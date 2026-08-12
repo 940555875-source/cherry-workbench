@@ -773,7 +773,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.6</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.7</div>
     </div>
   </aside>
 
@@ -1065,7 +1065,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.6 — 回到前台自动同步（移动端切回即时刷新）
+// amber的工作台 v14.7 — 同步状态真实化（拉取/上传失败不再假变绿）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1157,10 +1157,11 @@ function initSyncPills() {
   pillEls.testBtnMobile = $('#syncTestBtnMobile');
 }
 
-function setSyncStatus(status, label) {
+function setSyncStatus(status, label, detail) {
   [pillEls.desktop, pillEls.mobile].forEach(el => {
     if (!el) return;
     el.className = 'sync-pill ' + status;
+    el.title = detail || '';
   });
   [pillEls.labelDesktop, pillEls.labelMobile].forEach(el => {
     if (el) el.textContent = label;
@@ -1178,27 +1179,29 @@ function withDeviceId(record) {
   return { ...record, device_id: DEVICE_ID };
 }
 
-/** Pull all records from a Supabase table (including tombstones) */
+/** Pull all records from a Supabase table (including tombstones). Returns null on failure (distinct from empty). */
 async function cloudPull(tableName) {
-  if (!sb) return [];
+  if (!sb) return null;
   const { data, error } = await sb.from(tableName).select('*').order('updated_at', { ascending: false });
-  if (error) { console.warn('Pull error', tableName, error.message); return []; }
+  if (error) { console.warn('Pull error', tableName, error.message); return null; }
   return data || [];
 }
 
-/** Push (upsert) records to cloud */
+/** Push (upsert) records to cloud. Returns true on success. */
 async function cloudPush(tableName, records) {
-  if (!sb || !records.length) return;
+  if (!sb || !records.length) return false;
   const { error } = await sb.from(tableName).upsert(records);
-  if (error) console.warn('Push error', tableName, error.message);
+  if (error) { console.warn('Push error', tableName, error.message); return false; }
+  return true;
 }
 
-/** Mark a record as deleted (tombstone) in cloud */
+/** Mark a record as deleted (tombstone) in cloud. Returns true on success. */
 async function cloudTombstone(tableName, id) {
-  if (!sb) return;
+  if (!sb) return false;
   const now = new Date().toISOString();
   const { error } = await sb.from(tableName).update({ deleted_at: now, updated_at: now }).eq('id', id);
-  if (error) console.warn('Tombstone error', tableName, error.message);
+  if (error) { console.warn('Tombstone error', tableName, error.message); return false; }
+  return true;
 }
 
 /**
@@ -1214,12 +1217,19 @@ async function fullSync(key) {
   try {
     // 1. Pull all records from cloud
     const cloudRecords = await cloudPull(tableName);
+    if (cloudRecords === null) {
+      // Pull failed (network/table missing/RLS) — do NOT treat as "cloud empty"
+      setSyncStatus('error', '同步失败', `拉取 ${tableName} 失败，请点「测试连接」诊断`);
+      return false;
+    }
     if (!cloudRecords.length) {
       // No cloud data — push all local to cloud
       const localData = state[key].map(withDeviceId);
-      if (localData.length) await cloudPush(tableName, localData);
-      setSyncStatus('online', '已同步');
-      return;
+      if (localData.length) {
+        const ok = await cloudPush(tableName, localData);
+        if (!ok) { setSyncStatus('error', '同步失败', `上传 ${tableName} 失败`); return false; }
+      }
+      return true;
     }
 
     // 2. Build lookup maps
@@ -1268,13 +1278,17 @@ async function fullSync(key) {
     saveLocal(key, merged);
 
     // 8. Push local-only records
-    if (toPush.length) await cloudPush(tableName, toPush);
+    if (toPush.length) {
+      const ok = await cloudPush(tableName, toPush);
+      if (!ok) { setSyncStatus('error', '同步失败', `上传 ${tableName} 失败`); return false; }
+    }
 
-    // 9. If we tombstoned locally, push those too (already handled by the caller)
-    setSyncStatus('online', '已同步');
+    // 9. Success — status set by caller (to avoid concurrent overwrite)
+    return true;
   } catch(e) {
     console.warn('FullSync error', key, e.message);
     setSyncStatus('error', '同步失败');
+    return false;
   }
 }
 
@@ -1301,7 +1315,7 @@ function createRecord(key, record) {
   saveLocal(key, state[key]);
 
   if (syncEnabled) {
-    cloudPush(TABLE_MAP[key], [withDeviceId(rec)]).then(() => setSyncStatus('online', '已同步'));
+    cloudPush(TABLE_MAP[key], [withDeviceId(rec)]).then(ok => setSyncStatus(ok ? 'online' : 'error', ok ? '已同步' : '同步失败'));
   }
 }
 
@@ -1312,7 +1326,7 @@ function updateRecord(key, id, updates) {
   saveLocal(key, state[key]);
 
   if (syncEnabled) {
-    cloudPush(TABLE_MAP[key], [withDeviceId(rec)]).then(() => setSyncStatus('online', '已同步'));
+    cloudPush(TABLE_MAP[key], [withDeviceId(rec)]).then(ok => setSyncStatus(ok ? 'online' : 'error', ok ? '已同步' : '同步失败'));
   }
 }
 
@@ -1340,7 +1354,7 @@ function deleteRecord(key, id) {
   localStorage.setItem(LS_KEYS[key], JSON.stringify(allRecords));
 
   if (syncEnabled) {
-    cloudTombstone(TABLE_MAP[key], id).then(() => setSyncStatus('online', '已同步'));
+    cloudTombstone(TABLE_MAP[key], id).then(ok => setSyncStatus(ok ? 'online' : 'error', ok ? '已同步' : '同步失败'));
   }
 }
 
@@ -1363,9 +1377,10 @@ async function init() {
   if (hasConfig) {
     setSyncStatus('syncing', '同步中...');
     try {
-      await Promise.all([
+      const syncResults = await Promise.all([
         fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), fullSync('travels'),
       ]);
+      if (syncResults.every(Boolean)) setSyncStatus('online', '已同步');
       safe('renderAll after sync', () => renderAll());
     } catch(e) {
       console.warn('Initial sync failed', e.message);
@@ -1401,9 +1416,10 @@ async function periodicSync() {
   if (!syncEnabled) return;
   setSyncStatus('syncing', '同步中...');
   try {
-    await Promise.all([
+    const syncResults = await Promise.all([
       fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), fullSync('travels'),
     ]);
+    if (syncResults.every(Boolean)) setSyncStatus('online', '已同步');
     renderAll();
   } catch(e) {
     setSyncStatus('error', '同步失败');
@@ -1459,7 +1475,7 @@ async function testConnection() {
     showDiagToast('连接成功 ✓ — 云端同步已就绪', 'online');
 
     // Do a full sync after successful test
-    fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links');
+    fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links'); fullSync('travels');
   } catch(e) {
     showDiagToast('网络错误 — 无法连接到 Supabase，请检查网络', 'error');
   }
