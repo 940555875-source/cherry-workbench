@@ -1,4 +1,4 @@
-const CACHE_NAME = 'amber-workbench-v2';
+const CACHE_NAME = 'amber-workbench-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
