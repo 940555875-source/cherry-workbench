@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="amber的工作台">
-<link rel="icon" href="/icons/icon-48x48.png">
-<link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="./icons/icon-48x48.png">
+<link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+<link rel="manifest" href="./manifest.json">
 <title>amber的工作台</title>
 <style>
 /* ===== Reset & Base ===== */
@@ -624,7 +624,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v6.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v7.0</div>
     </div>
   </aside>
 
@@ -794,7 +794,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v5 — 错误兜底 + 日历重排 + ICS 导入
+// amber的工作台 v7 — 修复 GitHub Pages 子路径下的绝对路径 + SW/manifest 正确注册
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1865,7 +1865,9 @@ $('#syncTestBtnMobile').addEventListener('click', testConnection);
 // ============================================================
 function registerSW() {
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    // Use a relative path so this resolves correctly on GitHub Pages
+    // (deployed under /cherry-workbench/, not the domain root).
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
   }
 }
 
