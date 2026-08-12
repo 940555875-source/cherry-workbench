@@ -196,39 +196,55 @@ body{
 .cal-nav .cal-today{background:var(--blue-400);color:var(--white);border-color:var(--blue-400)}
 .cal-nav .cal-today:hover{background:var(--blue-500)}
 .cal-month-label{font-size:15px;font-weight:600;color:var(--gray-700);min-width:100px;text-align:center}
-/* Calendar grid: 7 cols x 5 rows, equal-height rows for stable layout */
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
-/* Weekday header only needs a single row — must NOT inherit the 5-row template */
+/* Calendar grid: 7 columns, rows auto-grow so event chips can expand */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center}
+/* Weekday header only needs a single row — must NOT inherit extra rows */
 .cal-grid.weekdays{grid-template-rows:auto;margin-bottom:4px}
 .cal-weekday{
   font-size:11px;font-weight:600;color:var(--gray-400);
   padding:6px 0;text-transform:uppercase;letter-spacing:.5px;
   display:flex;align-items:center;justify-content:center;
 }
-/* Use a grid-row span per day cell so layout is exact */
 .cal-day{
-  position:relative;padding:5px 3px;border-radius:var(--radius-xs);
+  position:relative;padding:4px 3px 5px;border-radius:var(--radius-xs);
   cursor:pointer;transition:all .2s;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
   font-size:13px;font-weight:500;color:var(--gray-700);
-  border:1.5px solid transparent;min-height:54px;
+  border:1.5px solid transparent;min-height:80px;
   background:#fff;overflow:hidden;
 }
 .cal-day:hover{background:var(--blue-50);border-color:var(--blue-200)}
-.cal-day.today{
-  background:var(--blue-100);border-color:var(--blue-300);
-  font-weight:700;color:var(--blue-500);
-}
+.cal-day.today{background:var(--blue-100);border-color:var(--blue-300)}
 .cal-day.other-month{color:var(--gray-300);background:transparent}
-.cal-day.blank{background:transparent;border-color:transparent;cursor:default;pointer-events:none;min-height:54px}
-.cal-day-num{font-size:13px;line-height:1.2}
-.cal-day-dots{display:flex;gap:2px;margin-top:auto;padding-top:4px;flex-wrap:wrap;justify-content:center;align-items:center}
-.cal-dot{
-  width:6px;height:6px;border-radius:50%;flex-shrink:0;
+.cal-day.blank{background:transparent;border-color:transparent;cursor:default;pointer-events:none;min-height:80px}
+.cal-day-head{display:flex;align-items:center;justify-content:space-between;padding:0 2px;margin-bottom:3px}
+.cal-day-num{font-size:13px;line-height:1.2;font-weight:600}
+.cal-day.today .cal-day-num{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:20px;height:20px;border-radius:50%;background:var(--blue-400);color:#fff;font-weight:700;
 }
-.cal-dot.plan{background:var(--pink-300)}
-.cal-dot.event{background:var(--blue-400)}
-.cal-dot.checkin{background:#4CAF50}
+.cal-day-more{font-size:9px;color:var(--gray-400);font-weight:600}
+.cal-day-events{display:flex;flex-direction:column;gap:2px;width:100%}
+.cal-ev{
+  display:flex;align-items:center;gap:3px;width:100%;
+  font-size:10px;line-height:1.3;text-align:left;
+  padding:2px 4px;border-radius:5px;overflow:hidden;white-space:nowrap;
+  color:#fff;cursor:pointer;flex-shrink:0;
+}
+.cal-ev:hover{filter:brightness(.92)}
+.cal-ev .ev-t{flex-shrink:0;font-weight:700;font-variant-numeric:tabular-nums}
+.cal-ev .ev-txt{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cal-ev.event{background:var(--blue-400)}
+.cal-ev.plan{background:var(--pink-300)}
+/* Multi-day event: continuous bar segments across the week */
+.cal-ev.mstart{border-radius:5px 0 0 5px;background:var(--blue-500);padding-left:4px}
+.cal-ev.mmid{border-radius:0;background:var(--blue-400);justify-content:center;color:var(--blue-200);padding-left:2px;padding-right:2px}
+.cal-ev.mend{border-radius:0 5px 5px 0;background:var(--blue-500);justify-content:flex-end;padding-right:4px}
+.cal-checkin-badge{
+  display:flex;align-items:center;justify-content:flex-end;gap:2px;
+  font-size:9px;color:#4CAF50;font-weight:700;padding:1px 2px 0;
+}
+.cal-checkin-badge::before{content:'✓';font-size:9px}
 
 /* ===== Daily Plans ===== */
 .plan-card{border-top:3px solid var(--pink-300)}
@@ -572,8 +588,10 @@ body{
   .overview-modules{grid-template-columns:1fr}
   .event-input-row{flex-direction:column}
   .widget-toggle{display:flex;align-items:center;justify-content:center}
-  .cal-day{font-size:11px;padding:3px 2px}
+  .cal-day{font-size:11px;padding:3px 2px;min-height:64px}
+  .cal-day.blank{min-height:64px}
   .cal-day-num{font-size:11px}
+  .cal-ev{font-size:9px;padding:2px 3px;gap:2px}
   .cal-nav button{padding:5px 10px;font-size:12px}
   .cal-nav{gap:6px}
   .sync-pill{font-size:10px;padding:3px 10px;gap:4px}
@@ -626,7 +644,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v8.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v9.0</div>
     </div>
   </aside>
 
@@ -702,18 +720,11 @@ body{
     <!-- PAGE: 事件提醒 -->
     <div class="page" id="page-events">
       <div class="card event-card">
-        <div class="card-header"><span class="card-title">🔔 事件提醒</span></div>
+        <div class="card-header">
+          <span class="card-title">🔔 事件提醒</span>
+          <button class="btn-add" id="btnAddEvent" style="background:var(--blue-400)">➕ 添加事件</button>
+        </div>
         <div class="card-body">
-          <div class="event-input-row">
-            <input type="date" class="ev-date" id="evDate">
-            <input type="time" class="ev-time" id="evTime" value="09:00">
-            <input type="text" class="ev-title" id="evTitle" placeholder="事件标题" maxlength="100">
-          </div>
-          <div class="event-input-row" style="margin-bottom:14px">
-            <input type="text" class="ev-desc" id="evDesc" placeholder="备注（可选）" maxlength="200">
-            <button class="btn-add" id="btnAddEvent" style="background:var(--blue-400)">添加事件</button>
-          </div>
-
           <!-- ICS import row -->
           <div class="ics-row">
             <span class="ics-label">📅 从本地日历导入：</span>
@@ -724,7 +735,7 @@ body{
           </div>
 
           <ul class="event-list" id="eventList"></ul>
-          <div class="plan-empty" id="eventEmpty">暂无事件提醒</div>
+          <div class="plan-empty" id="eventEmpty">暂无事件提醒，点击右上角「添加事件」或月历中的日期创建</div>
         </div>
       </div>
     </div>
@@ -767,6 +778,42 @@ body{
   <div class="widget-section"><h4>🔔 近期事件</h4><ul class="widget-mini-todos" id="wEvents"></ul></div>
 </div>
 
+<!-- === Event Modal (add/edit, opened by clicking a calendar date) === -->
+<div class="modal-overlay hidden" id="eventOverlay">
+  <div class="modal" style="max-width:420px">
+    <h2 id="eventModalTitle">➕ 添加事件</h2>
+    <label>日期</label>
+    <input type="date" id="emDate">
+    <label>开始时间</label>
+    <input type="time" id="emTime" value="09:00">
+    <label>事件标题</label>
+    <input type="text" id="emTitle" placeholder="输入事件标题" maxlength="100">
+    <label>跨天结束日期（可选）</label>
+    <input type="date" id="emEndDate">
+    <label>结束时间（可选）</label>
+    <input type="time" id="emEndTime">
+    <label>备注（可选）</label>
+    <input type="text" id="emDesc" placeholder="备注" maxlength="200">
+    <p class="modal-hint">结束日期大于开始日期时，事件会作为跨天事件在月历中连贯展示。</p>
+    <div class="modal-actions" style="flex-wrap:wrap">
+      <button class="btn btn-secondary" id="btnEventViewPlans" style="margin-right:auto">📋 该日计划</button>
+      <button class="btn btn-secondary" id="btnEventCancel">取消</button>
+      <button class="btn btn-primary" id="btnEventSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- === Reminder Modal (event starting within 1 hour) === -->
+<div class="modal-overlay hidden" id="remindOverlay">
+  <div class="modal" style="max-width:360px">
+    <h2>⏰ 事件即将开始</h2>
+    <div id="remindBody" style="font-size:14px;line-height:1.6;color:var(--gray-700)"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="btnRemindOk">知道了</button>
+    </div>
+  </div>
+</div>
+
 <!-- === Settings Modal === -->
 <div class="modal-overlay hidden" id="settingsOverlay">
   <div class="modal">
@@ -796,7 +843,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v8 — 修复移动端布局(顶栏挤占主内容致按钮失效) + 月历改为真实月份视图
+// amber的工作台 v9 — 月历外显事件(时间+标题) + 跨天事件连贯展示 + 提前1小时弹窗提醒 + 点击日期添加事件弹窗
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1094,6 +1141,7 @@ async function init() {
   safe('cleanupOldTombstones', () => cleanupOldTombstones());
   safe('periodicSync setup', () => setInterval(periodicSync, 300000));
   safe('monitorOnline', () => monitorOnline());
+  safe('initReminders', () => initReminders());
   safe('registerSW', () => registerSW());
 }
 
@@ -1290,6 +1338,28 @@ function initCalendar() {
   });
 }
 
+function eventRange(ev) {
+  return { start: ev.date, end: ev.end_date || ev.date };
+}
+
+function eventsCoveringDate(dateStr) {
+  const res = [];
+  state.events.forEach(ev => {
+    const { start, end } = eventRange(ev);
+    if (dateStr >= start && dateStr <= end) {
+      res.push({ ev, isStart: dateStr === start, isEnd: dateStr === end, isMulti: start !== end });
+    }
+  });
+  return res.sort((a, b) => {
+    if (a.ev.date !== b.ev.date) return a.ev.date > b.ev.date ? 1 : -1;
+    return (a.ev.time || '') > (b.ev.time || '') ? 1 : -1;
+  });
+}
+
+function plansOnDate(dateStr) {
+  return state.plans.filter(p => p.date === dateStr && !p.done);
+}
+
 function renderCalendar() {
   const year = state.calYear, month = state.calMonth;
   const today = fmtDate(new Date());
@@ -1302,11 +1372,6 @@ function renderCalendar() {
   // Monday-first offset so 1号 lands under the correct weekday column (Mon=0 ... Sun=6)
   const startOffset = (firstDay.getDay() + 6) % 7;
 
-  const planCounts = {}, eventCounts = {}, checkinCounts = {};
-  state.plans.filter(p => !p.done).forEach(p => { planCounts[p.date] = (planCounts[p.date]||0) + 1; });
-  state.events.forEach(e => { eventCounts[e.date] = (eventCounts[e.date]||0) + 1; });
-  state.checkins.forEach(h => { (h.dates || []).forEach(d => { checkinCounts[d] = (checkinCounts[d]||0) + 1; }); });
-
   const grid = $('#calGrid');
   grid.innerHTML = '';
 
@@ -1315,18 +1380,47 @@ function renderCalendar() {
     grid.innerHTML += '<div class="cal-day blank"></div>';
   }
 
+  const MAX_CHIPS = 3;
+
   for (let d = 1; d <= daysInMonth; d++) {
     const date = new Date(year, month, d);
     const dateStr = fmtDate(date);
     const isToday = dateStr === today;
-    const nPlans = planCounts[dateStr] || 0, nEvents = eventCounts[dateStr] || 0, nCheckins = checkinCounts[dateStr] || 0;
+    const evs = eventsCoveringDate(dateStr);
+    const plans = plansOnDate(dateStr);
+    const nCheckin = state.checkins.reduce((n, h) => n + ((h.dates || []).includes(dateStr) ? 1 : 0), 0);
+
+    const chips = [];
+    // Events: show time + title; multi-day events render as continuous segments
+    evs.forEach(({ ev, isStart, isEnd, isMulti }) => {
+      let chipCls, body;
+      if (isMulti) {
+        if (isStart) { chipCls = 'mstart'; body = `<span class="ev-t">${escapeHtml(ev.time || '')}</span><span class="ev-txt">${escapeHtml(ev.title)}</span>`; }
+        else if (isEnd) { chipCls = 'mend'; body = `<span class="ev-txt">${escapeHtml(ev.title)}</span>`; }
+        else { chipCls = 'mmid'; body = `<span class="ev-txt">· · ·</span>`; }
+      } else {
+        chipCls = 'event';
+        body = `<span class="ev-t">${escapeHtml(ev.time || '')}</span><span class="ev-txt">${escapeHtml(ev.title)}</span>`;
+      }
+      chips.push(`<div class="cal-ev ${chipCls}" data-id="${ev.id}" onclick="editEvent('${ev.id}', event)">${body}</div>`);
+    });
+    // Plans: show title only (no time field)
+    plans.forEach(p => {
+      chips.push(`<div class="cal-ev plan" title="${escapeHtml(p.text)}"><span class="ev-txt">${escapeHtml(p.text)}</span></div>`);
+    });
+
+    const visible = chips.slice(0, MAX_CHIPS).join('');
+    const moreCount = chips.length - MAX_CHIPS;
+    const moreHtml = moreCount > 0 ? `<div class="cal-day-more">+${moreCount}</div>` : '';
+    const checkinHtml = nCheckin > 0 ? `<div class="cal-checkin-badge">${nCheckin}</div>` : '';
+
     let cls = 'cal-day';
     if (isToday) cls += ' today';
-    let dots = '';
-    for (let j = 0; j < nPlans; j++) dots += '<span class="cal-dot plan"></span>';
-    for (let j = 0; j < nEvents; j++) dots += '<span class="cal-dot event"></span>';
-    for (let j = 0; j < Math.min(nCheckins, 2); j++) dots += '<span class="cal-dot checkin"></span>';
-    grid.innerHTML += `<div class="${cls}" data-date="${dateStr}" onclick="navigateToDate('${dateStr}')"><span class="cal-day-num">${d}</span><div class="cal-day-dots">${dots}</div></div>`;
+
+    grid.innerHTML += `<div class="${cls}" data-date="${dateStr}" onclick="openEventModal('${dateStr}')">
+      <div class="cal-day-head"><span class="cal-day-num">${d}</span>${moreHtml}</div>
+      <div class="cal-day-events">${visible}</div>${checkinHtml}
+    </div>`;
   }
 
   // Fill the last row so the grid always ends on a complete week
@@ -1346,8 +1440,71 @@ function navigateToDate(dateStr) {
   $$('.nav-item, .mobile-nav-item').forEach(b => { b.classList.toggle('active', b.dataset.page === 'plans'); });
   renderPlanPage();
 }
-// Exposed globally for inline onclick handlers (calendar day cells)
+// Exposed globally for inline onclick handlers (calendar day cells + modal link)
 window.navigateToDate = navigateToDate;
+
+// ============================================================
+// EVENT MODAL — add / edit an event (opened by calendar date click)
+// ============================================================
+let _editingEventId = null;
+
+function openEventModal(dateStr, eventObj) {
+  _editingEventId = eventObj ? eventObj.id : null;
+  $('#emDate').value = eventObj ? eventObj.date : dateStr;
+  $('#emTime').value = eventObj ? (eventObj.time || '09:00') : '09:00';
+  $('#emTitle').value = eventObj ? (eventObj.title || '') : '';
+  $('#emEndDate').value = eventObj ? (eventObj.end_date || '') : '';
+  $('#emEndTime').value = eventObj ? (eventObj.end_time || '') : '';
+  $('#emDesc').value = eventObj ? (eventObj.desc_text || '') : '';
+  $('#eventModalTitle').textContent = eventObj ? '✏️ 编辑事件' : '➕ 添加事件';
+  $('#eventOverlay').classList.remove('hidden');
+  setTimeout(() => $('#emTitle').focus(), 60);
+}
+window.openEventModal = openEventModal;
+
+function closeEventModal() {
+  $('#eventOverlay').classList.add('hidden');
+}
+
+function saveEventModal() {
+  const date = $('#emDate').value;
+  const time = $('#emTime').value;
+  const title = $('#emTitle').value.trim();
+  const end_date = $('#emEndDate').value;
+  const end_time = $('#emEndTime').value;
+  const desc_text = $('#emDesc').value.trim();
+  if (!date) { showDiagToast('请选择日期', 'error'); return; }
+  if (!title) { showDiagToast('请输入事件标题', 'error'); return; }
+  if (end_date && end_date < date) { showDiagToast('结束日期不能早于开始日期', 'error'); return; }
+
+  const payload = { date, time: time || '09:00', title, end_date: end_date || null, end_time: end_time || null, desc_text };
+  if (_editingEventId) {
+    updateRecord('events', _editingEventId, payload);
+  } else {
+    createRecord('events', { id: 'e_' + Date.now(), ...payload });
+  }
+  closeEventModal();
+  renderEventPage(); renderCalendar(); renderOverviewModules(); renderWidgetPanel();
+}
+window.saveEventModal = saveEventModal;
+
+function editEvent(id, e) {
+  if (e) e.stopPropagation();
+  const ev = state.events.find(x => x.id === id);
+  if (ev) openEventModal(ev.date, ev);
+}
+window.editEvent = editEvent;
+
+function eventRangeLabel(ev) {
+  const days = ['日','一','二','三','四','五','六'];
+  const d = new Date(ev.date + 'T00:00:00');
+  const startLabel = `${d.getMonth()+1}/${d.getDate()} 周${days[d.getDay()]}`;
+  if (ev.end_date && ev.end_date !== ev.date) {
+    const ed = new Date(ev.end_date + 'T00:00:00');
+    return `${startLabel} → ${ed.getMonth()+1}/${ed.getDate()} 周${days[ed.getDay()]}`;
+  }
+  return `${startLabel} ${ev.time || ''}`;
+}
 
 // ============================================================
 // DAILY PLANS — 4-section layout with square checkboxes + auto-carry
@@ -1483,7 +1640,6 @@ $('#planInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#bt
 // EVENTS (with tombstone CRUD)
 // ============================================================
 function renderEventPage() {
-  $('#evDate').value = fmtDate(new Date());
   const sorted = [...state.events].sort((a,b) => {
     if (a.date !== b.date) return a.date > b.date ? 1 : -1;
     return (a.time||'') > (b.time||'') ? 1 : -1;
@@ -1494,13 +1650,10 @@ function renderEventPage() {
   else {
     list.classList.remove('hidden'); empty.classList.add('hidden');
     sorted.forEach(ev => {
-      const d = new Date(ev.date + 'T00:00:00');
-      const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-      const days = ['日','一','二','三','四','五','六'];
-      const dateLabel = `${d.getMonth()+1}/${d.getDate()} 周${days[d.getDay()]}`;
       const li = document.createElement('li');
       li.className = 'event-item';
-      li.innerHTML = `<div class="event-info"><div class="event-title">${escapeHtml(ev.title)}</div><div class="event-meta">📅 ${dateLabel} ${ev.time||''}</div>${ev.desc_text ? `<div class="event-desc-text">${escapeHtml(ev.desc_text)}</div>` : ''}</div><button class="event-del" data-id="${ev.id}">×</button>`;
+      li.style.cursor = 'pointer';
+      li.innerHTML = `<div class="event-info"><div class="event-title">${escapeHtml(ev.title)}</div><div class="event-meta">📅 ${escapeHtml(eventRangeLabel(ev))}</div>${ev.desc_text ? `<div class="event-desc-text">${escapeHtml(ev.desc_text)}</div>` : ''}</div><button class="event-del" data-id="${ev.id}">×</button>`;
       list.appendChild(li);
     });
   }
@@ -1508,17 +1661,23 @@ function renderEventPage() {
 
 $('#eventList').addEventListener('click', e => {
   const del = e.target.closest('.event-del');
-  if (del) { deleteRecord('events', del.dataset.id); renderEventPage(); renderCalendar(); renderOverviewModules(); }
+  if (del) { deleteRecord('events', del.dataset.id); renderEventPage(); renderCalendar(); renderOverviewModules(); return; }
+  const item = e.target.closest('.event-item');
+  if (item) {
+    const id = item.querySelector('.event-del').dataset.id;
+    const ev = state.events.find(x => x.id === id);
+    if (ev) openEventModal(ev.date, ev);
+  }
 });
 
-$('#btnAddEvent').addEventListener('click', () => {
-  const date = $('#evDate').value, time = $('#evTime').value;
-  const title = $('#evTitle').value.trim(), desc_text = $('#evDesc').value.trim();
-  if (!date || !title) return;
-  createRecord('events', { id: 'e_' + Date.now(), date, time, title, desc_text });
-  $('#evTitle').value = ''; $('#evDesc').value = '';
-  renderEventPage(); renderCalendar(); renderOverviewModules();
-});
+$('#btnAddEvent').addEventListener('click', () => openEventModal(fmtDate(new Date())));
+
+// Event modal actions
+$('#btnEventSave').addEventListener('click', saveEventModal);
+$('#btnEventCancel').addEventListener('click', closeEventModal);
+$('#eventOverlay').addEventListener('click', e => { if (e.target === $('#eventOverlay')) closeEventModal(); });
+$('#btnEventViewPlans').addEventListener('click', () => { const d = $('#emDate').value; closeEventModal(); if (d) navigateToDate(d); });
+$('#emTitle').addEventListener('keydown', e => { if (e.key === 'Enter') saveEventModal(); });
 
 // ============================================================
 // ICS IMPORT — pull events from local calendar app
@@ -1563,10 +1722,10 @@ function parseICS(text) {
   };
 
   const ymd = (s) => {
-    // 20260815T093000Z or 20260815 or 2026-08-15
+    // 20260815T093000Z or 20260815 or 2026-08-15 (no time part => all-day)
     const m = s.match(/^(\d{4})-?(\d{2})-?(\d{2})(?:T(\d{2})(\d{2})?(\d{2})?)?(Z)?/);
     if (!m) return null;
-    return { date: `${m[1]}-${m[2]}-${m[3]}`, time: m[4] ? `${m[4]}:${(m[5]||'00')}` : '09:00' };
+    return { date: `${m[1]}-${m[2]}-${m[3]}`, time: m[4] ? `${m[4]}:${(m[5]||'00')}` : '' };
   };
 
   for (const raw of unfolded) {
@@ -1581,7 +1740,11 @@ function parseICS(text) {
     if (p.key === 'SUMMARY') cur.title = v;
     else if (p.key === 'DESCRIPTION') cur.desc_text = v;
     else if (p.key === 'DTSTART') { const t = ymd(v); if (t) { cur.date = t.date; cur.time = t.time; } }
-    else if (p.key === 'DTEND' && !cur._hasEnd) { /* ignored — single-day only */ }
+    else if (p.key === 'DTEND') {
+      const t = ymd(v);
+      if (t && t.date !== cur.date) cur.end_date = t.date;      // multi-day event
+      else if (t) cur.end_time = t.time;                        // same-day end time
+    }
     else if (p.key === 'LOCATION') cur.location = v;
   }
   return events;
@@ -1635,7 +1798,9 @@ function bindIcsImporter() {
       if (dup) return;
       createRecord('events', {
         id: 'ics_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
-        date: ev.date, time: ev.time || '09:00',
+        date: ev.date, time: ev.time || '',
+        end_date: ev.end_date || null,
+        end_time: ev.end_time || null,
         title: (ev.title || '未命名事件').slice(0, 100),
         desc_text: (ev.desc_text || '').slice(0, 200),
       });
@@ -1813,6 +1978,81 @@ function updateClock() {
   if (ovDate) ovDate.textContent = dateStr;
 }
 setInterval(updateClock, 10000);
+
+// ============================================================
+// REMINDERS — pop up 1 hour before an event starts (+ browser notification)
+// ============================================================
+let _reminded = {};
+function loadReminded() {
+  try { _reminded = JSON.parse(localStorage.getItem('amber_reminded_v1') || '{}'); } catch(e) { _reminded = {}; }
+}
+function saveReminded() {
+  try { localStorage.setItem('amber_reminded_v1', JSON.stringify(_reminded)); } catch(e) {}
+}
+
+function eventStartMs(ev) {
+  if (!ev.time) return null;
+  const t = new Date(ev.date + 'T' + ev.time + ':00').getTime();
+  return isNaN(t) ? null : t;
+}
+
+function showReminderModal(ev) {
+  $('#remindBody').innerHTML =
+    `「${escapeHtml(ev.title)}」<br>` +
+    `<span style="color:var(--gray-500);font-size:13px">将于 <b>${escapeHtml(ev.date)} ${escapeHtml(ev.time || '')}</b> 开始</span>`;
+  $('#remindOverlay').classList.remove('hidden');
+}
+
+function triggerReminder(ev) {
+  showReminderModal(ev);
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try {
+      new Notification('⏰ 事件提醒：' + ev.title, {
+        body: `${ev.date} ${ev.time || ''} 开始`,
+        tag: ev.id,
+      });
+    } catch(e) {}
+  }
+}
+
+function checkReminders() {
+  const now = Date.now();
+  let changed = false;
+  state.events.forEach(ev => {
+    const start = eventStartMs(ev);
+    if (start == null) return;
+    const diff = start - now;
+    // Remind once when the event is within the upcoming 1-hour window
+    if (diff > 0 && diff <= 3600000) {
+      const key = ev.id + '_' + ev.date + '_' + ev.time;
+      if (_reminded[key]) return;
+      _reminded[key] = now;
+      changed = true;
+      triggerReminder(ev);
+    }
+  });
+  if (changed) saveReminded();
+  // Prune stale keys (events long past)
+  const pruneBefore = now - 86400000;
+  let pruned = false;
+  Object.keys(_reminded).forEach(k => { if (_reminded[k] < pruneBefore) { delete _reminded[k]; pruned = true; } });
+  if (pruned) saveReminded();
+}
+
+function initReminders() {
+  loadReminded();
+  checkReminders();
+  setInterval(checkReminders, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkReminders(); });
+  // Ask for notification permission on the first user interaction (browser requirement)
+  if ('Notification' in window && Notification.permission === 'default') {
+    const ask = () => { try { Notification.requestPermission(); } catch(e) {} };
+    document.addEventListener('click', ask, { once: true });
+    document.addEventListener('touchend', ask, { once: true });
+  }
+}
+
+$('#btnRemindOk').addEventListener('click', () => $('#remindOverlay').classList.add('hidden'));
 
 // ============================================================
 // WIDGET
