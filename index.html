@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#7EB8DA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="cherry的工作台">
+<link rel="icon" href="/icons/icon-48x48.png">
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+<link rel="manifest" href="/manifest.json">
+<title>cherry的工作台</title>
+<style>
+/* ===== Reset & Base ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue-50:#E3F2FD;--blue-100:#BBDEFB;--blue-200:#90CAF9;--blue-300:#64B5F6;
+  --blue-400:#7EB8DA;--blue-500:#5C9EC4;
+  --pink-50:#FCE4EC;--pink-100:#F8BBD0;--pink-200:#F48FB1;--pink-300:#F06292;
+  --pink-400:#EC7FA0;--pink-500:#D4687C;
+  --white:#FFFFFF;--gray-50:#FAFAFA;--gray-100:#F5F5F5;--gray-200:#EEEEEE;
+  --gray-300:#E0E0E0;--gray-400:#BDBDBD;--gray-500:#9E9E9E;
+  --gray-700:#616161;--gray-900:#212121;
+  --radius:14px;--radius-sm:10px;--radius-xs:8px;
+  --shadow:0 2px 12px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 30px rgba(0,0,0,.08);
+  --font-mono:'SF Mono','Fira Code','Consolas',monospace;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  background:linear-gradient(135deg,var(--blue-50) 0%,var(--pink-50) 100%);
+  min-height:100vh;min-height:100dvh;
+  color:var(--gray-900);
+  -webkit-font-smoothing:antialiased;
+  transition:background .5s;
+}
+/* ===== Header ===== */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px;background:rgba(255,255,255,.75);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(0,0,0,.06);
+  position:sticky;top:0;z-index:100;
+}
+.header-left{display:flex;align-items:center;gap:12px}
+.app-icon{
+  width:38px;height:38px;border-radius:10px;
+  background:var(--blue-400);color:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;letter-spacing:-.5px;
+  flex-shrink:0;
+}
+.app-title{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.header-right{display:flex;align-items:center;gap:12px}
+/* ===== Sync Status ===== */
+.sync-status{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--gray-500);
+  padding:6px 12px;border-radius:20px;
+  background:var(--gray-100);
+  transition:all .3s;
+}
+.sync-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--gray-400);
+  transition:background .3s;
+}
+.sync-status.online .sync-dot{background:#4CAF50;box-shadow:0 0 6px rgba(76,175,80,.4)}
+.sync-status.offline .sync-dot{background:#FF9800;box-shadow:0 0 6px rgba(255,152,0,.4)}
+.sync-status.error .sync-dot{background:#F44336;box-shadow:0 0 6px rgba(244,67,54,.4)}
+.sync-status.syncing .sync-dot{background:var(--blue-400);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* ===== Settings Button ===== */
+.btn-icon{
+  width:34px;height:34px;border-radius:50%;border:none;
+  background:var(--gray-100);color:var(--gray-700);
+  cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.btn-icon:hover{background:var(--gray-200)}
+/* ===== Main Layout ===== */
+.main{
+  max-width:1200px;margin:0 auto;padding:20px 24px 40px;
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:20px;
+}
+/* ===== Cards ===== */
+.card{
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border-radius:var(--radius);padding:20px;
+  box-shadow:var(--shadow);
+  border:1px solid rgba(0,0,0,.04);
+  transition:box-shadow .3s,border-color .3s;
+  display:flex;flex-direction:column;
+}
+.card:hover{box-shadow:var(--shadow-lg);border-color:rgba(0,0,0,.08)}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;padding-bottom:12px;
+  border-bottom:1px solid var(--gray-200);
+}
+.card-title{
+  font-size:15px;font-weight:600;color:var(--gray-700);
+  display:flex;align-items:center;gap:8px;
+}
+.card-title .emoji{font-size:18px}
+.card-body{flex:1;overflow-y:auto;min-height:0}
+/* ===== Note Card ===== */
+.note-card{border-top:3px solid var(--blue-300)}
+.note-area{
+  width:100%;min-height:240px;border:none;outline:none;
+  font-size:14px;line-height:1.7;color:var(--gray-900);
+  resize:none;background:transparent;
+  font-family:inherit;
+  padding:4px 0;
+}
+.note-area::placeholder{color:var(--gray-400)}
+.note-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:12px;padding-top:12px;
+  border-top:1px solid var(--gray-100);
+  font-size:11px;color:var(--gray-400);
+}
+.note-saved{display:flex;align-items:center;gap:4px}
+.note-saved.saved{color:#4CAF50}
+/* ===== Todo Card ===== */
+.todo-card{border-top:3px solid var(--pink-300)}
+.todo-input-wrap{
+  display:flex;gap:8px;margin-bottom:16px;
+}
+.todo-input{
+  flex:1;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
+  padding:10px 14px;font-size:14px;outline:none;font-family:inherit;
+  transition:border-color .2s;
+  background:var(--gray-50);
+}
+.todo-input:focus{border-color:var(--pink-300);background:var(--white)}
+.btn-add{
+  padding:10px 18px;border:none;border-radius:var(--radius-xs);
+  background:var(--pink-300);color:var(--white);
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.btn-add:hover{background:var(--pink-400);transform:translateY(-1px)}
+.todo-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.todo-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:var(--radius-xs);
+  background:var(--gray-50);transition:all .2s;
+  animation:slideIn .25s ease;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.todo-item:hover{background:var(--pink-50)}
+.todo-check{
+  width:20px;height:20px;border-radius:50%;
+  border:2px solid var(--gray-300);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+  background:var(--white);
+}
+.todo-check:hover{border-color:var(--pink-300)}
+.todo-item.done .todo-check{
+  background:var(--pink-300);border-color:var(--pink-300);
+}
+.todo-check::after{
+  content:'✓';font-size:11px;color:var(--white);
+  opacity:0;transition:opacity .2s;
+}
+.todo-item.done .todo-check::after{opacity:1}
+.todo-text{flex:1;font-size:14px;transition:all .2s}
+.todo-item.done .todo-text{text-decoration:line-through;color:var(--gray-400)}
+.todo-del{
+  width:26px;height:26px;border-radius:50%;border:none;
+  background:transparent;color:var(--gray-400);cursor:pointer;
+  font-size:16px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;opacity:0;
+}
+.todo-item:hover .todo-del{opacity:1}
+.todo-del:hover{background:#FFEBEE;color:#F44336}
+.todo-empty{text-align:center;color:var(--gray-400);font-size:13px;padding:20px 0}
+.todo-count{font-size:12px;color:var(--gray-400)}
+/* ===== Links Card ===== */
+.links-card{border-top:3px solid var(--blue-300)}
+.link-add-wrap{display:flex;gap:6px;margin-bottom:16px}
+.link-add-wrap input{
+  flex:1;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
+  padding:8px 12px;font-size:13px;outline:none;font-family:inherit;
+  background:var(--gray-50);transition:border-color .2s;
+}
+.link-add-wrap input:focus{border-color:var(--blue-300);background:var(--white)}
+.link-add-wrap input:nth-child(1){flex:2}
+.link-add-wrap input:nth-child(2){flex:3}
+.btn-link-add{
+  padding:8px 14px;border:none;border-radius:var(--radius-xs);
+  background:var(--blue-300);color:var(--white);
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.btn-link-add:hover{background:var(--blue-400)}
+.link-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.link-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:var(--radius-xs);
+  transition:all .2s;text-decoration:none;color:var(--gray-900);
+}
+.link-item:hover{background:var(--blue-50)}
+.link-favicon{
+  width:28px;height:28px;border-radius:6px;
+  background:var(--blue-100);display:flex;align-items:center;justify-content:center;
+  font-size:12px;flex-shrink:0;color:var(--blue-500);
+}
+.link-info{flex:1;min-width:0}
+.link-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-url{font-size:11px;color:var(--gray-400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-del-btn{
+  width:24px;height:24px;border-radius:50%;border:none;
+  background:transparent;color:var(--gray-400);cursor:pointer;
+  font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;opacity:0;flex-shrink:0;
+}
+.link-item:hover .link-del-btn{opacity:1}
+.link-del-btn:hover{background:#FFEBEE;color:#F44336}
+/* ===== Clock ===== */
+.clock-wrap{text-align:center;padding:8px 0}
+.clock-time{font-size:36px;font-weight:300;letter-spacing:-1px;color:var(--gray-900);font-variant-numeric:tabular-nums}
+.clock-date{font-size:13px;color:var(--gray-500);margin-top:4px}
+/* ===== Settings Modal ===== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.3);
+  display:flex;align-items:center;justify-content:center;
+  z-index:200;backdrop-filter:blur(4px);
+  animation:fadeIn .2s ease;
+}
+@keyframes fadeIn{from{opacity:0}}
+.modal{
+  background:var(--white);border-radius:var(--radius);
+  padding:28px;width:90%;max-width:440px;
+  box-shadow:var(--shadow-lg);
+  animation:scaleIn .2s ease;
+}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal h2{font-size:18px;margin-bottom:20px}
+.modal label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px;margin-top:14px}
+.modal label:first-of-type{margin-top:0}
+.modal input{
+  width:100%;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
+  padding:10px 14px;font-size:14px;outline:none;font-family:inherit;background:var(--gray-50);
+  transition:border-color .2s;
+}
+.modal input:focus{border-color:var(--blue-300);background:var(--white)}
+.modal-hint{font-size:12px;color:var(--gray-400);margin-top:4px}
+.modal-actions{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
+.btn{border:none;border-radius:var(--radius-xs);padding:10px 20px;font-size:14px;cursor:pointer;font-weight:600;transition:all .2s}
+.btn-primary{background:var(--blue-400);color:var(--white)}
+.btn-primary:hover{background:var(--blue-500)}
+.btn-secondary{background:var(--gray-100);color:var(--gray-700)}
+.btn-secondary:hover{background:var(--gray-200)}
+.btn-danger{background:#FFEBEE;color:#F44336}
+.btn-danger:hover{background:#FFCDD2}
+/* ===== Widget View (Mobile) ===== */
+.widget-toggle{
+  display:none;position:fixed;bottom:20px;right:20px;z-index:150;
+  width:48px;height:48px;border-radius:50%;border:none;
+  background:var(--blue-400);color:var(--white);
+  font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(126,184,218,.4);
+  transition:all .2s;
+}
+.widget-toggle:hover{transform:scale(1.05)}
+.widget-overlay{
+  display:none;position:fixed;inset:0;z-index:180;
+  background:rgba(0,0,0,.2);backdrop-filter:blur(2px);
+}
+.widget-panel{
+  display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:190;width:min(340px,92vw);
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-radius:20px;padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.12);
+  border:1px solid rgba(0,0,0,.06);
+}
+.widget-panel.active,.widget-overlay.active{display:block}
+.widget-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.widget-header h3{font-size:16px;font-weight:600}
+.widget-close{
+  width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--gray-100);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.widget-clock{text-align:center;margin-bottom:16px}
+.widget-clock .w-time{font-size:42px;font-weight:200;letter-spacing:-2px}
+.widget-clock .w-date{font-size:12px;color:var(--gray-500);margin-top:2px}
+.widget-section{margin-bottom:12px}
+.widget-section h4{font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.widget-mini-note{
+  padding:10px 12px;background:var(--blue-50);border-radius:10px;
+  font-size:13px;color:var(--gray-700);max-height:60px;overflow:hidden;
+  line-height:1.5;
+}
+.widget-mini-todos{list-style:none;display:flex;flex-direction:column;gap:4px}
+.widget-mini-todos li{
+  font-size:13px;padding:6px 10px;background:var(--pink-50);border-radius:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.widget-mini-todos li.done{text-decoration:line-through;opacity:.5}
+.widget-actions{display:flex;gap:8px;margin-top:14px}
+.widget-actions button{
+  flex:1;padding:10px;border:none;border-radius:10px;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.widget-actions .wa-note{background:var(--blue-100);color:var(--blue-500)}
+.widget-actions .wa-todo{background:var(--pink-100);color:var(--pink-500)}
+.widget-actions .wa-link{background:var(--blue-50);color:var(--blue-500)}
+/* ===== Responsive ===== */
+@media(max-width:768px){
+  .main{grid-template-columns:1fr;gap:14px;padding:14px 16px 30px}
+  .header{padding:12px 16px}
+  .app-title{font-size:17px}
+  .note-area{min-height:160px}
+  .widget-toggle{display:flex;align-items:center;justify-content:center}
+}
+@media(min-width:769px){
+  .widget-toggle,.widget-overlay,.widget-panel{display:none!important}
+}
+/* ===== Utility ===== */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="header">
+  <div class="header-left">
+    <div class="app-icon">cherry</div>
+    <span class="app-title">cherry的工作台</span>
+  </div>
+  <div class="header-right">
+    <div class="sync-status offline" id="syncStatus" title="连接状态">
+      <span class="sync-dot"></span>
+      <span id="syncLabel">离线</span>
+    </div>
+    <button class="btn-icon" id="btnSettings" title="设置">⚙</button>
+  </div>
+</header>
+
+<!-- ===== Main Content ===== -->
+<main class="main" id="mainContent">
+  <!-- 便签 -->
+  <section class="card note-card">
+    <div class="card-header">
+      <span class="card-title"><span class="emoji">📝</span> 便签</span>
+    </div>
+    <div class="card-body">
+      <textarea class="note-area" id="noteArea" placeholder="写点什么..."></textarea>
+    </div>
+    <div class="note-footer">
+      <span class="note-saved saved" id="noteSaved">✓ 已保存</span>
+      <span id="noteWordCount">0 字</span>
+    </div>
+  </section>
+
+  <!-- 待办 -->
+  <section class="card todo-card">
+    <div class="card-header">
+      <span class="card-title"><span class="emoji">✅</span> 待办</span>
+      <span class="todo-count" id="todoCount"></span>
+    </div>
+    <div class="card-body">
+      <div class="todo-input-wrap">
+        <input type="text" class="todo-input" id="todoInput" placeholder="添加待办事项..." maxlength="200">
+        <button class="btn-add" id="btnAddTodo">添加</button>
+      </div>
+      <ul class="todo-list" id="todoList"></ul>
+      <div class="todo-empty" id="todoEmpty">还没有待办事项 🎉</div>
+    </div>
+  </section>
+
+  <!-- 快捷链接 + 时钟 -->
+  <section class="card links-card">
+    <div class="card-header">
+      <span class="card-title"><span class="emoji">🔗</span> 快捷链接</span>
+    </div>
+    <div class="card-body">
+      <div class="link-add-wrap">
+        <input type="text" id="linkNameInput" placeholder="名称" maxlength="30">
+        <input type="url" id="linkUrlInput" placeholder="https://..." maxlength="500">
+        <button class="btn-link-add" id="btnAddLink">添加</button>
+      </div>
+      <ul class="link-list" id="linkList"></ul>
+      <!-- 时钟 -->
+      <div class="clock-wrap" style="margin-top:16px">
+        <div class="clock-time" id="clockTime">--:--</div>
+        <div class="clock-date" id="clockDate">----年--月--日 星期-</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== Widget Toggle (Mobile) ===== -->
+<button class="widget-toggle" id="btnWidget" title="挂件视图">◈</button>
+
+<!-- ===== Widget Panel (Mobile) ===== -->
+<div class="widget-overlay" id="widgetOverlay"></div>
+<div class="widget-panel" id="widgetPanel">
+  <div class="widget-header">
+    <h3>cherry 挂件</h3>
+    <button class="widget-close" id="btnWidgetClose">✕</button>
+  </div>
+  <div class="widget-clock">
+    <div class="w-time" id="wTime">--:--</div>
+    <div class="w-date" id="wDate">----年--月--日</div>
+  </div>
+  <div class="widget-section">
+    <h4>📝 便签</h4>
+    <div class="widget-mini-note" id="wNote">暂无内容</div>
+  </div>
+  <div class="widget-section">
+    <h4>✅ 待办</h4>
+    <ul class="widget-mini-todos" id="wTodos"></ul>
+  </div>
+  <div class="widget-actions">
+    <button class="wa-note" id="wFocusNote">📝 写便签</button>
+    <button class="wa-todo" id="wFocusTodo">✅ 添待办</button>
+    <button class="wa-link" id="wFocusLink">🔗 加链接</button>
+    <button class="wa-link" id="wCloseWidget">收起</button>
+  </div>
+</div>
+
+<!-- ===== Settings Modal ===== -->
+<div class="modal-overlay hidden" id="settingsOverlay">
+  <div class="modal">
+    <h2>⚙ 设置</h2>
+    <label>Supabase URL</label>
+    <input type="url" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
+    <label>Supabase Anon Key</label>
+    <input type="password" id="supabaseKey" placeholder="eyJhbGciOi...">
+    <p class="modal-hint">配置 Supabase 后可实现多设备云端同步。留空则仅使用本地存储。</p>
+    <div class="modal-actions">
+      <button class="btn btn-danger hidden" id="btnClearData">清除本地数据</button>
+      <button class="btn btn-secondary" id="btnSettingsClose">取消</button>
+      <button class="btn btn-primary" id="btnSettingsSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Supabase SDK ===== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+// ============================================================
+// cherry的工作台 - 主应用逻辑
+// ============================================================
+
+// --- DOM Refs ---
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+const noteArea = $('#noteArea');
+const noteSaved = $('#noteSaved');
+const noteWordCount = $('#noteWordCount');
+const todoInput = $('#todoInput');
+const btnAddTodo = $('#btnAddTodo');
+const todoList = $('#todoList');
+const todoEmpty = $('#todoEmpty');
+const todoCount = $('#todoCount');
+const linkNameInput = $('#linkNameInput');
+const linkUrlInput = $('#linkUrlInput');
+const btnAddLink = $('#btnAddLink');
+const linkList = $('#linkList');
+const clockTime = $('#clockTime');
+const clockDateEl = $('#clockDate');
+const syncStatus = $('#syncStatus');
+const syncLabel = $('#syncLabel');
+
+// Widget
+const btnWidget = $('#btnWidget');
+const widgetOverlay = $('#widgetOverlay');
+const widgetPanel = $('#widgetPanel');
+const btnWidgetClose = $('#btnWidgetClose');
+const wTime = $('#wTime');
+const wDate = $('#wDate');
+const wNote = $('#wNote');
+const wTodos = $('#wTodos');
+
+// Settings
+const settingsOverlay = $('#settingsOverlay');
+const supabaseUrl = $('#supabaseUrl');
+const supabaseKey = $('#supabaseKey');
+
+// --- State ---
+let supabase = null;
+let supabaseConfig = { url: '', key: '' };
+let isOnline = false;
+let isSyncing = false;
+let noteSaveTimer = null;
+
+// Data
+let todos = [];
+let links = [];
+let noteContent = '';
+
+// --- Init ---
+function init() {
+  loadConfig();
+  loadLocalData();
+  initSupabase();
+  renderAll();
+  updateClock();
+  setInterval(updateClock, 10000);
+  monitorOnlineStatus();
+  registerSW();
+}
+
+// --- PWA Registration ---
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('[PWA] SW registered'))
+      .catch((e) => console.warn('[PWA] SW registration failed:', e));
+  }
+}
+
+// --- Config ---
+function loadConfig() {
+  try {
+    const saved = localStorage.getItem('cherry_config');
+    if (saved) {
+      supabaseConfig = JSON.parse(saved);
+      supabaseUrl.value = supabaseConfig.url || '';
+      supabaseKey.value = supabaseConfig.key || '';
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function saveConfig() {
+  supabaseConfig = {
+    url: supabaseUrl.value.trim(),
+    key: supabaseKey.value.trim()
+  };
+  localStorage.setItem('cherry_config', JSON.stringify(supabaseConfig));
+  initSupabase();
+}
+
+// --- Supabase ---
+function initSupabase() {
+  if (supabaseConfig.url && supabaseConfig.key) {
+    try {
+      supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.key);
+      checkSupabaseConnection();
+    } catch (e) {
+      supabase = null;
+      setSyncStatus('error', '配置错误');
+    }
+  } else {
+    supabase = null;
+    setSyncStatus('offline', '仅本地');
+  }
+}
+
+async function checkSupabaseConnection() {
+  if (!supabase) return;
+  setSyncStatus('syncing', '同步中...');
+  try {
+    // Simple health check
+    const { error } = await supabase.from('todos').select('id').limit(1);
+    if (error && error.code === '42P01') {
+      // Table doesn't exist - that's ok, tables need to be created
+      setSyncStatus('online', '已连接');
+      isOnline = true;
+    } else if (error) {
+      throw error;
+    } else {
+      setSyncStatus('online', '已连接');
+      isOnline = true;
+      // Pull data from cloud
+      await pullFromCloud();
+    }
+  } catch (e) {
+    console.warn('[Supabase] Connection failed:', e.message);
+    setSyncStatus('error', '连接失败');
+    isOnline = false;
+  }
+}
+
+function setSyncStatus(status, label) {
+  syncStatus.className = 'sync-status ' + status;
+  syncLabel.textContent = label;
+}
+
+async function pullFromCloud() {
+  if (!supabase || !isOnline) return;
+  try {
+    // Pull todos
+    const { data: cloudTodos } = await supabase.from('todos').select('*').order('created_at', { ascending: true });
+    if (cloudTodos && cloudTodos.length > 0) {
+      // Merge: cloud wins if newer
+      const localTodos = JSON.parse(localStorage.getItem('cherry_todos') || '[]');
+      const merged = mergeData(localTodos, cloudTodos, 'id');
+      todos = merged.map(t => ({ id: t.id, text: t.text, done: t.done, created_at: t.created_at }));
+      saveTodos();
+    }
+    
+    // Pull links
+    const { data: cloudLinks } = await supabase.from('links').select('*').order('created_at', { ascending: true });
+    if (cloudLinks && cloudLinks.length > 0) {
+      const localLinks = JSON.parse(localStorage.getItem('cherry_links') || '[]');
+      const merged = mergeData(localLinks, cloudLinks, 'id');
+      links = merged.map(l => ({ id: l.id, name: l.name, url: l.url, created_at: l.created_at }));
+      saveLinks();
+    }
+    
+    // Pull note
+    const { data: cloudNotes } = await supabase.from('notes').select('*').order('updated_at', { ascending: false }).limit(1);
+    if (cloudNotes && cloudNotes.length > 0) {
+      const localNote = JSON.parse(localStorage.getItem('cherry_note') || '{"content":"","updated_at":0}');
+      if (new Date(cloudNotes[0].updated_at).getTime() > localNote.updated_at) {
+        noteContent = cloudNotes[0].content || '';
+        noteArea.value = noteContent;
+        saveNote();
+      }
+    }
+    
+    renderAll();
+  } catch (e) {
+    console.warn('[Supabase] Pull failed:', e);
+  }
+}
+
+function mergeData(localItems, cloudItems, idField) {
+  const map = new Map();
+  for (const item of localItems) map.set(item[idField], item);
+  for (const item of cloudItems) {
+    const local = map.get(item[idField]);
+    if (!local || new Date(item.updated_at || item.created_at).getTime() > new Date(local.updated_at || local.created_at).getTime()) {
+      map.set(item[idField], item);
+    }
+  }
+  return Array.from(map.values());
+}
+
+async function pushToCloud(table, data) {
+  if (!supabase || !isOnline) return;
+  try {
+    await supabase.from(table).upsert(data, { onConflict: 'id' });
+  } catch (e) {
+    console.warn(`[Supabase] Push to ${table} failed:`, e);
+  }
+}
+
+// --- Local Data ---
+function loadLocalData() {
+  try {
+    todos = JSON.parse(localStorage.getItem('cherry_todos') || '[]');
+  } catch (e) { todos = []; }
+  try {
+    links = JSON.parse(localStorage.getItem('cherry_links') || '[]');
+  } catch (e) { links = []; }
+  try {
+    const noteData = JSON.parse(localStorage.getItem('cherry_note') || '{"content":"","updated_at":0}');
+    noteContent = noteData.content || '';
+    noteArea.value = noteContent;
+  } catch (e) { noteContent = ''; }
+}
+
+function saveTodos() {
+  localStorage.setItem('cherry_todos', JSON.stringify(todos));
+  if (isOnline) {
+    pushToCloud('todos', todos.map(t => ({ ...t, updated_at: new Date().toISOString() })));
+  }
+}
+
+function saveLinks() {
+  localStorage.setItem('cherry_links', JSON.stringify(links));
+  if (isOnline) {
+    pushToCloud('links', links.map(l => ({ ...l, updated_at: new Date().toISOString() })));
+  }
+}
+
+function saveNote() {
+  const data = { content: noteContent, updated_at: Date.now() };
+  localStorage.setItem('cherry_note', JSON.stringify(data));
+  if (isOnline) {
+    pushToCloud('notes', [{ id: 'default', content: noteContent, updated_at: new Date().toISOString() }]);
+  }
+}
+
+// --- Online Status Monitor ---
+function monitorOnlineStatus() {
+  const update = () => {
+    if (navigator.onLine) {
+      if (supabaseConfig.url && supabaseConfig.key) {
+        checkSupabaseConnection();
+      } else {
+        setSyncStatus('offline', '仅本地');
+      }
+    } else {
+      setSyncStatus('offline', '断网');
+      isOnline = false;
+    }
+  };
+  window.addEventListener('online', update);
+  window.addEventListener('offline', update);
+  update();
+}
+
+// --- Render ---
+function renderAll() {
+  renderTodos();
+  renderLinks();
+  updateNoteStats();
+}
+
+function renderTodos() {
+  todoList.innerHTML = '';
+  const pending = todos.filter(t => !t.done);
+  const done = todos.filter(t => t.done);
+  const sorted = [...pending, ...done];
+  
+  if (sorted.length === 0) {
+    todoEmpty.classList.remove('hidden');
+    todoList.classList.add('hidden');
+  } else {
+    todoEmpty.classList.add('hidden');
+    todoList.classList.remove('hidden');
+  }
+  
+  sorted.forEach(todo => {
+    const li = document.createElement('li');
+    li.className = 'todo-item' + (todo.done ? ' done' : '');
+    li.innerHTML = `
+      <button class="todo-check" data-id="${todo.id}"></button>
+      <span class="todo-text">${escapeHtml(todo.text)}</span>
+      <button class="todo-del" data-id="${todo.id}">×</button>
+    `;
+    todoList.appendChild(li);
+  });
+  
+  const remaining = todos.filter(t => !t.done).length;
+  todoCount.textContent = remaining > 0 ? `${remaining} 项待完成` : '全部完成 ✓';
+}
+
+function renderLinks() {
+  linkList.innerHTML = '';
+  links.forEach(link => {
+    const domain = getDomain(link.url);
+    const li = document.createElement('li');
+    li.className = 'link-item';
+    li.innerHTML = `
+      <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;flex:1;min-width:0">
+        <span class="link-favicon">${domain.charAt(0).toUpperCase()}</span>
+        <span class="link-info">
+          <span class="link-name">${escapeHtml(link.name)}</span>
+          <span class="link-url">${escapeHtml(domain)}</span>
+        </span>
+      </a>
+      <button class="link-del-btn" data-id="${link.id}">×</button>
+    `;
+    linkList.appendChild(li);
+  });
+}
+
+function updateNoteStats() {
+  const len = noteContent.replace(/\s/g, '').length;
+  noteWordCount.textContent = `${len} 字`;
+}
+
+function renderWidget() {
+  // Widget note preview
+  if (noteContent.trim()) {
+    wNote.textContent = noteContent.substring(0, 100) + (noteContent.length > 100 ? '...' : '');
+  } else {
+    wNote.textContent = '暂无内容';
+  }
+  
+  // Widget todos
+  wTodos.innerHTML = '';
+  const pending = todos.filter(t => !t.done).slice(0, 5);
+  if (pending.length === 0) {
+    wTodos.innerHTML = '<li style="color:var(--gray-400);background:transparent">暂无待办</li>';
+  } else {
+    pending.forEach(t => {
+      const li = document.createElement('li');
+      li.textContent = t.text;
+      wTodos.appendChild(li);
+    });
+  }
+}
+
+// --- Clock ---
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  const days = ['日', '一', '二', '三', '四', '五', '六'];
+  const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${days[now.getDay()]}`;
+  
+  clockTime.textContent = `${h}:${m}`;
+  clockDateEl.textContent = dateStr;
+  wTime.textContent = `${h}:${m}`;
+  wDate.textContent = dateStr;
+}
+
+// --- Todo CRUD ---
+function addTodo() {
+  const text = todoInput.value.trim();
+  if (!text) return;
+  const todo = {
+    id: 't_' + Date.now(),
+    text,
+    done: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  todos.unshift(todo);
+  saveTodos();
+  renderTodos();
+  todoInput.value = '';
+  todoInput.focus();
+}
+
+function toggleTodo(id) {
+  const todo = todos.find(t => t.id === id);
+  if (todo) {
+    todo.done = !todo.done;
+    todo.updated_at = new Date().toISOString();
+    saveTodos();
+    renderTodos();
+  }
+}
+
+function deleteTodo(id) {
+  todos = todos.filter(t => t.id !== id);
+  saveTodos();
+  renderTodos();
+}
+
+// --- Link CRUD ---
+function addLink() {
+  const name = linkNameInput.value.trim();
+  let url = linkUrlInput.value.trim();
+  if (!name || !url) return;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+  }
+  const link = {
+    id: 'l_' + Date.now(),
+    name,
+    url,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  links.unshift(link);
+  saveLinks();
+  renderLinks();
+  linkNameInput.value = '';
+  linkUrlInput.value = '';
+}
+
+function deleteLink(id) {
+  links = links.filter(l => l.id !== id);
+  saveLinks();
+  renderLinks();
+}
+
+// --- Note Auto-Save ---
+noteArea.addEventListener('input', () => {
+  noteContent = noteArea.value;
+  updateNoteStats();
+  
+  noteSaved.textContent = '保存中...';
+  noteSaved.className = 'note-saved';
+  
+  clearTimeout(noteSaveTimer);
+  noteSaveTimer = setTimeout(() => {
+    saveNote();
+    noteSaved.textContent = '✓ 已保存';
+    noteSaved.className = 'note-saved saved';
+  }, 500);
+});
+
+// --- Event Delegation ---
+todoList.addEventListener('click', (e) => {
+  const checkBtn = e.target.closest('.todo-check');
+  const delBtn = e.target.closest('.todo-del');
+  if (checkBtn) toggleTodo(checkBtn.dataset.id);
+  if (delBtn) deleteTodo(delBtn.dataset.id);
+});
+
+linkList.addEventListener('click', (e) => {
+  const delBtn = e.target.closest('.link-del-btn');
+  if (delBtn) {
+    e.preventDefault();
+    deleteLink(delBtn.dataset.id);
+  }
+});
+
+btnAddTodo.addEventListener('click', addTodo);
+todoInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addTodo();
+});
+
+btnAddLink.addEventListener('click', addLink);
+linkUrlInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addLink();
+});
+
+// --- Widget ---
+btnWidget.addEventListener('click', () => {
+  renderWidget();
+  updateClock();
+  widgetOverlay.classList.add('active');
+  widgetPanel.classList.add('active');
+});
+
+btnWidgetClose.addEventListener('click', closeWidget);
+widgetOverlay.addEventListener('click', closeWidget);
+$('#wCloseWidget').addEventListener('click', closeWidget);
+
+function closeWidget() {
+  widgetOverlay.classList.remove('active');
+  widgetPanel.classList.remove('active');
+}
+
+$('#wFocusNote').addEventListener('click', () => { closeWidget(); noteArea.focus(); noteArea.scrollIntoView({ behavior: 'smooth' }); });
+$('#wFocusTodo').addEventListener('click', () => { closeWidget(); todoInput.focus(); todoInput.scrollIntoView({ behavior: 'smooth' }); });
+$('#wFocusLink').addEventListener('click', () => { closeWidget(); linkNameInput.focus(); linkNameInput.scrollIntoView({ behavior: 'smooth' }); });
+
+// --- Settings ---
+$('#btnSettings').addEventListener('click', () => {
+  loadConfig();
+  settingsOverlay.classList.remove('hidden');
+});
+
+$('#btnSettingsClose').addEventListener('click', () => {
+  settingsOverlay.classList.add('hidden');
+});
+
+$('#btnSettingsSave').addEventListener('click', () => {
+  saveConfig();
+  settingsOverlay.classList.add('hidden');
+});
+
+$('#btnClearData').addEventListener('click', () => {
+  if (confirm('确定要清除所有本地数据吗？此操作不可恢复！')) {
+    localStorage.removeItem('cherry_todos');
+    localStorage.removeItem('cherry_links');
+    localStorage.removeItem('cherry_note');
+    todos = [];
+    links = [];
+    noteContent = '';
+    noteArea.value = '';
+    renderAll();
+    settingsOverlay.classList.add('hidden');
+  }
+});
+
+settingsOverlay.addEventListener('click', (e) => {
+  if (e.target === settingsOverlay) settingsOverlay.classList.add('hidden');
+});
+
+// --- Keyboard shortcuts ---
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    e.preventDefault();
+    saveNote();
+    noteSaved.textContent = '✓ 已保存';
+    noteSaved.className = 'note-saved saved';
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    todoInput.focus();
+  }
+});
+
+// --- Helpers ---
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function getDomain(url) {
+  try {
+    return new URL(url).hostname.replace('www.', '');
+  } catch (e) {
+    return url;
+  }
+}
+
+// --- Visibility change: sync when tab becomes visible ---
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && isOnline) {
+    checkSupabaseConnection();
+  }
+});
+
+// --- Boot ---
+init();
+</script>
+</body>
+</html>
