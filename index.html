@@ -25,7 +25,7 @@
   --radius:14px;--radius-sm:10px;--radius-xs:8px;
   --shadow:0 2px 12px rgba(0,0,0,.06);
   --shadow-lg:0 8px 30px rgba(0,0,0,.08);
-  --font-mono:'SF Mono','Fira Code','Consolas',monospace;
+  --sidebar-w:200px;
 }
 body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
@@ -33,214 +33,441 @@ body{
   min-height:100vh;min-height:100dvh;
   color:var(--gray-900);
   -webkit-font-smoothing:antialiased;
-  transition:background .5s;
 }
-/* ===== Header ===== */
-.header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 24px;background:rgba(255,255,255,.75);
+
+/* ===== Desktop Top Bar ===== */
+.desktop-topbar{
+  display:none;
+  height:36px;background:rgba(255,255,255,.85);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(0,0,0,.06);
-  position:sticky;top:0;z-index:100;
+  border-bottom:1px solid rgba(0,0,0,.05);
+  align-items:center;justify-content:space-between;
+  padding:0 20px;position:sticky;top:0;z-index:60;
 }
-.header-left{display:flex;align-items:center;gap:12px}
-.app-icon{
-  width:38px;height:38px;border-radius:10px;
-  background:var(--blue-400);color:var(--white);
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;letter-spacing:-.5px;
-  flex-shrink:0;
+
+/* ===== Sync Pill ===== */
+.sync-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 14px;border-radius:20px;
+  font-size:12px;font-weight:600;letter-spacing:.3px;
+  transition:all .3s;cursor:default;user-select:none;
 }
-.app-title{font-size:20px;font-weight:700;letter-spacing:-.3px}
-.header-right{display:flex;align-items:center;gap:12px}
-/* ===== Sync Status ===== */
-.sync-status{
-  display:flex;align-items:center;gap:6px;
-  font-size:12px;color:var(--gray-500);
-  padding:6px 12px;border-radius:20px;
-  background:var(--gray-100);
-  transition:all .3s;
+.sync-pill.online{background:#E8F5E9;color:#2E7D32}
+.sync-pill.offline{background:var(--gray-100);color:var(--gray-500)}
+.sync-pill.syncing{background:var(--blue-50);color:var(--blue-500)}
+.sync-pill.error{background:#FFF3E0;color:#E65100}
+.sync-pill-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all .3s;
 }
-.sync-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:var(--gray-400);
-  transition:background .3s;
+.sync-pill.online .sync-pill-dot{background:#4CAF50;box-shadow:0 0 6px rgba(76,175,80,.4)}
+.sync-pill.offline .sync-pill-dot{background:var(--gray-400)}
+.sync-pill.syncing .sync-pill-dot{background:var(--blue-400);animation:pulse 1s infinite}
+.sync-pill.error .sync-pill-dot{background:#FF9800}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.sync-test-btn{
+  margin-left:4px;padding:2px 10px;border-radius:10px;border:1px solid var(--gray-300);
+  background:var(--white);font-size:11px;color:var(--gray-700);cursor:pointer;
+  font-family:inherit;transition:all .2s;display:none;
 }
-.sync-status.online .sync-dot{background:#4CAF50;box-shadow:0 0 6px rgba(76,175,80,.4)}
-.sync-status.offline .sync-dot{background:#FF9800;box-shadow:0 0 6px rgba(255,152,0,.4)}
-.sync-status.error .sync-dot{background:#F44336;box-shadow:0 0 6px rgba(244,67,54,.4)}
-.sync-status.syncing .sync-dot{background:var(--blue-400);animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-/* ===== Settings Button ===== */
-.btn-icon{
-  width:34px;height:34px;border-radius:50%;border:none;
-  background:var(--gray-100);color:var(--gray-700);
-  cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
+.sync-pill.offline .sync-test-btn,.sync-pill.error .sync-test-btn{display:inline-block}
+.sync-test-btn:hover{border-color:var(--blue-300);color:var(--blue-500);background:var(--blue-50)}
+.sync-test-result{
+  font-size:11px;color:var(--gray-500);margin-top:2px;display:none;text-align:center;
+}
+.sync-test-result.show{display:block}
+
+/* ===== App Shell ===== */
+.app{display:flex;min-height:calc(100vh - 36px);min-height:calc(100dvh - 36px)}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  width:var(--sidebar-w);background:rgba(255,255,255,.9);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-right:1px solid rgba(0,0,0,.06);
+  display:flex;flex-direction:column;flex-shrink:0;
+  position:sticky;top:36px;height:calc(100vh - 36px);height:calc(100dvh - 36px);
+  z-index:50;transition:transform .3s;
+}
+.sidebar-brand{
+  padding:18px 18px 12px;border-bottom:1px solid var(--gray-100);
+  display:flex;align-items:center;gap:10px;
+}
+.sidebar-icon{
+  width:32px;height:32px;border-radius:9px;background:var(--blue-400);
+  color:var(--white);display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;letter-spacing:-.5px;flex-shrink:0;
+}
+.sidebar-brand-text{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.sidebar-nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:11px 14px;
+  border-radius:10px;border:none;background:transparent;
+  font-size:14px;font-weight:500;color:var(--gray-700);cursor:pointer;
+  transition:all .2s;width:100%;text-align:left;font-family:inherit;
+}
+.nav-item:hover{background:var(--blue-50);color:var(--blue-500)}
+.nav-item.active{background:var(--blue-100);color:var(--blue-500);font-weight:600}
+.nav-emoji{font-size:18px;flex-shrink:0}
+.sidebar-footer{
+  padding:12px 10px 16px;border-top:1px solid var(--gray-100);
+}
+.btn-settings{
+  display:flex;align-items:center;gap:8px;width:100%;padding:8px 14px;
+  border-radius:10px;border:none;background:transparent;
+  font-size:13px;color:var(--gray-500);cursor:pointer;font-family:inherit;
   transition:all .2s;
 }
-.btn-icon:hover{background:var(--gray-200)}
-/* ===== Main Layout ===== */
+.btn-settings:hover{background:var(--gray-100)}
+
+/* ===== Main Content ===== */
 .main{
-  max-width:1200px;margin:0 auto;padding:20px 24px 40px;
-  display:grid;grid-template-columns:1fr 1fr 1fr;
-  gap:20px;
+  flex:1;display:flex;flex-direction:column;min-width:0;
+  padding:20px 28px 40px;gap:20px;overflow-y:auto;
 }
+.page{display:none;flex-direction:column;gap:20px}
+.page.active{display:flex}
+
+/* ===== Mobile Top Bar ===== */
+.topbar{
+  display:none;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:rgba(255,255,255,.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(0,0,0,.06);
+  position:sticky;top:0;z-index:100;gap:8px;
+}
+.topbar-left{display:flex;align-items:center;gap:8px;min-width:0}
+.topbar-icon{
+  width:28px;height:28px;border-radius:7px;background:var(--blue-400);color:var(--white);
+  display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;
+}
+.topbar-title{font-size:15px;font-weight:700;white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.menu-btn{
+  width:32px;height:32px;border-radius:50%;border:none;
+  background:var(--gray-100);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+/* ===== Mobile Nav ===== */
+.mobile-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.06);
+  padding:6px 10px env(safe-area-inset-bottom,10px);
+}
+.mobile-nav-items{display:flex;gap:2px}
+.mobile-nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 4px;border-radius:10px;border:none;background:transparent;
+  font-size:10px;color:var(--gray-500);cursor:pointer;font-family:inherit;
+  transition:all .2s;
+}
+.mobile-nav-item .mni-icon{font-size:20px}
+.mobile-nav-item.active{color:var(--blue-500);background:var(--blue-50)}
+
 /* ===== Cards ===== */
 .card{
   background:rgba(255,255,255,.85);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border-radius:var(--radius);padding:20px;
-  box-shadow:var(--shadow);
-  border:1px solid rgba(0,0,0,.04);
-  transition:box-shadow .3s,border-color .3s;
-  display:flex;flex-direction:column;
+  box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
+  transition:box-shadow .3s;
 }
-.card:hover{box-shadow:var(--shadow-lg);border-color:rgba(0,0,0,.08)}
+.card:hover{box-shadow:var(--shadow-lg)}
 .card-header{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:16px;padding-bottom:12px;
   border-bottom:1px solid var(--gray-200);
 }
-.card-title{
-  font-size:15px;font-weight:600;color:var(--gray-700);
-  display:flex;align-items:center;gap:8px;
-}
-.card-title .emoji{font-size:18px}
+.card-title{font-size:15px;font-weight:600;color:var(--gray-700);display:flex;align-items:center;gap:8px}
 .card-body{flex:1;overflow-y:auto;min-height:0}
-/* ===== Note Card ===== */
-.note-card{border-top:3px solid var(--blue-300)}
-.note-area{
-  width:100%;min-height:240px;border:none;outline:none;
-  font-size:14px;line-height:1.7;color:var(--gray-900);
-  resize:none;background:transparent;
-  font-family:inherit;
-  padding:4px 0;
+
+/* ===== Calendar Card ===== */
+.calendar-card{border-top:3px solid var(--blue-300)}
+.cal-nav{display:flex;align-items:center;gap:12px}
+.cal-nav button{
+  padding:6px 14px;border-radius:8px;border:1.5px solid var(--gray-200);
+  background:var(--white);font-size:13px;cursor:pointer;font-family:inherit;
+  color:var(--gray-700);transition:all .2s;
 }
-.note-area::placeholder{color:var(--gray-400)}
-.note-footer{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-top:12px;padding-top:12px;
-  border-top:1px solid var(--gray-100);
-  font-size:11px;color:var(--gray-400);
+.cal-nav button:hover{border-color:var(--blue-300);color:var(--blue-500)}
+.cal-nav .cal-today{background:var(--blue-400);color:var(--white);border-color:var(--blue-400)}
+.cal-nav .cal-today:hover{background:var(--blue-500)}
+.cal-month-label{font-size:15px;font-weight:600;color:var(--gray-700);min-width:100px;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal-weekday{
+  font-size:11px;font-weight:600;color:var(--gray-400);
+  padding:6px 0;text-transform:uppercase;letter-spacing:.5px;
 }
-.note-saved{display:flex;align-items:center;gap:4px}
-.note-saved.saved{color:#4CAF50}
-/* ===== Todo Card ===== */
-.todo-card{border-top:3px solid var(--pink-300)}
-.todo-input-wrap{
-  display:flex;gap:8px;margin-bottom:16px;
+.cal-day{
+  aspect-ratio:1;border-radius:var(--radius-xs);padding:5px 3px;
+  cursor:pointer;transition:all .2s;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  font-size:13px;font-weight:500;color:var(--gray-700);
+  border:1.5px solid transparent;min-height:0;
 }
-.todo-input{
+.cal-day:hover{background:var(--blue-50);border-color:var(--blue-200)}
+.cal-day.today{
+  background:var(--blue-100);border-color:var(--blue-300);
+  font-weight:700;color:var(--blue-500);
+}
+.cal-day.other-month{color:var(--gray-300)}
+.cal-day-num{font-size:13px;line-height:1}
+.cal-day-dots{display:flex;gap:2px;margin-top:3px;flex-wrap:wrap;justify-content:center}
+.cal-dot{
+  width:6px;height:6px;border-radius:50%;flex-shrink:0;
+}
+.cal-dot.plan{background:var(--pink-300)}
+.cal-dot.event{background:var(--blue-400)}
+.cal-dot.checkin{background:#4CAF50}
+
+/* ===== Daily Plans ===== */
+.plan-card{border-top:3px solid var(--pink-300)}
+.plan-date-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:14px;
+}
+.plan-date-header button{
+  width:30px;height:30px;border-radius:50%;border:1.5px solid var(--gray-200);
+  background:var(--white);font-size:16px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;color:var(--gray-700);transition:all .2s;
+}
+.plan-date-header button:hover{border-color:var(--blue-300);color:var(--blue-500)}
+.plan-date-label{font-size:15px;font-weight:600;color:var(--gray-700);min-width:140px;text-align:center}
+.plan-input-wrap{display:flex;gap:8px;margin-bottom:14px}
+.plan-input{
   flex:1;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
   padding:10px 14px;font-size:14px;outline:none;font-family:inherit;
-  transition:border-color .2s;
-  background:var(--gray-50);
+  background:var(--gray-50);transition:border-color .2s;
 }
-.todo-input:focus{border-color:var(--pink-300);background:var(--white)}
+.plan-input:focus{border-color:var(--pink-300);background:var(--white)}
 .btn-add{
   padding:10px 18px;border:none;border-radius:var(--radius-xs);
   background:var(--pink-300);color:var(--white);
-  font-size:14px;font-weight:600;cursor:pointer;
-  transition:all .2s;white-space:nowrap;
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;
 }
-.btn-add:hover{background:var(--pink-400);transform:translateY(-1px)}
-.todo-list{list-style:none;display:flex;flex-direction:column;gap:6px}
-.todo-item{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;border-radius:var(--radius-xs);
-  background:var(--gray-50);transition:all .2s;
-  animation:slideIn .25s ease;
+.btn-add:hover{background:var(--pink-400)}
+.plan-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.plan-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:var(--radius-xs);background:var(--gray-50);transition:all .2s;
 }
-@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-.todo-item:hover{background:var(--pink-50)}
-.todo-check{
-  width:20px;height:20px;border-radius:50%;
-  border:2px solid var(--gray-300);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;flex-shrink:0;
-  background:var(--white);
+.plan-item:hover{background:var(--pink-50)}
+.plan-check{
+  width:22px;height:22px;border-radius:5px;border:2px solid var(--gray-300);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;background:var(--white);
 }
-.todo-check:hover{border-color:var(--pink-300)}
-.todo-item.done .todo-check{
-  background:var(--pink-300);border-color:var(--pink-300);
+.plan-check:hover{border-color:var(--pink-300);background:var(--pink-50)}
+.plan-item.done .plan-check{background:var(--pink-300);border-color:var(--pink-300)}
+.plan-check::after{content:'✓';font-size:12px;color:var(--white);opacity:0;transition:opacity .15s;font-weight:700}
+.plan-item.done .plan-check::after{opacity:1}
+
+/* ===== Plan Sections (4-group layout) ===== */
+.plan-section{margin-bottom:4px}
+.plan-section-header{
+  font-size:12px;font-weight:600;color:var(--gray-500);
+  padding:8px 14px 6px;display:flex;align-items:center;gap:6px;
+  letter-spacing:.5px;text-transform:uppercase;
 }
-.todo-check::after{
-  content:'✓';font-size:11px;color:var(--white);
-  opacity:0;transition:opacity .2s;
+.plan-section-header .sec-dot{width:6px;height:6px;border-radius:2px;flex-shrink:0}
+.plan-section-header .sec-count{font-weight:400;color:var(--gray-400);margin-left:auto;font-size:11px}
+.plan-section.overdue .sec-dot{background:#FF9800}
+.plan-section.today-sec .sec-dot{background:var(--pink-300)}
+.plan-section.done-sec .sec-dot{background:#4CAF50}
+.plan-section.future-sec .sec-dot{background:var(--blue-300)}
+.plan-section.overdue .plan-item{background:#FFF8E1}
+.plan-section.today-sec .plan-item{background:var(--pink-50)}
+.plan-section.done-sec .plan-item{background:#E8F5E9}
+.plan-section.future-sec .plan-item{background:var(--blue-50)}
+
+/* ===== Stats Cards (square, text top + number bottom) ===== */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-card{
+  background:rgba(255,255,255,.9);border-radius:12px;
+  padding:14px 10px;text-align:center;
+  box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
+  transition:all .2s;cursor:default;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;aspect-ratio:1;
 }
-.todo-item.done .todo-check::after{opacity:1}
-.todo-text{flex:1;font-size:14px;transition:all .2s}
-.todo-item.done .todo-text{text-decoration:line-through;color:var(--gray-400)}
-.todo-del{
+.stat-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.stat-card.orange{border-top:3px solid #FF9800}
+.stat-card.pink{border-top:3px solid var(--pink-300)}
+.stat-card.green{border-top:3px solid #4CAF50}
+.stat-card.blue{border-top:3px solid var(--blue-300)}
+.stat-label{font-size:11px;font-weight:500;color:var(--gray-500);margin-bottom:4px;letter-spacing:.3px}
+.stat-value{font-size:26px;font-weight:700;color:var(--gray-900);letter-spacing:-1px}
+.stat-card.orange .stat-value{color:#E65100}
+.stat-card.pink .stat-value{color:var(--pink-500)}
+.stat-card.green .stat-value{color:#2E7D32}
+.stat-card.blue .stat-value{color:var(--blue-500)}
+
+/* ===== Add Plan Button Bottom ===== */
+.plan-add-bottom{
+  display:flex;gap:8px;padding:12px 0 0;margin-top:8px;
+  border-top:2px dashed var(--gray-200);
+}
+.plan-add-bottom input{
+  flex:1;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
+  padding:10px 14px;font-size:14px;outline:none;font-family:inherit;
+  background:var(--gray-50);transition:border-color .2s;
+}
+.plan-add-bottom input:focus{border-color:var(--pink-300);background:var(--white)}
+.plan-add-bottom .btn-add{
+  padding:10px 18px;border:none;border-radius:var(--radius-xs);
+  background:var(--pink-300);color:var(--white);
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.plan-add-bottom .btn-add:hover{background:var(--pink-400)}
+
+/* ===== Overview Stats Row ===== */
+.ov-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.plan-text{flex:1;font-size:14px;transition:all .2s}
+.plan-item.done .plan-text{text-decoration:line-through;color:var(--gray-400)}
+.plan-del{
   width:26px;height:26px;border-radius:50%;border:none;
   background:transparent;color:var(--gray-400);cursor:pointer;
   font-size:16px;display:flex;align-items:center;justify-content:center;
   transition:all .2s;opacity:0;
 }
-.todo-item:hover .todo-del{opacity:1}
-.todo-del:hover{background:#FFEBEE;color:#F44336}
-.todo-empty{text-align:center;color:var(--gray-400);font-size:13px;padding:20px 0}
-.todo-count{font-size:12px;color:var(--gray-400)}
-/* ===== Links Card ===== */
-.links-card{border-top:3px solid var(--blue-300)}
-.link-add-wrap{display:flex;gap:6px;margin-bottom:16px}
-.link-add-wrap input{
-  flex:1;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
-  padding:8px 12px;font-size:13px;outline:none;font-family:inherit;
+.plan-item:hover .plan-del{opacity:1}
+.plan-del:hover{background:#FFEBEE;color:#F44336}
+.plan-empty{text-align:center;color:var(--gray-400);font-size:13px;padding:20px 0}
+.plan-progress{font-size:12px;color:var(--gray-400);display:flex;align-items:center;gap:6px}
+.plan-progress-bar{
+  width:60px;height:4px;border-radius:2px;background:var(--gray-200);overflow:hidden;
+}
+.plan-progress-fill{height:100%;background:var(--pink-300);border-radius:2px;transition:width .3s}
+
+/* ===== Events ===== */
+.event-card{border-top:3px solid var(--blue-300)}
+.event-input-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.event-input-row input{
+  border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
+  padding:9px 12px;font-size:13px;outline:none;font-family:inherit;
   background:var(--gray-50);transition:border-color .2s;
 }
-.link-add-wrap input:focus{border-color:var(--blue-300);background:var(--white)}
-.link-add-wrap input:nth-child(1){flex:2}
-.link-add-wrap input:nth-child(2){flex:3}
-.btn-link-add{
-  padding:8px 14px;border:none;border-radius:var(--radius-xs);
-  background:var(--blue-300);color:var(--white);
-  font-size:13px;font-weight:600;cursor:pointer;
-  transition:all .2s;white-space:nowrap;
+.event-input-row input:focus{border-color:var(--blue-300);background:var(--white)}
+.ev-date{flex:1;min-width:100px}
+.ev-time{flex:1;min-width:80px}
+.ev-title{flex:2;min-width:120px}
+.ev-desc{width:100%}
+.event-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.event-item{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-radius:var(--radius-xs);background:var(--gray-50);transition:all .2s;
+  border-left:3px solid var(--blue-300);
 }
-.btn-link-add:hover{background:var(--blue-400)}
-.link-list{list-style:none;display:flex;flex-direction:column;gap:4px}
-.link-item{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;border-radius:var(--radius-xs);
-  transition:all .2s;text-decoration:none;color:var(--gray-900);
-}
-.link-item:hover{background:var(--blue-50)}
-.link-favicon{
-  width:28px;height:28px;border-radius:6px;
-  background:var(--blue-100);display:flex;align-items:center;justify-content:center;
-  font-size:12px;flex-shrink:0;color:var(--blue-500);
-}
-.link-info{flex:1;min-width:0}
-.link-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.link-url{font-size:11px;color:var(--gray-400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.link-del-btn{
-  width:24px;height:24px;border-radius:50%;border:none;
+.event-item:hover{background:var(--blue-50)}
+.event-info{flex:1;min-width:0}
+.event-title{font-size:14px;font-weight:500}
+.event-meta{font-size:11px;color:var(--gray-400);margin-top:2px}
+.event-desc-text{font-size:12px;color:var(--gray-500);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.event-del{
+  width:26px;height:26px;border-radius:50%;border:none;
   background:transparent;color:var(--gray-400);cursor:pointer;
-  font-size:14px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;display:flex;align-items:center;justify-content:center;
   transition:all .2s;opacity:0;flex-shrink:0;
 }
-.link-item:hover .link-del-btn{opacity:1}
-.link-del-btn:hover{background:#FFEBEE;color:#F44336}
-/* ===== Clock ===== */
-.clock-wrap{text-align:center;padding:8px 0}
-.clock-time{font-size:36px;font-weight:300;letter-spacing:-1px;color:var(--gray-900);font-variant-numeric:tabular-nums}
-.clock-date{font-size:13px;color:var(--gray-500);margin-top:4px}
+.event-item:hover .event-del{opacity:1}
+.event-del:hover{background:#FFEBEE;color:#F44336}
+
+/* ===== Check-in ===== */
+.checkin-card{border-top:3px solid #4CAF50}
+.checkin-add-wrap{display:flex;gap:8px;margin-bottom:16px}
+.checkin-add-wrap input{
+  flex:1;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
+  padding:10px 14px;font-size:14px;outline:none;font-family:inherit;
+  background:var(--gray-50);transition:border-color .2s;
+}
+.checkin-add-wrap input:focus{border-color:#4CAF50;background:var(--white)}
+.btn-checkin-add{
+  padding:10px 18px;border:none;border-radius:var(--radius-xs);
+  background:#4CAF50;color:var(--white);
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.btn-checkin-add:hover{background:#43A047}
+.checkin-habits{display:flex;flex-direction:column;gap:12px}
+.checkin-habit{
+  background:var(--gray-50);border-radius:var(--radius-sm);padding:14px;transition:all .2s;
+}
+.checkin-habit-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.checkin-habit-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.checkin-habit-name .emoji{font-size:18px}
+.checkin-streak{
+  font-size:11px;color:#4CAF50;font-weight:600;
+  background:#E8F5E9;padding:3px 10px;border-radius:12px;
+}
+.checkin-days{display:flex;gap:3px;flex-wrap:wrap}
+.checkin-day{
+  width:28px;height:28px;border-radius:6px;border:1.5px solid var(--gray-200);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:11px;transition:all .2s;background:var(--white);
+  color:var(--gray-500);position:relative;
+}
+.checkin-day:hover{border-color:#4CAF50}
+.checkin-day.checked{background:#4CAF50;border-color:#4CAF50;color:var(--white)}
+.checkin-day.today{border-color:#4CAF50;border-width:2px;font-weight:700}
+.checkin-habit-del{
+  width:26px;height:26px;border-radius:50%;border:none;
+  background:transparent;color:var(--gray-400);cursor:pointer;
+  font-size:14px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.checkin-habit-del:hover{background:#FFEBEE;color:#F44336}
+
+/* ===== Overview Modules ===== */
+.overview-modules{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ov-module{
+  background:rgba(255,255,255,.85);border-radius:var(--radius);padding:16px;
+  box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
+  cursor:pointer;transition:all .2s;
+}
+.ov-module:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.ov-module-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ov-module-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.ov-module-badge{
+  font-size:11px;padding:2px 8px;border-radius:10px;
+  font-weight:600;
+}
+.ov-module-badge.blue{background:var(--blue-100);color:var(--blue-500)}
+.ov-module-badge.pink{background:var(--pink-100);color:var(--pink-500)}
+.ov-module-badge.green{background:#E8F5E9;color:#4CAF50}
+.ov-module-preview{font-size:13px;color:var(--gray-500);line-height:1.5}
+.ov-module-items{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.ov-module-item{
+  font-size:13px;padding:5px 8px;border-radius:6px;background:var(--gray-50);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ov-module-item.done{text-decoration:line-through;opacity:.5}
+
+/* ===== Note Card ===== */
+.note-card{border-top:3px solid var(--blue-300)}
+.note-area{
+  width:100%;min-height:200px;border:none;outline:none;
+  font-size:14px;line-height:1.7;color:var(--gray-900);
+  resize:none;background:transparent;font-family:inherit;padding:4px 0;
+}
+.note-area::placeholder{color:var(--gray-400)}
+.note-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--gray-100);
+  font-size:11px;color:var(--gray-400);
+}
+.note-saved{display:flex;align-items:center;gap:4px}
+.note-saved.saved{color:#4CAF50}
+
 /* ===== Settings Modal ===== */
 .modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.3);
   display:flex;align-items:center;justify-content:center;
   z-index:200;backdrop-filter:blur(4px);
-  animation:fadeIn .2s ease;
 }
-@keyframes fadeIn{from{opacity:0}}
+.modal-overlay.hidden{display:none}
 .modal{
   background:var(--white);border-radius:var(--radius);
   padding:28px;width:90%;max-width:440px;
   box-shadow:var(--shadow-lg);
-  animation:scaleIn .2s ease;
 }
-@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .modal h2{font-size:18px;margin-bottom:20px}
 .modal label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px;margin-top:14px}
 .modal label:first-of-type{margin-top:0}
@@ -259,15 +486,14 @@ body{
 .btn-secondary:hover{background:var(--gray-200)}
 .btn-danger{background:#FFEBEE;color:#F44336}
 .btn-danger:hover{background:#FFCDD2}
-/* ===== Widget View (Mobile) ===== */
+
+/* ===== Widget (mobile) ===== */
 .widget-toggle{
-  display:none;position:fixed;bottom:20px;right:20px;z-index:150;
-  width:48px;height:48px;border-radius:50%;border:none;
-  background:var(--blue-400);color:var(--white);
-  font-size:20px;cursor:pointer;box-shadow:0 4px 16px rgba(126,184,218,.4);
-  transition:all .2s;
+  display:none;position:fixed;bottom:80px;right:16px;z-index:90;
+  width:44px;height:44px;border-radius:50%;border:none;
+  background:var(--blue-400);color:var(--white);font-size:18px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(126,184,218,.4);
 }
-.widget-toggle:hover{transform:scale(1.05)}
 .widget-overlay{
   display:none;position:fixed;inset:0;z-index:180;
   background:rgba(0,0,0,.2);backdrop-filter:blur(2px);
@@ -275,32 +501,22 @@ body{
 .widget-panel{
   display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
   z-index:190;width:min(340px,92vw);
-  background:rgba(255,255,255,.95);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-radius:20px;padding:20px;
-  box-shadow:0 20px 60px rgba(0,0,0,.12);
-  border:1px solid rgba(0,0,0,.06);
+  background:rgba(255,255,255,.95);backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);border-radius:20px;padding:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.06);
 }
 .widget-panel.active,.widget-overlay.active{display:block}
-.widget-header{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:16px;
-}
+.widget-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .widget-header h3{font-size:16px;font-weight:600}
 .widget-close{
   width:30px;height:30px;border-radius:50%;border:none;
   background:var(--gray-100);font-size:14px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
 }
-.widget-clock{text-align:center;margin-bottom:16px}
-.widget-clock .w-time{font-size:42px;font-weight:200;letter-spacing:-2px}
-.widget-clock .w-date{font-size:12px;color:var(--gray-500);margin-top:2px}
-.widget-section{margin-bottom:12px}
-.widget-section h4{font-size:12px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.widget-section{margin-bottom:10px}
+.widget-section h4{font-size:12px;font-weight:600;color:var(--gray-500);margin-bottom:6px}
 .widget-mini-note{
   padding:10px 12px;background:var(--blue-50);border-radius:10px;
-  font-size:13px;color:var(--gray-700);max-height:60px;overflow:hidden;
-  line-height:1.5;
+  font-size:13px;color:var(--gray-700);max-height:60px;overflow:hidden;line-height:1.5;
 }
 .widget-mini-todos{list-style:none;display:flex;flex-direction:column;gap:4px}
 .widget-mini-todos li{
@@ -308,130 +524,229 @@ body{
   display:flex;align-items:center;gap:6px;
 }
 .widget-mini-todos li.done{text-decoration:line-through;opacity:.5}
-.widget-actions{display:flex;gap:8px;margin-top:14px}
-.widget-actions button{
-  flex:1;padding:10px;border:none;border-radius:10px;
-  font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;
-}
-.widget-actions .wa-note{background:var(--blue-100);color:var(--blue-500)}
-.widget-actions .wa-todo{background:var(--pink-100);color:var(--pink-500)}
-.widget-actions .wa-link{background:var(--blue-50);color:var(--blue-500)}
+
 /* ===== Responsive ===== */
 @media(max-width:768px){
-  .main{grid-template-columns:1fr;gap:14px;padding:14px 16px 30px}
-  .header{padding:12px 16px}
-  .app-title{font-size:17px}
-  .note-area{min-height:160px}
+  .desktop-topbar{display:none!important}
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);z-index:110;box-shadow:var(--shadow-lg);height:100vh;height:100dvh}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:105;
+  }
+  .sidebar-backdrop.open{display:block}
+  .topbar{display:flex}
+  .mobile-nav{display:block}
+  .main{padding:14px 14px 90px;gap:14px}
+  .overview-modules{grid-template-columns:1fr}
+  .event-input-row{flex-direction:column}
   .widget-toggle{display:flex;align-items:center;justify-content:center}
+  .cal-day{font-size:11px;padding:3px 2px}
+  .cal-day-num{font-size:11px}
+  .cal-nav button{padding:5px 10px;font-size:12px}
+  .cal-nav{gap:6px}
+  .sync-pill{font-size:10px;padding:3px 10px;gap:4px}
+  .sync-test-btn{font-size:10px;padding:2px 8px}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:8px}
+  .ov-stats-row{grid-template-columns:repeat(2,1fr);gap:8px}
+  .stat-card{padding:10px 8px;border-radius:10px}
+  .stat-value{font-size:22px}
+  .stat-label{font-size:10px}
 }
 @media(min-width:769px){
-  .widget-toggle,.widget-overlay,.widget-panel{display:none!important}
+  .desktop-topbar{display:flex}
+  .topbar,.mobile-nav,.sidebar-backdrop{display:none!important}
 }
+
 /* ===== Utility ===== */
 .hidden{display:none!important}
 </style>
 </head>
 <body>
 
-<!-- ===== Header ===== -->
-<header class="header">
-  <div class="header-left">
-    <div class="app-icon">amber</div>
-    <span class="app-title">amber的工作台</span>
-  </div>
-  <div class="header-right">
-    <div class="sync-status offline" id="syncStatus" title="连接状态">
-      <span class="sync-dot"></span>
-      <span id="syncLabel">离线</span>
+<!-- ===== Desktop Top Bar (sync pill) ===== -->
+<div class="desktop-topbar" id="desktopTopbar">
+  <div></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="sync-pill offline" id="syncPillDesktop" title="同步状态">
+      <span class="sync-pill-dot"></span>
+      <span id="syncLabelDesktop">仅本地</span>
+      <button class="sync-test-btn" id="syncTestBtnDesktop">测试连接</button>
     </div>
-    <button class="btn-icon" id="btnSettings" title="设置">⚙</button>
-  </div>
-</header>
-
-<!-- ===== Main Content ===== -->
-<main class="main" id="mainContent">
-  <!-- 便签 -->
-  <section class="card note-card">
-    <div class="card-header">
-      <span class="card-title"><span class="emoji">📝</span> 便签</span>
-    </div>
-    <div class="card-body">
-      <textarea class="note-area" id="noteArea" placeholder="写点什么..."></textarea>
-    </div>
-    <div class="note-footer">
-      <span class="note-saved saved" id="noteSaved">✓ 已保存</span>
-      <span id="noteWordCount">0 字</span>
-    </div>
-  </section>
-
-  <!-- 待办 -->
-  <section class="card todo-card">
-    <div class="card-header">
-      <span class="card-title"><span class="emoji">✅</span> 待办</span>
-      <span class="todo-count" id="todoCount"></span>
-    </div>
-    <div class="card-body">
-      <div class="todo-input-wrap">
-        <input type="text" class="todo-input" id="todoInput" placeholder="添加待办事项..." maxlength="200">
-        <button class="btn-add" id="btnAddTodo">添加</button>
-      </div>
-      <ul class="todo-list" id="todoList"></ul>
-      <div class="todo-empty" id="todoEmpty">还没有待办事项 🎉</div>
-    </div>
-  </section>
-
-  <!-- 快捷链接 + 时钟 -->
-  <section class="card links-card">
-    <div class="card-header">
-      <span class="card-title"><span class="emoji">🔗</span> 快捷链接</span>
-    </div>
-    <div class="card-body">
-      <div class="link-add-wrap">
-        <input type="text" id="linkNameInput" placeholder="名称" maxlength="30">
-        <input type="url" id="linkUrlInput" placeholder="https://..." maxlength="500">
-        <button class="btn-link-add" id="btnAddLink">添加</button>
-      </div>
-      <ul class="link-list" id="linkList"></ul>
-      <!-- 时钟 -->
-      <div class="clock-wrap" style="margin-top:16px">
-        <div class="clock-time" id="clockTime">--:--</div>
-        <div class="clock-date" id="clockDate">----年--月--日 星期-</div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<!-- ===== Widget Toggle (Mobile) ===== -->
-<button class="widget-toggle" id="btnWidget" title="挂件视图">◈</button>
-
-<!-- ===== Widget Panel (Mobile) ===== -->
-<div class="widget-overlay" id="widgetOverlay"></div>
-<div class="widget-panel" id="widgetPanel">
-  <div class="widget-header">
-    <h3>amber 挂件</h3>
-    <button class="widget-close" id="btnWidgetClose">✕</button>
-  </div>
-  <div class="widget-clock">
-    <div class="w-time" id="wTime">--:--</div>
-    <div class="w-date" id="wDate">----年--月--日</div>
-  </div>
-  <div class="widget-section">
-    <h4>📝 便签</h4>
-    <div class="widget-mini-note" id="wNote">暂无内容</div>
-  </div>
-  <div class="widget-section">
-    <h4>✅ 待办</h4>
-    <ul class="widget-mini-todos" id="wTodos"></ul>
-  </div>
-  <div class="widget-actions">
-    <button class="wa-note" id="wFocusNote">📝 写便签</button>
-    <button class="wa-todo" id="wFocusTodo">✅ 添待办</button>
-    <button class="wa-link" id="wFocusLink">🔗 加链接</button>
-    <button class="wa-link" id="wCloseWidget">收起</button>
+    <button class="btn-settings" id="btnSettingsDesktop" style="width:auto;padding:4px 10px;font-size:12px">⚙ 设置</button>
   </div>
 </div>
 
-<!-- ===== Settings Modal ===== -->
+<div class="app">
+  <!-- === Sidebar Backdrop (mobile) === -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- === Sidebar === -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-icon">amber</div>
+      <span class="sidebar-brand-text">amber的工作台</span>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav">
+      <button class="nav-item active" data-page="overview"><span class="nav-emoji">🏠</span> 总览</button>
+      <button class="nav-item" data-page="plans"><span class="nav-emoji">📋</span> 每日计划</button>
+      <button class="nav-item" data-page="events"><span class="nav-emoji">🔔</span> 事件提醒</button>
+      <button class="nav-item" data-page="checkins"><span class="nav-emoji">✅</span> 打卡</button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-settings" id="btnSettings">⚙ 设置</button>
+    </div>
+  </aside>
+
+  <!-- === Top Bar (mobile) === -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-icon">amber</div>
+      <span class="topbar-title">amber的工作台</span>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-pill offline" id="syncPillMobile" title="同步状态">
+        <span class="sync-pill-dot"></span>
+        <span id="syncLabelMobile" style="display:none">仅本地</span>
+        <button class="sync-test-btn" id="syncTestBtnMobile">测试连接</button>
+      </div>
+      <button class="menu-btn" id="btnMenu" aria-label="菜单">☰</button>
+    </div>
+  </div>
+
+  <!-- === Main Content === -->
+  <main class="main" id="mainContent">
+    <!-- PAGE: 总览 -->
+    <div class="page active" id="page-overview">
+      <!-- Overview Stats -->
+      <div class="stats-row" id="ovStats"></div>
+      <div class="card calendar-card">
+        <div class="card-header">
+          <span class="card-title">📅 月历</span>
+          <div class="cal-nav">
+            <button id="calPrev">‹ 上月</button>
+            <span class="cal-month-label" id="calMonthLabel"></span>
+            <button id="calNext">下月 ›</button>
+            <button class="cal-today" id="calToday">今天</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="cal-grid" id="calWeekdays"></div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+      </div>
+
+      <div class="overview-modules" id="overviewModules"></div>
+
+      <div class="card note-card">
+        <div class="card-header"><span class="card-title">📝 便签</span></div>
+        <div class="card-body">
+          <textarea class="note-area" id="noteArea" placeholder="写点什么..."></textarea>
+        </div>
+        <div class="note-footer">
+          <span class="note-saved saved" id="noteSaved">✓ 已保存</span>
+          <span id="noteWordCount">0 字</span>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--blue-300)">
+        <div class="card-header"><span class="card-title">🔗 快捷链接</span></div>
+        <div class="link-add-wrap" style="display:flex;gap:6px;margin-bottom:14px">
+          <input type="text" id="linkNameInput" placeholder="名称" maxlength="30" style="flex:2;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);padding:8px 12px;font-size:13px;outline:none;font-family:inherit;background:var(--gray-50)">
+          <input type="url" id="linkUrlInput" placeholder="https://" maxlength="500" style="flex:3;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);padding:8px 12px;font-size:13px;outline:none;font-family:inherit;background:var(--gray-50)">
+          <button id="btnAddLink" style="padding:8px 14px;border:none;border-radius:var(--radius-xs);background:var(--blue-300);color:var(--white);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">添加</button>
+        </div>
+        <ul class="link-list" id="linkList"></ul>
+      </div>
+    </div>
+
+    <!-- PAGE: 每日计划 -->
+    <div class="page" id="page-plans">
+      <div class="card plan-card">
+        <div class="card-header">
+          <span class="card-title">📋 每日计划</span>
+          <span class="plan-progress" id="planProgress"></span>
+        </div>
+        <div class="card-body">
+          <div class="plan-date-header">
+            <button id="planPrevDay">‹</button>
+            <span class="plan-date-label" id="planDateLabel"></span>
+            <button id="planNextDay">›</button>
+            <button class="cal-today" id="planToday" style="margin-left:8px">今天</button>
+          </div>
+          <!-- Stats cards -->
+          <div class="stats-row" id="planStats"></div>
+          <!-- Sections -->
+          <div id="planSections"></div>
+          <div class="plan-empty" id="planEmpty">这一天还没有计划 🎉</div>
+          <!-- Add at bottom -->
+          <div class="plan-add-bottom">
+            <input type="text" id="planInput" placeholder="添加计划..." maxlength="200">
+            <button class="btn-add" id="btnAddPlan">添加计划</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: 事件提醒 -->
+    <div class="page" id="page-events">
+      <div class="card event-card">
+        <div class="card-header"><span class="card-title">🔔 事件提醒</span></div>
+        <div class="card-body">
+          <div class="event-input-row">
+            <input type="date" class="ev-date" id="evDate">
+            <input type="time" class="ev-time" id="evTime" value="09:00">
+            <input type="text" class="ev-title" id="evTitle" placeholder="事件标题" maxlength="100">
+          </div>
+          <div class="event-input-row" style="margin-bottom:14px">
+            <input type="text" class="ev-desc" id="evDesc" placeholder="备注（可选）" maxlength="200">
+            <button class="btn-add" id="btnAddEvent" style="background:var(--blue-400)">添加事件</button>
+          </div>
+          <ul class="event-list" id="eventList"></ul>
+          <div class="plan-empty" id="eventEmpty">暂无事件提醒</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: 打卡 -->
+    <div class="page" id="page-checkins">
+      <div class="card checkin-card">
+        <div class="card-header"><span class="card-title">✅ 打卡</span></div>
+        <div class="card-body">
+          <div class="checkin-add-wrap">
+            <input type="text" id="checkinInput" placeholder="添加打卡习惯（如：早起、运动、阅读）" maxlength="50">
+            <button class="btn-checkin-add" id="btnAddCheckin">添加</button>
+          </div>
+          <div class="checkin-habits" id="checkinHabits"></div>
+          <div class="plan-empty" id="checkinEmpty">还没有打卡习惯，添加一个吧 💪</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- === Mobile Bottom Nav === -->
+  <nav class="mobile-nav" id="mobileNav">
+    <div class="mobile-nav-items">
+      <button class="mobile-nav-item active" data-page="overview"><span class="mni-icon">🏠</span>总览</button>
+      <button class="mobile-nav-item" data-page="plans"><span class="mni-icon">📋</span>计划</button>
+      <button class="mobile-nav-item" data-page="events"><span class="mni-icon">🔔</span>事件</button>
+      <button class="mobile-nav-item" data-page="checkins"><span class="mni-icon">✅</span>打卡</button>
+    </div>
+  </nav>
+
+  <!-- === Widget Toggle (mobile) === -->
+  <button class="widget-toggle" id="btnWidget" title="挂件">◈</button>
+</div>
+
+<!-- === Widget Panel === -->
+<div class="widget-overlay" id="widgetOverlay"></div>
+<div class="widget-panel" id="widgetPanel">
+  <div class="widget-header"><h3>amber 挂件</h3><button class="widget-close" id="btnWidgetClose">✕</button></div>
+  <div class="widget-section"><h4>📝 便签</h4><div class="widget-mini-note" id="wNote">暂无内容</div></div>
+  <div class="widget-section"><h4>📋 今日计划</h4><ul class="widget-mini-todos" id="wPlans"></ul></div>
+  <div class="widget-section"><h4>🔔 近期事件</h4><ul class="widget-mini-todos" id="wEvents"></ul></div>
+</div>
+
+<!-- === Settings Modal === -->
 <div class="modal-overlay hidden" id="settingsOverlay">
   <div class="modal">
     <h2>⚙ 设置</h2>
@@ -439,567 +754,1071 @@ body{
     <input type="url" id="supabaseUrl" placeholder="https://xxxxx.supabase.co">
     <label>Supabase Anon Key</label>
     <input type="password" id="supabaseKey" placeholder="eyJhbGciOi...">
-    <p class="modal-hint">配置 Supabase 后可实现多设备云端同步。留空则仅使用本地存储。</p>
+    <p class="modal-hint">配置后可实现多设备云端同步。<br>详细教程见项目中的 SUPABASE_GUIDE.md</p>
     <div class="modal-actions">
-      <button class="btn btn-danger hidden" id="btnClearData">清除本地数据</button>
+      <button class="btn btn-danger" id="btnClearData">清除本地数据</button>
       <button class="btn btn-secondary" id="btnSettingsClose">取消</button>
       <button class="btn btn-primary" id="btnSettingsSave">保存</button>
     </div>
   </div>
 </div>
 
-<!-- ===== Supabase SDK ===== -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- === Connection Diagnostic Toast === -->
+<div id="diagToast" style="position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:300;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.12);display:none;max-width:90vw;text-align:center"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ============================================================
-// amber的工作台 - 主应用逻辑
+// amber的工作台 v3 — 墓碑同步引擎 + 顶栏状态药丸
 // ============================================================
 
-// --- DOM Refs ---
-const $ = (s) => document.querySelector(s);
-const $$ = (s) => document.querySelectorAll(s);
-
-const noteArea = $('#noteArea');
-const noteSaved = $('#noteSaved');
-const noteWordCount = $('#noteWordCount');
-const todoInput = $('#todoInput');
-const btnAddTodo = $('#btnAddTodo');
-const todoList = $('#todoList');
-const todoEmpty = $('#todoEmpty');
-const todoCount = $('#todoCount');
-const linkNameInput = $('#linkNameInput');
-const linkUrlInput = $('#linkUrlInput');
-const btnAddLink = $('#btnAddLink');
-const linkList = $('#linkList');
-const clockTime = $('#clockTime');
-const clockDateEl = $('#clockDate');
-const syncStatus = $('#syncStatus');
-const syncLabel = $('#syncLabel');
-
-// Widget
-const btnWidget = $('#btnWidget');
-const widgetOverlay = $('#widgetOverlay');
-const widgetPanel = $('#widgetPanel');
-const btnWidgetClose = $('#btnWidgetClose');
-const wTime = $('#wTime');
-const wDate = $('#wDate');
-const wNote = $('#wNote');
-const wTodos = $('#wTodos');
-
-// Settings
-const settingsOverlay = $('#settingsOverlay');
-const supabaseUrl = $('#supabaseUrl');
-const supabaseKey = $('#supabaseKey');
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const LS_KEYS = {
+  plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
+  notes: 'amber_note_v3', links: 'amber_links_v3', config: 'amber_config',
+  deviceId: 'amber_device_id', todos: 'amber_todos',
+};
 
 // --- State ---
+let state = {
+  currentPage: 'overview',
+  calStartDate: null,
+  planSelectedDate: fmtDate(new Date()),
+  plans: [],
+  events: [],
+  checkins: [],
+  notes: '',
+  links: [],
+  todos: [],
+};
+
+// ============================================================
+// DEVICE ID + SUPABASE CLIENT
+// ============================================================
+let DEVICE_ID = localStorage.getItem(LS_KEYS.deviceId);
+if (!DEVICE_ID) { DEVICE_ID = 'd_' + crypto.randomUUID(); localStorage.setItem(LS_KEYS.deviceId, DEVICE_ID); }
+
 let supabase = null;
-let supabaseConfig = { url: '', key: '' };
-let isOnline = false;
-let isSyncing = false;
-let noteSaveTimer = null;
+let syncEnabled = false;
 
-// Data
-let todos = [];
-let links = [];
-let noteContent = '';
-
-// --- Init ---
-function init() {
-  loadConfig();
-  loadLocalData();
-  initSupabase();
-  renderAll();
-  updateClock();
-  setInterval(updateClock, 10000);
-  monitorOnlineStatus();
-  registerSW();
-}
-
-// --- PWA Registration ---
-function registerSW() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(() => console.log('[PWA] SW registered'))
-      .catch((e) => console.warn('[PWA] SW registration failed:', e));
-  }
-}
-
-// --- Config ---
-function loadConfig() {
-  try {
-    const saved = localStorage.getItem('amber_config');
-    if (saved) {
-      supabaseConfig = JSON.parse(saved);
-      supabaseUrl.value = supabaseConfig.url || '';
-      supabaseKey.value = supabaseConfig.key || '';
-    }
-  } catch (e) { /* ignore */ }
-}
-
-function saveConfig() {
-  supabaseConfig = {
-    url: supabaseUrl.value.trim(),
-    key: supabaseKey.value.trim()
-  };
-  localStorage.setItem('amber_config', JSON.stringify(supabaseConfig));
-  initSupabase();
-}
-
-// --- Supabase ---
 function initSupabase() {
-  if (supabaseConfig.url && supabaseConfig.key) {
-    try {
-      supabase = window.supabase.createClient(supabaseConfig.url, supabaseConfig.key);
-      checkSupabaseConnection();
-    } catch (e) {
-      supabase = null;
-      setSyncStatus('error', '配置错误');
+  try {
+    const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
+    if (cfg.url && cfg.key) {
+      supabase = window.supabase.createClient(cfg.url, cfg.key);
+      syncEnabled = true;
+      return true;
     }
-  } else {
-    supabase = null;
-    setSyncStatus('offline', '仅本地');
-  }
+  } catch(e) {}
+  supabase = null;
+  syncEnabled = false;
+  return false;
 }
 
-async function checkSupabaseConnection() {
-  if (!supabase) return;
-  setSyncStatus('syncing', '同步中...');
-  try {
-    // Simple health check
-    const { error } = await supabase.from('todos').select('id').limit(1);
-    if (error && error.code === '42P01') {
-      // Table doesn't exist - that's ok, tables need to be created
-      setSyncStatus('online', '已连接');
-      isOnline = true;
-    } else if (error) {
-      throw error;
-    } else {
-      setSyncStatus('online', '已连接');
-      isOnline = true;
-      // Pull data from cloud
-      await pullFromCloud();
-    }
-  } catch (e) {
-    console.warn('[Supabase] Connection failed:', e.message);
-    setSyncStatus('error', '连接失败');
-    isOnline = false;
-  }
+// ============================================================
+// SYNC PILL — 统一管理桌面端和手机端的状态药丸
+// ============================================================
+const pillEls = {
+  desktop: null, mobile: null,
+  labelDesktop: null, labelMobile: null,
+  testBtnDesktop: null, testBtnMobile: null,
+};
+function initSyncPills() {
+  pillEls.desktop = $('#syncPillDesktop');
+  pillEls.mobile = $('#syncPillMobile');
+  pillEls.labelDesktop = $('#syncLabelDesktop');
+  pillEls.labelMobile = $('#syncLabelMobile');
+  pillEls.testBtnDesktop = $('#syncTestBtnDesktop');
+  pillEls.testBtnMobile = $('#syncTestBtnMobile');
 }
 
 function setSyncStatus(status, label) {
-  syncStatus.className = 'sync-status ' + status;
-  syncLabel.textContent = label;
+  [pillEls.desktop, pillEls.mobile].forEach(el => {
+    if (!el) return;
+    el.className = 'sync-pill ' + status;
+  });
+  [pillEls.labelDesktop, pillEls.labelMobile].forEach(el => {
+    if (el) el.textContent = label;
+  });
 }
 
-async function pullFromCloud() {
-  if (!supabase || !isOnline) return;
+// ============================================================
+// TOMBSTONE SYNC ENGINE
+// ============================================================
+
+// Map state keys to Supabase table names
+const TABLE_MAP = { plans: 'plans', events: 'events', checkins: 'checkins', links: 'links' };
+
+function withDeviceId(record) {
+  return { ...record, device_id: DEVICE_ID };
+}
+
+/** Pull all records from a Supabase table (including tombstones) */
+async function cloudPull(tableName) {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from(tableName).select('*').order('updated_at', { ascending: false });
+  if (error) { console.warn('Pull error', tableName, error.message); return []; }
+  return data || [];
+}
+
+/** Push (upsert) records to cloud */
+async function cloudPush(tableName, records) {
+  if (!supabase || !records.length) return;
+  const { error } = await supabase.from(tableName).upsert(records);
+  if (error) console.warn('Push error', tableName, error.message);
+}
+
+/** Mark a record as deleted (tombstone) in cloud */
+async function cloudTombstone(tableName, id) {
+  if (!supabase) return;
+  const now = new Date().toISOString();
+  const { error } = await supabase.from(tableName).update({ deleted_at: now, updated_at: now }).eq('id', id);
+  if (error) console.warn('Tombstone error', tableName, error.message);
+}
+
+/**
+ * Full merge: pull cloud → apply tombstones → merge non-tombstone → push local-only
+ * Returns merged local data (active records only, no tombstones)
+ */
+async function fullSync(key) {
+  if (!syncEnabled || !supabase) return;
+
+  const tableName = TABLE_MAP[key];
+  if (!tableName) return;
+
   try {
-    // Pull todos
-    const { data: cloudTodos } = await supabase.from('todos').select('*').order('created_at', { ascending: true });
-    if (cloudTodos && cloudTodos.length > 0) {
-      // Merge: cloud wins if newer
-      const localTodos = JSON.parse(localStorage.getItem('amber_todos') || '[]');
-      const merged = mergeData(localTodos, cloudTodos, 'id');
-      todos = merged.map(t => ({ id: t.id, text: t.text, done: t.done, created_at: t.created_at }));
-      saveTodos();
+    // 1. Pull all records from cloud
+    const cloudRecords = await cloudPull(tableName);
+    if (!cloudRecords.length) {
+      // No cloud data — push all local to cloud
+      const localData = state[key].map(withDeviceId);
+      if (localData.length) await cloudPush(tableName, localData);
+      setSyncStatus('online', '已同步');
+      return;
     }
-    
-    // Pull links
-    const { data: cloudLinks } = await supabase.from('links').select('*').order('created_at', { ascending: true });
-    if (cloudLinks && cloudLinks.length > 0) {
-      const localLinks = JSON.parse(localStorage.getItem('amber_links') || '[]');
-      const merged = mergeData(localLinks, cloudLinks, 'id');
-      links = merged.map(l => ({ id: l.id, name: l.name, url: l.url, created_at: l.created_at }));
-      saveLinks();
-    }
-    
-    // Pull note
-    const { data: cloudNotes } = await supabase.from('notes').select('*').order('updated_at', { ascending: false }).limit(1);
-    if (cloudNotes && cloudNotes.length > 0) {
-      const localNote = JSON.parse(localStorage.getItem('amber_note') || '{"content":"","updated_at":0}');
-      if (new Date(cloudNotes[0].updated_at).getTime() > localNote.updated_at) {
-        noteContent = cloudNotes[0].content || '';
-        noteArea.value = noteContent;
-        saveNote();
-      }
-    }
-    
-    renderAll();
-  } catch (e) {
-    console.warn('[Supabase] Pull failed:', e);
-  }
-}
 
-function mergeData(localItems, cloudItems, idField) {
-  const map = new Map();
-  for (const item of localItems) map.set(item[idField], item);
-  for (const item of cloudItems) {
-    const local = map.get(item[idField]);
-    if (!local || new Date(item.updated_at || item.created_at).getTime() > new Date(local.updated_at || local.created_at).getTime()) {
-      map.set(item[idField], item);
-    }
-  }
-  return Array.from(map.values());
-}
+    // 2. Build lookup maps
+    const localMap = {};
+    state[key].forEach(r => { localMap[r.id] = r; });
 
-async function pushToCloud(table, data) {
-  if (!supabase || !isOnline) return;
-  try {
-    await supabase.from(table).upsert(data, { onConflict: 'id' });
-  } catch (e) {
-    console.warn(`[Supabase] Push to ${table} failed:`, e);
-  }
-}
+    const cloudMap = {};
+    cloudRecords.forEach(r => { cloudMap[r.id] = r; });
 
-// --- Local Data ---
-function loadLocalData() {
-  try {
-    todos = JSON.parse(localStorage.getItem('amber_todos') || '[]');
-  } catch (e) { todos = []; }
-  try {
-    links = JSON.parse(localStorage.getItem('amber_links') || '[]');
-  } catch (e) { links = []; }
-  try {
-    const noteData = JSON.parse(localStorage.getItem('amber_note') || '{"content":"","updated_at":0}');
-    noteContent = noteData.content || '';
-    noteArea.value = noteContent;
-  } catch (e) { noteContent = ''; }
-}
+    // 3. Apply tombstones: remove local records that are tombstoned in cloud
+    const cloudTombstones = cloudRecords.filter(r => r.deleted_at);
+    const tombstoneIds = new Set(cloudTombstones.map(r => r.id));
 
-function saveTodos() {
-  localStorage.setItem('amber_todos', JSON.stringify(todos));
-  if (isOnline) {
-    pushToCloud('todos', todos.map(t => ({ ...t, updated_at: new Date().toISOString() })));
-  }
-}
+    // 4. Merge non-tombstone cloud records into local
+    const mergedMap = { ...localMap };
+    const toPush = [];
 
-function saveLinks() {
-  localStorage.setItem('amber_links', JSON.stringify(links));
-  if (isOnline) {
-    pushToCloud('links', links.map(l => ({ ...l, updated_at: new Date().toISOString() })));
-  }
-}
-
-function saveNote() {
-  const data = { content: noteContent, updated_at: Date.now() };
-  localStorage.setItem('amber_note', JSON.stringify(data));
-  if (isOnline) {
-    pushToCloud('notes', [{ id: 'default', content: noteContent, updated_at: new Date().toISOString() }]);
-  }
-}
-
-// --- Online Status Monitor ---
-function monitorOnlineStatus() {
-  const update = () => {
-    if (navigator.onLine) {
-      if (supabaseConfig.url && supabaseConfig.key) {
-        checkSupabaseConnection();
+    cloudRecords.filter(r => !r.deleted_at).forEach(cr => {
+      const local = mergedMap[cr.id];
+      if (!local) {
+        // New from cloud — add to local
+        mergedMap[cr.id] = cr;
       } else {
-        setSyncStatus('offline', '仅本地');
+        // Both exist — newer updated_at wins
+        const cloudTime = new Date(cr.updated_at || 0).getTime();
+        const localTime = new Date(local.updated_at || 0).getTime();
+        if (cloudTime > localTime) {
+          mergedMap[cr.id] = { ...local, ...cr, id: cr.id }; // cloud wins but keep local shape
+        }
       }
-    } else {
-      setSyncStatus('offline', '断网');
-      isOnline = false;
-    }
-  };
-  window.addEventListener('online', update);
-  window.addEventListener('offline', update);
-  update();
-}
+    });
 
-// --- Render ---
-function renderAll() {
-  renderTodos();
-  renderLinks();
-  updateNoteStats();
-}
+    // 5. Push local-only records (not in cloud at all)
+    Object.values(localMap).forEach(lr => {
+      if (!cloudMap[lr.id]) {
+        toPush.push(withDeviceId(lr));
+      }
+    });
 
-function renderTodos() {
-  todoList.innerHTML = '';
-  const pending = todos.filter(t => !t.done);
-  const done = todos.filter(t => t.done);
-  const sorted = [...pending, ...done];
-  
-  if (sorted.length === 0) {
-    todoEmpty.classList.remove('hidden');
-    todoList.classList.add('hidden');
-  } else {
-    todoEmpty.classList.add('hidden');
-    todoList.classList.remove('hidden');
+    // 6. Remove tombstoned records from merged
+    tombstoneIds.forEach(id => { delete mergedMap[id]; });
+
+    // 7. Update state
+    const merged = Object.values(mergedMap).filter(r => !r.deleted_at);
+    state[key] = merged;
+    saveLocal(key, merged);
+
+    // 8. Push local-only records
+    if (toPush.length) await cloudPush(tableName, toPush);
+
+    // 9. If we tombstoned locally, push those too (already handled by the caller)
+    setSyncStatus('online', '已同步');
+  } catch(e) {
+    console.warn('FullSync error', key, e.message);
+    setSyncStatus('error', '同步失败');
   }
-  
-  sorted.forEach(todo => {
-    const li = document.createElement('li');
-    li.className = 'todo-item' + (todo.done ? ' done' : '');
-    li.innerHTML = `
-      <button class="todo-check" data-id="${todo.id}"></button>
-      <span class="todo-text">${escapeHtml(todo.text)}</span>
-      <button class="todo-del" data-id="${todo.id}">×</button>
-    `;
-    todoList.appendChild(li);
-  });
-  
-  const remaining = todos.filter(t => !t.done).length;
-  todoCount.textContent = remaining > 0 ? `${remaining} 项待完成` : '全部完成 ✓';
 }
 
-function renderLinks() {
-  linkList.innerHTML = '';
-  links.forEach(link => {
-    const domain = getDomain(link.url);
-    const li = document.createElement('li');
-    li.className = 'link-item';
-    li.innerHTML = `
-      <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;flex:1;min-width:0">
-        <span class="link-favicon">${domain.charAt(0).toUpperCase()}</span>
-        <span class="link-info">
-          <span class="link-name">${escapeHtml(link.name)}</span>
-          <span class="link-url">${escapeHtml(domain)}</span>
-        </span>
-      </a>
-      <button class="link-del-btn" data-id="${link.id}">×</button>
-    `;
-    linkList.appendChild(li);
-  });
+/** Debounced full sync for a table */
+const syncTimers = {};
+function debouncedSync(key) {
+  clearTimeout(syncTimers[key]);
+  syncTimers[key] = setTimeout(() => fullSync(key), 800);
 }
 
-function updateNoteStats() {
-  const len = noteContent.replace(/\s/g, '').length;
-  noteWordCount.textContent = `${len} 字`;
+// ============================================================
+// CRUD with Tombstone Support
+// ============================================================
+
+function saveLocal(key, data) {
+  const lsKey = LS_KEYS[key];
+  if (lsKey) localStorage.setItem(lsKey, JSON.stringify(data));
 }
 
-function renderWidget() {
-  // Widget note preview
-  if (noteContent.trim()) {
-    wNote.textContent = noteContent.substring(0, 100) + (noteContent.length > 100 ? '...' : '');
-  } else {
-    wNote.textContent = '暂无内容';
+function createRecord(key, record) {
+  const now = new Date().toISOString();
+  const rec = { ...record, created_at: record.created_at || now, updated_at: now };
+  state[key].push(rec);
+  saveLocal(key, state[key]);
+
+  if (syncEnabled) {
+    cloudPush(TABLE_MAP[key], [withDeviceId(rec)]).then(() => setSyncStatus('online', '已同步'));
   }
-  
-  // Widget todos
-  wTodos.innerHTML = '';
-  const pending = todos.filter(t => !t.done).slice(0, 5);
-  if (pending.length === 0) {
-    wTodos.innerHTML = '<li style="color:var(--gray-400);background:transparent">暂无待办</li>';
+}
+
+function updateRecord(key, id, updates) {
+  const rec = state[key].find(r => r.id === id);
+  if (!rec) return;
+  Object.assign(rec, updates, { updated_at: new Date().toISOString() });
+  saveLocal(key, state[key]);
+
+  if (syncEnabled) {
+    cloudPush(TABLE_MAP[key], [withDeviceId(rec)]).then(() => setSyncStatus('online', '已同步'));
+  }
+}
+
+function deleteRecord(key, id) {
+  const now = new Date().toISOString();
+  const rec = state[key].find(r => r.id === id);
+  if (!rec) return;
+
+  // TOMBSTONE: set deleted_at instead of splicing
+  rec.deleted_at = now;
+  rec.updated_at = now;
+  saveLocal(key, state[key]);
+
+  // Remove from display immediately
+  state[key] = state[key].filter(r => r.id !== id);
+  // But keep the tombstoned record in localStorage for sync reference
+  const allRecords = JSON.parse(localStorage.getItem(LS_KEYS[key]) || '[]');
+  const idx = allRecords.findIndex(r => r.id === id);
+  if (idx >= 0) {
+    allRecords[idx].deleted_at = now;
+    allRecords[idx].updated_at = now;
   } else {
-    pending.forEach(t => {
-      const li = document.createElement('li');
-      li.textContent = t.text;
-      wTodos.appendChild(li);
+    allRecords.push({ ...rec, deleted_at: now, updated_at: now });
+  }
+  localStorage.setItem(LS_KEYS[key], JSON.stringify(allRecords));
+
+  if (syncEnabled) {
+    cloudTombstone(TABLE_MAP[key], id).then(() => setSyncStatus('online', '已同步'));
+  }
+}
+
+// Note operations (special single-record)
+function saveNote() {
+  const now = new Date().toISOString();
+  const noteObj = { id: 'default', content: state.notes, updated_at: now, device_id: DEVICE_ID };
+  localStorage.setItem(LS_KEYS.notes, JSON.stringify(noteObj));
+  if (syncEnabled && supabase) {
+    supabase.from('notes').upsert(noteObj).then(({ error }) => {
+      if (!error) setSyncStatus('online', '已同步');
     });
   }
 }
 
-// --- Clock ---
+async function loadNote() {
+  // Load local first
+  try {
+    const local = JSON.parse(localStorage.getItem(LS_KEYS.notes) || '{}');
+    state.notes = local.content || '';
+  } catch(e) { state.notes = ''; }
+
+  // Pull from cloud
+  if (syncEnabled && supabase) {
+    try {
+      const { data, error } = await supabase.from('notes').select('*').eq('id', 'default').maybeSingle();
+      if (!error && data) {
+        const cloudTime = new Date(data.updated_at || 0).getTime();
+        const localTime = new Date((JSON.parse(localStorage.getItem(LS_KEYS.notes) || '{}')).updated_at || 0).getTime();
+        if (!data.deleted_at && cloudTime > localTime) {
+          state.notes = data.content || '';
+          localStorage.setItem(LS_KEYS.notes, JSON.stringify({ content: state.notes, updated_at: data.updated_at, device_id: DEVICE_ID }));
+        }
+      }
+    } catch(e) {}
+  }
+
+  $('#noteArea').value = state.notes;
+  updateNoteStats();
+}
+
+// ============================================================
+// INIT + DATA LOAD
+// ============================================================
+async function init() {
+  initSyncPills();
+  const hasConfig = initSupabase();
+
+  loadLocalData();
+  initCalendar();
+  initNavigation();
+
+  // Render immediately from local
+  renderAll();
+
+  // Then sync from cloud in background
+  if (hasConfig) {
+    setSyncStatus('syncing', '同步中...');
+    try {
+      await Promise.all([
+        fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), loadNote(),
+      ]);
+      // After merge, re-render
+      renderAll();
+    } catch(e) {
+      console.warn('Initial sync failed', e.message);
+      setSyncStatus('error', '同步失败');
+    }
+  }
+
+  // Periodic cleanup of old tombstones (>30 days)
+  cleanupOldTombstones();
+  // Periodic background sync every 5 min
+  setInterval(periodicSync, 300000);
+
+  monitorOnline();
+  registerSW();
+}
+
+function loadLocalData() {
+  try { state.plans = JSON.parse(localStorage.getItem(LS_KEYS.plans) || '[]').filter(r => !r.deleted_at); } catch(e) { state.plans = []; }
+  try { state.events = JSON.parse(localStorage.getItem(LS_KEYS.events) || '[]').filter(r => !r.deleted_at); } catch(e) { state.events = []; }
+  try { state.checkins = JSON.parse(localStorage.getItem(LS_KEYS.checkins) || '[]').filter(r => !r.deleted_at); } catch(e) { state.checkins = []; }
+  try { state.links = JSON.parse(localStorage.getItem(LS_KEYS.links) || '[]').filter(r => !r.deleted_at); } catch(e) { state.links = []; }
+  try { state.todos = JSON.parse(localStorage.getItem(LS_KEYS.todos) || '[]'); } catch(e) { state.todos = []; }
+  try { state.notes = (JSON.parse(localStorage.getItem(LS_KEYS.notes) || '{}')).content || ''; } catch(e) { state.notes = ''; }
+  $('#noteArea').value = state.notes;
+  updateNoteStats();
+}
+
+function renderAll() {
+  renderCalendar();
+  renderOvStats();
+  if (state.currentPage === 'overview' || state.currentPage === 'plans') renderPlanPage();
+  if (state.currentPage === 'overview' || state.currentPage === 'events') renderEventPage();
+  if (state.currentPage === 'overview' || state.currentPage === 'checkins') renderCheckinPage();
+  renderOverviewModules();
+  renderLinks();
+}
+
+async function periodicSync() {
+  if (!syncEnabled) return;
+  setSyncStatus('syncing', '同步中...');
+  try {
+    await Promise.all([
+      fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), loadNote(),
+    ]);
+    renderAll();
+  } catch(e) {
+    setSyncStatus('error', '同步失败');
+  }
+}
+
+function cleanupOldTombstones() {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  ['plans', 'events', 'checkins', 'links'].forEach(key => {
+    try {
+      const all = JSON.parse(localStorage.getItem(LS_KEYS[key]) || '[]');
+      const cleaned = all.filter(r => !r.deleted_at || r.deleted_at > thirtyDaysAgo);
+      if (cleaned.length !== all.length) {
+        localStorage.setItem(LS_KEYS[key], JSON.stringify(cleaned));
+      }
+    } catch(e) {}
+  });
+}
+
+// ============================================================
+// CONNECTION DIAGNOSTICS
+// ============================================================
+
+async function testConnection() {
+  if (!supabase) {
+    showDiagToast('未配置 Supabase，请先在设置中填写 URL 和 Key', 'error');
+    return;
+  }
+  showDiagToast('正在检测连接...', 'syncing');
+
+  try {
+    // Test 1: Basic connectivity
+    const { error: e1 } = await supabase.from('plans').select('id').limit(1);
+    if (e1) {
+      if (e1.code === '42P01') {
+        showDiagToast('表不存在 — 请先在 Supabase SQL Editor 中执行 supabase-setup.sql', 'error');
+      } else if (e1.message?.includes('JWT')) {
+        showDiagToast('Anon Key 无效 — 请检查是否正确复制', 'error');
+      } else {
+        showDiagToast('连接失败: ' + (e1.message || '未知错误'), 'error');
+      }
+      return;
+    }
+
+    // Test 2: Check table count
+    const { data, error: e2 } = await supabase.from('plans').select('id', { count: 'exact', head: true });
+    if (e2) {
+      showDiagToast('连接成功但查询失败 — 请检查 RLS 策略', 'error');
+      return;
+    }
+
+    setSyncStatus('online', '已同步');
+    showDiagToast('连接成功 ✓ — 云端同步已就绪', 'online');
+
+    // Do a full sync after successful test
+    fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links'); loadNote();
+  } catch(e) {
+    showDiagToast('网络错误 — 无法连接到 Supabase，请检查网络', 'error');
+  }
+}
+
+let diagTimer;
+function showDiagToast(msg, status) {
+  const toast = $('#diagToast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  toast.style.background = status === 'online' ? '#E8F5E9' : status === 'error' ? '#FFEBEE' : '#E3F2FD';
+  toast.style.color = status === 'online' ? '#2E7D32' : status === 'error' ? '#C62828' : '#1565C0';
+  clearTimeout(diagTimer);
+  diagTimer = setTimeout(() => { toast.style.display = 'none'; }, 4000);
+}
+
+// ============================================================
+// ONLINE MONITOR
+// ============================================================
+function monitorOnline() {
+  const update = () => {
+    if (!navigator.onLine) {
+      setSyncStatus('offline', '断网');
+    } else if (syncEnabled) {
+      // Already handled by init/fullSync
+    } else {
+      setSyncStatus('offline', '仅本地');
+    }
+  };
+  window.addEventListener('online', () => {
+    setSyncStatus('syncing', '同步中...');
+    periodicSync();
+  });
+  window.addEventListener('offline', () => setSyncStatus('offline', '断网'));
+  update();
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function initNavigation() {
+  const navigate = (page) => {
+    state.currentPage = page;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const target = $(`#page-${page}`);
+    if (target) target.classList.add('active');
+
+    $$('.nav-item, .mobile-nav-item').forEach(b => {
+      b.classList.toggle('active', b.dataset.page === page);
+    });
+
+    $('#sidebar').classList.remove('open');
+    $('#sidebarBackdrop').classList.remove('open');
+
+    if (page === 'overview') { renderCalendar(); renderOverviewModules(); renderOvStats(); updateClock(); }
+    if (page === 'plans') renderPlanPage();
+    if (page === 'events') renderEventPage();
+    if (page === 'checkins') renderCheckinPage();
+  };
+
+  $$('.nav-item, .mobile-nav-item').forEach(b => {
+    b.addEventListener('click', () => navigate(b.dataset.page));
+  });
+
+  $('#btnMenu').addEventListener('click', () => {
+    $('#sidebar').classList.add('open');
+    $('#sidebarBackdrop').classList.add('open');
+  });
+  $('#sidebarBackdrop').addEventListener('click', () => {
+    $('#sidebar').classList.remove('open');
+    $('#sidebarBackdrop').classList.remove('open');
+  });
+
+  // Widget
+  $('#btnWidget').addEventListener('click', () => {
+    renderWidgetPanel();
+    $('#widgetOverlay').classList.add('active');
+    $('#widgetPanel').classList.add('active');
+  });
+  const closeWidget = () => {
+    $('#widgetOverlay').classList.remove('active');
+    $('#widgetPanel').classList.remove('active');
+  };
+  $('#btnWidgetClose').addEventListener('click', closeWidget);
+  $('#widgetOverlay').addEventListener('click', closeWidget);
+}
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function initCalendar() {
+  state.calStartDate = getMondayOfWeek(new Date());
+  $('#calWeekdays').innerHTML = ['一','二','三','四','五','六','日'].map(d => `<div class="cal-weekday">${d}</div>`).join('');
+  $('#calPrev').addEventListener('click', () => {
+    state.calStartDate = new Date(state.calStartDate.getTime() - 35 * 86400000);
+    renderCalendar();
+  });
+  $('#calNext').addEventListener('click', () => {
+    state.calStartDate = new Date(state.calStartDate.getTime() + 35 * 86400000);
+    renderCalendar();
+  });
+  $('#calToday').addEventListener('click', () => {
+    state.calStartDate = getMondayOfWeek(new Date());
+    renderCalendar();
+  });
+}
+
+function getMondayOfWeek(d) {
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diff);
+  monday.setHours(0,0,0,0);
+  return monday;
+}
+
+function renderCalendar() {
+  const start = state.calStartDate;
+  const endDate = new Date(start.getTime() + 34 * 86400000);
+  const today = fmtDate(new Date());
+  const startMonth = start.getMonth(), endMonth = endDate.getMonth();
+  const startYear = start.getFullYear(), endYear = endDate.getFullYear();
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  let label = (startMonth === endMonth && startYear === endYear)
+    ? `${startYear}年 ${months[startMonth]}` : `${months[startMonth]} - ${months[endMonth]}`;
+  $('#calMonthLabel').textContent = label;
+
+  const planCounts = {}, eventCounts = {}, checkinCounts = {};
+  state.plans.filter(p => !p.done).forEach(p => { planCounts[p.date] = (planCounts[p.date]||0) + 1; });
+  state.events.forEach(e => { eventCounts[e.date] = (eventCounts[e.date]||0) + 1; });
+  state.checkins.forEach(h => { (h.dates || []).forEach(d => { checkinCounts[d] = (checkinCounts[d]||0) + 1; }); });
+
+  const grid = $('#calGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(start.getTime() + i * 86400000);
+    const dateStr = fmtDate(d), dayNum = d.getDate();
+    const isToday = dateStr === today;
+    const isOtherMonth = d.getMonth() !== startMonth && d.getMonth() !== endMonth;
+    const nPlans = planCounts[dateStr] || 0, nEvents = eventCounts[dateStr] || 0, nCheckins = checkinCounts[dateStr] || 0;
+    let cls = 'cal-day';
+    if (isToday) cls += ' today';
+    if (isOtherMonth) cls += ' other-month';
+    let dots = '';
+    for (let j = 0; j < nPlans; j++) dots += '<span class="cal-dot plan"></span>';
+    for (let j = 0; j < nEvents; j++) dots += '<span class="cal-dot event"></span>';
+    for (let j = 0; j < Math.min(nCheckins, 2); j++) dots += '<span class="cal-dot checkin"></span>';
+    grid.innerHTML += `<div class="${cls}" data-date="${dateStr}" onclick="navigateToDate('${dateStr}')"><span class="cal-day-num">${dayNum}</span><div class="cal-day-dots">${dots}</div></div>`;
+  }
+}
+
+function navigateToDate(dateStr) {
+  state.planSelectedDate = dateStr;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  $('#page-plans').classList.add('active');
+  state.currentPage = 'plans';
+  $$('.nav-item, .mobile-nav-item').forEach(b => { b.classList.toggle('active', b.dataset.page === 'plans'); });
+  renderPlanPage();
+}
+
+// ============================================================
+// DAILY PLANS — 4-section layout with square checkboxes + auto-carry
+// ============================================================
+
+function getPlanSections(dateStr) {
+  const today = fmtDate(new Date());
+  const overdue = [];  // 未完成：过去日期未完成 → 自动滚动到当天
+  const todayTasks = []; // 今日任务：当天日期未完成
+  const doneTasks = [];  // 已完成
+  const futureTasks = []; // 待完成：未来日期
+
+  state.plans.forEach(p => {
+    if (p.done) {
+      // Show done items only if they match the selected date (for context)
+      if (p.date === dateStr) doneTasks.push(p);
+    } else if (p.date < dateStr) {
+      overdue.push(p);
+    } else if (p.date === dateStr) {
+      todayTasks.push(p);
+    } else {
+      futureTasks.push(p);
+    }
+  });
+
+  return { overdue, todayTasks, doneTasks, futureTasks };
+}
+
+function renderPlanStats(dateStr) {
+  const { overdue, todayTasks, doneTasks, futureTasks } = getPlanSections(dateStr);
+  const total = overdue.length + todayTasks.length + doneTasks.length + futureTasks.length;
+
+  $('#planStats').innerHTML = `
+    <div class="stat-card orange"><div class="stat-label">未完成</div><div class="stat-value">${overdue.length}</div></div>
+    <div class="stat-card pink"><div class="stat-label">今日任务</div><div class="stat-value">${todayTasks.length}</div></div>
+    <div class="stat-card green"><div class="stat-label">已完成</div><div class="stat-value">${doneTasks.length}</div></div>
+    <div class="stat-card blue"><div class="stat-label">待完成</div><div class="stat-value">${futureTasks.length}</div></div>`;
+}
+
+function renderPlanPage() {
+  const dateStr = state.planSelectedDate;
+  const d = new Date(dateStr + 'T00:00:00');
+  const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const days = ['日','一','二','三','四','五','六'];
+  $('#planDateLabel').textContent = `${d.getFullYear()}年${months[d.getMonth()]}${d.getDate()}日 星期${days[d.getDay()]}`;
+
+  const { overdue, todayTasks, doneTasks, futureTasks } = getPlanSections(dateStr);
+  const totalNotDone = overdue.length + todayTasks.length;
+  const totalItems = totalNotDone + doneTasks.length + futureTasks.length;
+  const totalDone = state.plans.filter(p => p.done).length;
+
+  // Progress bar (today-focused)
+  const todayTotal = todayTasks.length + doneTasks.length;
+  const pct = todayTotal ? Math.round(doneTasks.length / todayTotal * 100) : 0;
+  $('#planProgress').innerHTML = `${doneTasks.length}/${todayTotal} · <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:${pct}%"></div></div>`;
+
+  // Stats cards
+  renderPlanStats(dateStr);
+
+  // Render sections
+  const container = $('#planSections');
+  const empty = $('#planEmpty');
+  container.innerHTML = '';
+
+  const renderSection = (cls, title, items, dotColor) => {
+    if (items.length === 0) return '';
+    return `<div class="plan-section ${cls}">
+      <div class="plan-section-header">
+        <span class="sec-dot"></span>${title}
+        <span class="sec-count">${items.length} 条</span>
+      </div>
+      <ul class="plan-list">${items.map(p => `
+        <li class="plan-item${p.done ? ' done' : ''}">
+          <button class="plan-check" data-id="${p.id}"></button>
+          <span class="plan-text">${escapeHtml(p.text)}</span>
+          <button class="plan-del" data-id="${p.id}">×</button>
+        </li>`).join('')}</ul>
+    </div>`;
+  };
+
+  const allEmpty = overdue.length + todayTasks.length + doneTasks.length + futureTasks.length === 0;
+
+  container.innerHTML = 
+    renderSection('overdue', '未完成', overdue) +
+    renderSection('today-sec', '今日任务', todayTasks) +
+    renderSection('done-sec', '已完成', doneTasks) +
+    renderSection('future-sec', '待完成', futureTasks);
+
+  if (allEmpty) { container.classList.add('hidden'); empty.classList.remove('hidden'); }
+  else { container.classList.remove('hidden'); empty.classList.add('hidden'); }
+
+  // Show overdue items count in today view
+  if (dateStr === fmtDate(new Date()) && overdue.length > 0) {
+    // Items auto-rolled over — give a visual hint
+    const overdueSection = container.querySelector('.plan-section.overdue');
+    if (overdueSection) {
+      const header = overdueSection.querySelector('.plan-section-header');
+      if (header) header.innerHTML = header.innerHTML.replace('未完成', '未完成（已滚动至今天）');
+    }
+  }
+
+  // Date navigation
+  $('#planPrevDay').onclick = () => { state.planSelectedDate = fmtDate(new Date(d.getTime() - 86400000)); renderPlanPage(); };
+  $('#planNextDay').onclick = () => { state.planSelectedDate = fmtDate(new Date(d.getTime() + 86400000)); renderPlanPage(); };
+  $('#planToday').onclick = () => { state.planSelectedDate = fmtDate(new Date()); renderPlanPage(); };
+}
+
+// Event delegation for plan actions (square check + delete)
+$('#planSections').addEventListener('click', e => {
+  const check = e.target.closest('.plan-check');
+  const del = e.target.closest('.plan-del');
+  if (check) {
+    const p = state.plans.find(x => x.id === check.dataset.id);
+    if (p) { updateRecord('plans', p.id, { done: !p.done }); renderPlanPage(); renderCalendar(); renderOverviewModules(); renderOvStats(); }
+  }
+  if (del) {
+    deleteRecord('plans', del.dataset.id);
+    renderPlanPage(); renderCalendar(); renderOverviewModules(); renderOvStats();
+  }
+});
+
+// Add plan button (bottom)
+$('#btnAddPlan').addEventListener('click', () => {
+  const text = $('#planInput').value.trim();
+  if (!text) return;
+  createRecord('plans', { id: 'p_' + Date.now(), date: state.planSelectedDate, text, done: false });
+  $('#planInput').value = '';
+  renderPlanPage(); renderCalendar(); renderOverviewModules(); renderOvStats();
+});
+$('#planInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btnAddPlan').click(); });
+
+// ============================================================
+// EVENTS (with tombstone CRUD)
+// ============================================================
+function renderEventPage() {
+  $('#evDate').value = fmtDate(new Date());
+  const sorted = [...state.events].sort((a,b) => {
+    if (a.date !== b.date) return a.date > b.date ? 1 : -1;
+    return (a.time||'') > (b.time||'') ? 1 : -1;
+  });
+  const list = $('#eventList'), empty = $('#eventEmpty');
+  list.innerHTML = '';
+  if (sorted.length === 0) { list.classList.add('hidden'); empty.classList.remove('hidden'); }
+  else {
+    list.classList.remove('hidden'); empty.classList.add('hidden');
+    sorted.forEach(ev => {
+      const d = new Date(ev.date + 'T00:00:00');
+      const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+      const days = ['日','一','二','三','四','五','六'];
+      const dateLabel = `${d.getMonth()+1}/${d.getDate()} 周${days[d.getDay()]}`;
+      const li = document.createElement('li');
+      li.className = 'event-item';
+      li.innerHTML = `<div class="event-info"><div class="event-title">${escapeHtml(ev.title)}</div><div class="event-meta">📅 ${dateLabel} ${ev.time||''}</div>${ev.desc_text ? `<div class="event-desc-text">${escapeHtml(ev.desc_text)}</div>` : ''}</div><button class="event-del" data-id="${ev.id}">×</button>`;
+      list.appendChild(li);
+    });
+  }
+}
+
+$('#eventList').addEventListener('click', e => {
+  const del = e.target.closest('.event-del');
+  if (del) { deleteRecord('events', del.dataset.id); renderEventPage(); renderCalendar(); renderOverviewModules(); }
+});
+
+$('#btnAddEvent').addEventListener('click', () => {
+  const date = $('#evDate').value, time = $('#evTime').value;
+  const title = $('#evTitle').value.trim(), desc_text = $('#evDesc').value.trim();
+  if (!date || !title) return;
+  createRecord('events', { id: 'e_' + Date.now(), date, time, title, desc_text });
+  $('#evTitle').value = ''; $('#evDesc').value = '';
+  renderEventPage(); renderCalendar(); renderOverviewModules();
+});
+
+// ============================================================
+// CHECK-INS (with tombstone CRUD)
+// ============================================================
+function renderCheckinPage() {
+  const list = $('#checkinHabits'), empty = $('#checkinEmpty');
+  list.innerHTML = '';
+  if (state.checkins.length === 0) { list.classList.add('hidden'); empty.classList.remove('hidden'); return; }
+  list.classList.remove('hidden'); empty.classList.add('hidden');
+
+  const days = [];
+  for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(fmtDate(d)); }
+  const today = fmtDate(new Date());
+
+  state.checkins.forEach(habit => {
+    const dates = habit.dates || [];
+    const streak = calcStreak(dates);
+    const div = document.createElement('div');
+    div.className = 'checkin-habit';
+    div.innerHTML = `
+      <div class="checkin-habit-header">
+        <span class="checkin-habit-name"><span class="emoji">🔥</span>${escapeHtml(habit.name)}</span>
+        <span class="checkin-streak">连续 ${streak} 天</span>
+      </div>
+      <div class="checkin-days">${days.map(d => {
+        const checked = dates.includes(d), isToday = d === today;
+        return `<button class="checkin-day${checked?' checked':''}${isToday?' today':''}" data-date="${d}" data-habit="${habit.id}" title="${d}">${d.slice(-2)}</button>`;
+      }).join('')}</div>
+      <button class="checkin-habit-del" data-id="${habit.id}" style="margin-top:8px;float:right">删除</button>`;
+    list.appendChild(div);
+  });
+}
+
+$('#checkinHabits').addEventListener('click', e => {
+  const dayBtn = e.target.closest('.checkin-day');
+  const delBtn = e.target.closest('.checkin-habit-del');
+  if (dayBtn) {
+    const habitId = dayBtn.dataset.habit, date = dayBtn.dataset.date;
+    const habit = state.checkins.find(h => h.id === habitId);
+    if (habit) {
+      if (!habit.dates) habit.dates = [];
+      const idx = habit.dates.indexOf(date);
+      if (idx >= 0) habit.dates.splice(idx, 1);
+      else habit.dates.push(date);
+      updateRecord('checkins', habitId, { dates: habit.dates });
+      renderCheckinPage(); renderCalendar(); renderOverviewModules();
+    }
+  }
+  if (delBtn) {
+    if (confirm('删除这个打卡习惯？')) {
+      deleteRecord('checkins', delBtn.dataset.id);
+      renderCheckinPage(); renderCalendar(); renderOverviewModules();
+    }
+  }
+});
+
+$('#btnAddCheckin').addEventListener('click', () => {
+  const name = $('#checkinInput').value.trim();
+  if (!name) return;
+  createRecord('checkins', { id: 'c_' + Date.now(), name, dates: [] });
+  $('#checkinInput').value = '';
+  renderCheckinPage(); renderOverviewModules();
+});
+$('#checkinInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btnAddCheckin').click(); });
+
+function calcStreak(dates) {
+  if (!dates || dates.length === 0) return 0;
+  const sorted = [...dates].sort().reverse();
+  let streak = 1;
+  const today = fmtDate(new Date()), yesterday = fmtDate(new Date(Date.now() - 86400000));
+  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(sorted[i-1] + 'T00:00:00'), curr = new Date(sorted[i] + 'T00:00:00');
+    if ((prev - curr) === 86400000) streak++; else break;
+  }
+  return streak;
+}
+
+// ============================================================
+// OVERVIEW MODULES + STATS
+// ============================================================
+
+function renderOvStats() {
+  const today = fmtDate(new Date());
+  const { overdue, todayTasks, doneTasks, futureTasks } = getPlanSections(today);
+  const totalEvents = state.events.filter(e => e.date >= today).length;
+  const totalCheckins = state.checkins.length;
+  const activeStreak = state.checkins.reduce((max, h) => Math.max(max, calcStreak(h.dates)), 0);
+
+  $('#ovStats').innerHTML = `
+    <div class="stat-card orange" onclick="switchToPage('plans')" style="cursor:pointer">
+      <div class="stat-label">未完成</div><div class="stat-value">${overdue.length}</div>
+    </div>
+    <div class="stat-card pink" onclick="switchToPage('plans')" style="cursor:pointer">
+      <div class="stat-label">今日任务</div><div class="stat-value">${todayTasks.length}</div>
+    </div>
+    <div class="stat-card green" onclick="switchToPage('checkins')" style="cursor:pointer">
+      <div class="stat-label">打卡连续</div><div class="stat-value">${activeStreak}</div>
+    </div>
+    <div class="stat-card blue" onclick="switchToPage('events')" style="cursor:pointer">
+      <div class="stat-label">近期事件</div><div class="stat-value">${totalEvents}</div>
+    </div>`;
+}
+
+function renderOverviewModules() {
+  const today = fmtDate(new Date());
+  const todayPlans = state.plans.filter(p => p.date === today);
+  const undonePlans = todayPlans.filter(p => !p.done), donePlans = todayPlans.filter(p => p.done);
+  const upcomingEvents = state.events.filter(e => e.date >= today).sort((a,b) => a.date > b.date ? 1 : -1).slice(0, 3);
+  const checkinHabits = state.checkins;
+  const planPct = todayPlans.length ? Math.round(donePlans.length / todayPlans.length * 100) : 0;
+
+  const container = $('#overviewModules');
+  container.innerHTML = `
+    <div class="ov-module" onclick="switchToPage('plans')">
+      <div class="ov-module-header"><span class="ov-module-title">📋 今日计划</span><span class="ov-module-badge pink">${donePlans.length}/${todayPlans.length}</span></div>
+      ${todayPlans.length > 0 ? `
+        <div style="margin-bottom:8px"><div style="height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden"><div style="height:100%;width:${planPct}%;background:var(--pink-300);border-radius:3px;transition:width .3s"></div></div><div style="font-size:11px;color:var(--gray-400);margin-top:3px">完成 ${planPct}%</div></div>
+        <div class="ov-module-items">${undonePlans.slice(0,3).map(p => `<div class="ov-module-item">${escapeHtml(p.text)}</div>`).join('')}${donePlans.slice(0,2).map(p => `<div class="ov-module-item done">${escapeHtml(p.text)}</div>`).join('')}</div>
+      ` : '<div class="ov-module-preview">今天还没有计划</div>'}
+    </div>
+    <div class="ov-module" onclick="switchToPage('events')">
+      <div class="ov-module-header"><span class="ov-module-title">🔔 近期事件</span><span class="ov-module-badge blue">${state.events.filter(e=>e.date>=today).length}</span></div>
+      ${upcomingEvents.length > 0 ? `<div class="ov-module-items">${upcomingEvents.map(e => `<div class="ov-module-item">📅 ${e.date.slice(5)} · ${escapeHtml(e.title)}</div>`).join('')}</div>` : '<div class="ov-module-preview">暂无近期事件</div>'}
+    </div>
+    <div class="ov-module" onclick="switchToPage('checkins')">
+      <div class="ov-module-header"><span class="ov-module-title">✅ 打卡</span><span class="ov-module-badge green">${checkinHabits.length} 项</span></div>
+      ${checkinHabits.length > 0 ? `<div class="ov-module-items">${checkinHabits.map(h => `<div class="ov-module-item">🔥 ${escapeHtml(h.name)} · 连续 ${calcStreak(h.dates)} 天</div>`).join('')}</div>` : '<div class="ov-module-preview">还没有打卡习惯</div>'}
+    </div>
+    <div class="ov-module" style="text-align:center;padding:20px">
+      <div style="font-size:28px;font-weight:300;letter-spacing:-1px" id="ovClock">--:--</div>
+      <div style="font-size:12px;color:var(--gray-400);margin-top:4px" id="ovDate">----年--月--日 星期-</div>
+    </div>`;
+  updateClock();
+  renderOvStats();
+}
+
+function switchToPage(page) {
+  state.currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  $(`#page-${page}`).classList.add('active');
+  $$('.nav-item, .mobile-nav-item').forEach(b => { b.classList.toggle('active', b.dataset.page === page); });
+  if (page === 'overview') { renderCalendar(); renderOvStats(); renderOverviewModules(); updateClock(); }
+  if (page === 'plans') { state.planSelectedDate = fmtDate(new Date()); renderPlanPage(); }
+  if (page === 'events') renderEventPage();
+  if (page === 'checkins') renderCheckinPage();
+}
+
+// ============================================================
+// CLOCK
+// ============================================================
 function updateClock() {
   const now = new Date();
-  const h = String(now.getHours()).padStart(2, '0');
-  const m = String(now.getMinutes()).padStart(2, '0');
-  const days = ['日', '一', '二', '三', '四', '五', '六'];
+  const h = String(now.getHours()).padStart(2,'0'), m = String(now.getMinutes()).padStart(2,'0');
+  const days = ['日','一','二','三','四','五','六'];
   const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 星期${days[now.getDay()]}`;
-  
-  clockTime.textContent = `${h}:${m}`;
-  clockDateEl.textContent = dateStr;
-  wTime.textContent = `${h}:${m}`;
-  wDate.textContent = dateStr;
+  const ovClock = $('#ovClock'), ovDate = $('#ovDate');
+  if (ovClock) ovClock.textContent = `${h}:${m}`;
+  if (ovDate) ovDate.textContent = dateStr;
+}
+setInterval(updateClock, 10000);
+
+// ============================================================
+// LINKS (with tombstone CRUD)
+// ============================================================
+function renderLinks() {
+  const list = $('#linkList');
+  list.innerHTML = state.links.map(l => `
+    <li style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-xs);transition:all .2s">
+      <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;flex:1;min-width:0">
+        <span style="width:28px;height:28px;border-radius:6px;background:var(--blue-100);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--blue-500);flex-shrink:0">${getDomainInitial(l.url)}</span>
+        <span style="flex:1;min-width:0"><span style="font-size:14px;font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(l.name)}</span><span style="font-size:11px;color:var(--gray-400)">${escapeHtml(getDomain(l.url))}</span></span>
+      </a>
+      <button data-id="${l.id}" style="width:24px;height:24px;border-radius:50%;border:none;background:transparent;color:var(--gray-400);cursor:pointer;font-size:14px;flex-shrink:0" class="link-del-btn">×</button>
+    </li>`).join('');
 }
 
-// --- Todo CRUD ---
-function addTodo() {
-  const text = todoInput.value.trim();
-  if (!text) return;
-  const todo = {
-    id: 't_' + Date.now(),
-    text,
-    done: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  todos.unshift(todo);
-  saveTodos();
-  renderTodos();
-  todoInput.value = '';
-  todoInput.focus();
-}
+$('#linkList').addEventListener('click', e => {
+  const del = e.target.closest('.link-del-btn') || e.target.closest('button');
+  if (del && del.dataset.id) { e.preventDefault(); deleteRecord('links', del.dataset.id); renderLinks(); }
+});
 
-function toggleTodo(id) {
-  const todo = todos.find(t => t.id === id);
-  if (todo) {
-    todo.done = !todo.done;
-    todo.updated_at = new Date().toISOString();
-    saveTodos();
-    renderTodos();
-  }
-}
-
-function deleteTodo(id) {
-  todos = todos.filter(t => t.id !== id);
-  saveTodos();
-  renderTodos();
-}
-
-// --- Link CRUD ---
-function addLink() {
-  const name = linkNameInput.value.trim();
-  let url = linkUrlInput.value.trim();
+$('#btnAddLink').addEventListener('click', () => {
+  const name = $('#linkNameInput').value.trim();
+  let url = $('#linkUrlInput').value.trim();
   if (!name || !url) return;
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = 'https://' + url;
-  }
-  const link = {
-    id: 'l_' + Date.now(),
-    name,
-    url,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  links.unshift(link);
-  saveLinks();
+  if (!url.startsWith('http')) url = 'https://' + url;
+  createRecord('links', { id: 'l_' + Date.now(), name, url });
   renderLinks();
-  linkNameInput.value = '';
-  linkUrlInput.value = '';
-}
+  $('#linkNameInput').value = ''; $('#linkUrlInput').value = '';
+});
 
-function deleteLink(id) {
-  links = links.filter(l => l.id !== id);
-  saveLinks();
-  renderLinks();
-}
-
-// --- Note Auto-Save ---
-noteArea.addEventListener('input', () => {
-  noteContent = noteArea.value;
+// ============================================================
+// NOTE
+// ============================================================
+let noteSaveTimer;
+$('#noteArea').addEventListener('input', () => {
+  state.notes = $('#noteArea').value;
   updateNoteStats();
-  
-  noteSaved.textContent = '保存中...';
-  noteSaved.className = 'note-saved';
-  
+  $('#noteSaved').textContent = '保存中...'; $('#noteSaved').className = 'note-saved';
   clearTimeout(noteSaveTimer);
   noteSaveTimer = setTimeout(() => {
     saveNote();
-    noteSaved.textContent = '✓ 已保存';
-    noteSaved.className = 'note-saved saved';
+    $('#noteSaved').textContent = '✓ 已保存'; $('#noteSaved').className = 'note-saved saved';
   }, 500);
 });
 
-// --- Event Delegation ---
-todoList.addEventListener('click', (e) => {
-  const checkBtn = e.target.closest('.todo-check');
-  const delBtn = e.target.closest('.todo-del');
-  if (checkBtn) toggleTodo(checkBtn.dataset.id);
-  if (delBtn) deleteTodo(delBtn.dataset.id);
-});
-
-linkList.addEventListener('click', (e) => {
-  const delBtn = e.target.closest('.link-del-btn');
-  if (delBtn) {
-    e.preventDefault();
-    deleteLink(delBtn.dataset.id);
-  }
-});
-
-btnAddTodo.addEventListener('click', addTodo);
-todoInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') addTodo();
-});
-
-btnAddLink.addEventListener('click', addLink);
-linkUrlInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') addLink();
-});
-
-// --- Widget ---
-btnWidget.addEventListener('click', () => {
-  renderWidget();
-  updateClock();
-  widgetOverlay.classList.add('active');
-  widgetPanel.classList.add('active');
-});
-
-btnWidgetClose.addEventListener('click', closeWidget);
-widgetOverlay.addEventListener('click', closeWidget);
-$('#wCloseWidget').addEventListener('click', closeWidget);
-
-function closeWidget() {
-  widgetOverlay.classList.remove('active');
-  widgetPanel.classList.remove('active');
+function updateNoteStats() {
+  const len = state.notes.replace(/\s/g,'').length;
+  if ($('#noteWordCount')) $('#noteWordCount').textContent = `${len} 字`;
 }
 
-$('#wFocusNote').addEventListener('click', () => { closeWidget(); noteArea.focus(); noteArea.scrollIntoView({ behavior: 'smooth' }); });
-$('#wFocusTodo').addEventListener('click', () => { closeWidget(); todoInput.focus(); todoInput.scrollIntoView({ behavior: 'smooth' }); });
-$('#wFocusLink').addEventListener('click', () => { closeWidget(); linkNameInput.focus(); linkNameInput.scrollIntoView({ behavior: 'smooth' }); });
+// ============================================================
+// WIDGET
+// ============================================================
+function renderWidgetPanel() {
+  const today = fmtDate(new Date());
+  $('#wNote').textContent = state.notes.trim() ? state.notes.substring(0,100) + (state.notes.length>100?'...':'') : '暂无内容';
+  $('#wPlans').innerHTML = '';
+  const todayPlans = state.plans.filter(p => p.date === today);
+  if (todayPlans.length === 0) $('#wPlans').innerHTML = '<li style="color:var(--gray-400);background:transparent">暂无计划</li>';
+  else todayPlans.forEach(p => { const li = document.createElement('li'); if (p.done) li.className = 'done'; li.textContent = p.text; $('#wPlans').appendChild(li); });
+  $('#wEvents').innerHTML = '';
+  const upcoming = state.events.filter(e => e.date >= today).slice(0,3);
+  if (upcoming.length === 0) $('#wEvents').innerHTML = '<li style="color:var(--gray-400);background:transparent">暂无事件</li>';
+  else upcoming.forEach(e => { const li = document.createElement('li'); li.textContent = `${e.date.slice(5)} ${e.title}`; $('#wEvents').appendChild(li); });
+}
 
-// --- Settings ---
-$('#btnSettings').addEventListener('click', () => {
-  loadConfig();
-  settingsOverlay.classList.remove('hidden');
-});
+// ============================================================
+// SETTINGS
+// ============================================================
+function openSettings() {
+  const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
+  $('#supabaseUrl').value = cfg.url || '';
+  $('#supabaseKey').value = cfg.key || '';
+  $('#settingsOverlay').classList.remove('hidden');
+}
 
-$('#btnSettingsClose').addEventListener('click', () => {
-  settingsOverlay.classList.add('hidden');
-});
+$('#btnSettings').addEventListener('click', openSettings);
+$('#btnSettingsDesktop').addEventListener('click', openSettings);
+$('#btnSettingsClose').addEventListener('click', () => $('#settingsOverlay').classList.add('hidden'));
+$('#settingsOverlay').addEventListener('click', e => { if (e.target === $('#settingsOverlay')) $('#settingsOverlay').classList.add('hidden'); });
 
 $('#btnSettingsSave').addEventListener('click', () => {
-  saveConfig();
-  settingsOverlay.classList.add('hidden');
+  const cfg = { url: $('#supabaseUrl').value.trim(), key: $('#supabaseKey').value.trim() };
+  localStorage.setItem(LS_KEYS.config, JSON.stringify(cfg));
+  if (cfg.url && cfg.key) {
+    initSupabase();
+    setSyncStatus('syncing', '同步中...');
+    testConnection();
+  } else {
+    supabase = null; syncEnabled = false;
+    setSyncStatus('offline', '仅本地');
+  }
+  $('#settingsOverlay').classList.add('hidden');
 });
 
 $('#btnClearData').addEventListener('click', () => {
-  if (confirm('确定要清除所有本地数据吗？此操作不可恢复！')) {
-    localStorage.removeItem('amber_todos');
-    localStorage.removeItem('amber_links');
-    localStorage.removeItem('amber_note');
-    todos = [];
-    links = [];
-    noteContent = '';
-    noteArea.value = '';
+  if (confirm('确定清除所有本地数据？不可恢复！')) {
+    Object.values(LS_KEYS).forEach(k => localStorage.removeItem(k));
+    state = { ...state, plans: [], events: [], checkins: [], notes: '', links: [], todos: [] };
+    $('#noteArea').value = '';
     renderAll();
-    settingsOverlay.classList.add('hidden');
+    $('#settingsOverlay').classList.add('hidden');
   }
 });
 
-settingsOverlay.addEventListener('click', (e) => {
-  if (e.target === settingsOverlay) settingsOverlay.classList.add('hidden');
-});
+// ============================================================
+// TEST CONNECTION BUTTONS
+// ============================================================
+$('#syncTestBtnDesktop').addEventListener('click', testConnection);
+$('#syncTestBtnMobile').addEventListener('click', testConnection);
 
-// --- Keyboard shortcuts ---
-document.addEventListener('keydown', (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-    e.preventDefault();
-    saveNote();
-    noteSaved.textContent = '✓ 已保存';
-    noteSaved.className = 'note-saved saved';
+// ============================================================
+// PWA / HELPERS
+// ============================================================
+function registerSW() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-    e.preventDefault();
-    todoInput.focus();
-  }
-});
+}
 
-// --- Helpers ---
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
 }
 
 function getDomain(url) {
-  try {
-    return new URL(url).hostname.replace('www.', '');
-  } catch (e) {
-    return url;
-  }
+  try { return new URL(url).hostname.replace('www.',''); } catch(e) { return url; }
 }
 
-// --- Visibility change: sync when tab becomes visible ---
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && isOnline) {
-    checkSupabaseConnection();
+function getDomainInitial(url) {
+  try { return new URL(url).hostname.replace('www.','').charAt(0).toUpperCase(); } catch(e) { return '?'; }
+}
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey||e.ctrlKey) && e.key === 's') {
+    e.preventDefault();
+    saveNote();
+    $('#noteSaved').textContent = '✓ 已保存'; $('#noteSaved').className = 'note-saved saved';
   }
 });
 
-// --- Boot ---
+// ============================================================
+// BOOT
+// ============================================================
 init();
 </script>
 </body>
