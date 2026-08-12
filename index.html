@@ -773,7 +773,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.5</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.6</div>
     </div>
   </aside>
 
@@ -1065,7 +1065,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.5 — 修复 Supabase URL 末尾斜杠导致连接失败
+// amber的工作台 v14.6 — 回到前台自动同步（移动端切回即时刷新）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1495,6 +1495,9 @@ function monitorOnline() {
     periodicSync();
   });
   window.addEventListener('offline', () => setSyncStatus('offline', '断网'));
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && syncEnabled) periodicSync();
+  });
   update();
 }
 
