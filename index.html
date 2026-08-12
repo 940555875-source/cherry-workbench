@@ -665,7 +665,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v11.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v12.0</div>
     </div>
   </aside>
 
@@ -897,7 +897,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v11 — 总览统计卡跳转对应分类 + 月历不再显示计划 + 计划详情状态可切换
+// amber的工作台 v12 — 计划四分类重定义：已完成=全部完成 / 未完成=超截止时间 / 今日任务=当日自然日 / 待完成=明日及后续
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1553,27 +1553,32 @@ function eventRangeLabel(ev) {
 }
 
 // ============================================================
-// DAILY PLANS — 4-section layout with square checkboxes + auto-carry
+// DAILY PLANS — 4-category tabs (未完成/今日任务/已完成/待完成)
 // ============================================================
 
+// 四分类规则（以「当日自然日」为基准，不再依赖选中查看日期）：
+//   已完成   — 所有已完成计划（不限日期）
+//   未完成   — 已超过截止时间（或日期已过）仍未完成
+//   今日任务 — 当日自然日的未完成计划
+//   待完成   — 明日及后续的未完成计划
 function getPlanSections(dateStr) {
   const today = fmtDate(new Date());
-  const overdue = [];  // 未完成：过去日期未完成 → 自动滚动到当天
-  const todayTasks = []; // 今日任务：当天日期未完成
-  const doneTasks = [];  // 已完成
-  const futureTasks = []; // 待完成：未来日期
+  const nowMs = Date.now();
+  const overdue = [], todayTasks = [], doneTasks = [], futureTasks = [];
 
   state.plans.forEach(p => {
-    if (p.done) {
-      // Show done items only if they match the selected date (for context)
-      if (p.date === dateStr) doneTasks.push(p);
-    } else if (p.date < dateStr) {
-      overdue.push(p);
-    } else if (p.date === dateStr) {
-      todayTasks.push(p);
-    } else {
-      futureTasks.push(p);
+    // 已完成：所有已完成的计划
+    if (p.done) { doneTasks.push(p); return; }
+
+    // 未完成（逾期）：截止时间已过，仍未完成
+    if (p.deadline) {
+      const dlMs = new Date(p.deadline).getTime();
+      if (!isNaN(dlMs) && dlMs < nowMs) { overdue.push(p); return; }
     }
+
+    if (p.date === today) { todayTasks.push(p); return; }  // 今日任务：当日自然日
+    if (p.date > today) { futureTasks.push(p); return; }   // 待完成：明日及后续
+    overdue.push(p);                                        // 日期已过且截止时间未设置/未过 → 未完成
   });
 
   return { overdue, todayTasks, doneTasks, futureTasks };
@@ -1648,10 +1653,12 @@ function renderPlanPage() {
   const activeKey = state.planActiveSection;
   const activeItems = data[activeKey];
 
-  // Progress bar (today-focused)
-  const todayTotal = data.today.length + data.done.length;
-  const pct = todayTotal ? Math.round(data.done.length / todayTotal * 100) : 0;
-  $('#planProgress').innerHTML = `${data.done.length}/${todayTotal} · <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:${pct}%"></div></div>`;
+  // Progress bar (今日完成率：仅统计当日自然日的计划)
+  const todayStr = fmtDate(new Date());
+  const todayDone = state.plans.filter(p => p.date === todayStr && p.done).length;
+  const todayAll = todayDone + data.today.length;
+  const pct = todayAll ? Math.round(todayDone / todayAll * 100) : 0;
+  $('#planProgress').innerHTML = `${todayDone}/${todayAll} · <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:${pct}%"></div></div>`;
 
   renderPlanStats(dateStr, activeKey);
 
@@ -1680,7 +1687,7 @@ function renderPlanPage() {
 
   if (totalAll === 0) {
     container.classList.add('hidden'); empty.classList.remove('hidden');
-    empty.textContent = '这一天还没有计划 🎉';
+    empty.textContent = '还没有计划 🎉';
   } else {
     container.classList.remove('hidden'); empty.classList.add('hidden');
     const meta = SECTION_META[activeKey];
