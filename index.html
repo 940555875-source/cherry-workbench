@@ -773,7 +773,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.4</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.5</div>
     </div>
   </aside>
 
@@ -1065,7 +1065,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.4 — 旅行打点补 id、对齐 Supabase 同步 schema
+// amber的工作台 v14.5 — 修复 Supabase URL 末尾斜杠导致连接失败
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1120,11 +1120,17 @@ if (!DEVICE_ID) { DEVICE_ID = 'd_' + crypto.randomUUID(); localStorage.setItem(L
 let sb = null;
 let syncEnabled = false;
 
+function normalizeSupabaseUrl(u) {
+  if (!u) return u;
+  return String(u).trim().replace(/\/+$/, '');
+}
+
 function initSupabase() {
   try {
     const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
-    if (cfg.url && cfg.key && window.supabase && window.supabase.createClient) {
-      sb = window.supabase.createClient(cfg.url, cfg.key);
+    const url = normalizeSupabaseUrl(cfg.url);
+    if (url && cfg.key && window.supabase && window.supabase.createClient) {
+      sb = window.supabase.createClient(url, cfg.key);
       syncEnabled = true;
       return true;
     }
@@ -2869,7 +2875,7 @@ function renderWidgetPanel() {
 // ============================================================
 function openSettings() {
   const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
-  $('#supabaseUrl').value = cfg.url || '';
+  $('#supabaseUrl').value = normalizeSupabaseUrl(cfg.url) || '';
   $('#supabaseKey').value = cfg.key || '';
   $('#settingsOverlay').classList.remove('hidden');
 }
@@ -2880,7 +2886,7 @@ $('#btnSettingsClose').addEventListener('click', () => $('#settingsOverlay').cla
 $('#settingsOverlay').addEventListener('click', e => { if (e.target === $('#settingsOverlay')) $('#settingsOverlay').classList.add('hidden'); });
 
 $('#btnSettingsSave').addEventListener('click', () => {
-  const cfg = { url: $('#supabaseUrl').value.trim(), key: $('#supabaseKey').value.trim() };
+  const cfg = { url: normalizeSupabaseUrl($('#supabaseUrl').value), key: $('#supabaseKey').value.trim() };
   localStorage.setItem(LS_KEYS.config, JSON.stringify(cfg));
   if (cfg.url && cfg.key) {
     initSupabase();
