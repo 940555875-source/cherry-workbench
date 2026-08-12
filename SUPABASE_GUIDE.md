@@ -97,3 +97,33 @@
 - 采用「墓碑机制」：删除操作不会真正删除数据，而是打上删除标记
 - 所有设备拉取数据时会自动过滤已删除的条目
 - 保证了多设备数据的一致性
+
+
+---
+
+## 附录：从本地日历 app 导入事件
+
+amber 的工作台支持导入标准 `.ics` 格式（Apple Calendar / Outlook / Google Calendar 都可导出），把已经在本地日历里填好的事件批量同步进来。
+
+### 操作步骤
+
+1. 在 Mac/Windows 打开你的本地日历 app（Apple Calendar、Outlook 等）
+2. 选择要导入的日历，**导出为 `.ics` 文件**（Apple Calendar：右键日历 → Export → 选 .ics；Outlook：File → Save Calendar）
+3. 在 amber 的工作台中打开 **「事件提醒」** 页面
+4. 点击 **「选择 .ics 文件」** 按钮，选中刚才导出的文件
+5. 看到「✓ 解析到 N 条」的提示后，点击 **「导入」**
+6. 导入完成后所有事件会进入 amber 的事件提醒列表，并自动同步到其他设备（如果你已配置 Supabase）
+
+### 支持的字段
+
+- 事件标题 (SUMMARY)
+- 开始日期 + 时间 (DTSTART)
+- 描述 (DESCRIPTION)
+- 地点 (LOCATION)
+- 全天事件 (DTSTART;VALUE=DATE)
+
+### 注意事项
+
+- 重复事件（标题 + 日期相同）会自动跳过，不会重复导入
+- 跨天事件只导入起始日（避免重复）
+- 时区：使用你本地日历里设置的时区（带 Z 标记视为 UTC）
