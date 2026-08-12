@@ -197,7 +197,7 @@ body{
 .cal-nav .cal-today:hover{background:var(--blue-500)}
 .cal-month-label{font-size:15px;font-weight:600;color:var(--gray-700);min-width:100px;text-align:center}
 /* Calendar grid: 7 cols x 5 rows, equal-height rows for stable layout */
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(5,1fr);gap:6px;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
 /* Weekday header only needs a single row — must NOT inherit the 5-row template */
 .cal-grid.weekdays{grid-template-rows:auto;margin-bottom:4px}
 .cal-weekday{
@@ -220,6 +220,7 @@ body{
   font-weight:700;color:var(--blue-500);
 }
 .cal-day.other-month{color:var(--gray-300);background:transparent}
+.cal-day.blank{background:transparent;border-color:transparent;cursor:default;pointer-events:none;min-height:54px}
 .cal-day-num{font-size:13px;line-height:1.2}
 .cal-day-dots{display:flex;gap:2px;margin-top:auto;padding-top:4px;flex-wrap:wrap;justify-content:center;align-items:center}
 .cal-dot{
@@ -557,6 +558,7 @@ body{
 
 /* ===== Responsive ===== */
 @media(max-width:768px){
+  .app{flex-direction:column}
   .desktop-topbar{display:none!important}
   .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);z-index:110;box-shadow:var(--shadow-lg);height:100vh;height:100dvh}
   .sidebar.open{transform:translateX(0)}
@@ -624,7 +626,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v7.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v8.0</div>
     </div>
   </aside>
 
@@ -794,7 +796,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v7 — 修复 GitHub Pages 子路径下的绝对路径 + SW/manifest 正确注册
+// amber的工作台 v8 — 修复移动端布局(顶栏挤占主内容致按钮失效) + 月历改为真实月份视图
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -823,7 +825,8 @@ const LS_KEYS = {
 // --- State ---
 let state = {
   currentPage: 'overview',
-  calStartDate: null,
+  calYear: new Date().getFullYear(),
+  calMonth: new Date().getMonth(),
   planSelectedDate: fmtDate(new Date()),
   plans: [],
   events: [],
@@ -1265,41 +1268,39 @@ function initNavigation() {
 // CALENDAR
 // ============================================================
 function initCalendar() {
-  state.calStartDate = getMondayOfWeek(new Date());
+  const now = new Date();
+  state.calYear = now.getFullYear();
+  state.calMonth = now.getMonth();
   $('#calWeekdays').innerHTML = ['一','二','三','四','五','六','日'].map(d => `<div class="cal-weekday">${d}</div>`).join('');
   $('#calPrev').addEventListener('click', () => {
-    state.calStartDate = new Date(state.calStartDate.getTime() - 35 * 86400000);
+    state.calMonth--;
+    if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
     renderCalendar();
   });
   $('#calNext').addEventListener('click', () => {
-    state.calStartDate = new Date(state.calStartDate.getTime() + 35 * 86400000);
+    state.calMonth++;
+    if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
     renderCalendar();
   });
   $('#calToday').addEventListener('click', () => {
-    state.calStartDate = getMondayOfWeek(new Date());
+    const now = new Date();
+    state.calYear = now.getFullYear();
+    state.calMonth = now.getMonth();
     renderCalendar();
   });
 }
 
-function getMondayOfWeek(d) {
-  const day = d.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(d);
-  monday.setDate(d.getDate() + diff);
-  monday.setHours(0,0,0,0);
-  return monday;
-}
-
 function renderCalendar() {
-  const start = state.calStartDate;
-  const endDate = new Date(start.getTime() + 34 * 86400000);
+  const year = state.calYear, month = state.calMonth;
   const today = fmtDate(new Date());
-  const startMonth = start.getMonth(), endMonth = endDate.getMonth();
-  const startYear = start.getFullYear(), endYear = endDate.getFullYear();
   const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-  let label = (startMonth === endMonth && startYear === endYear)
-    ? `${startYear}年 ${months[startMonth]}` : `${months[startMonth]} - ${months[endMonth]}`;
-  $('#calMonthLabel').textContent = label;
+  $('#calMonthLabel').textContent = `${year}年 ${months[month]}`;
+
+  // First day of the month + how many days it has
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // Monday-first offset so 1号 lands under the correct weekday column (Mon=0 ... Sun=6)
+  const startOffset = (firstDay.getDay() + 6) % 7;
 
   const planCounts = {}, eventCounts = {}, checkinCounts = {};
   state.plans.filter(p => !p.done).forEach(p => { planCounts[p.date] = (planCounts[p.date]||0) + 1; });
@@ -1308,20 +1309,32 @@ function renderCalendar() {
 
   const grid = $('#calGrid');
   grid.innerHTML = '';
-  for (let i = 0; i < 35; i++) {
-    const d = new Date(start.getTime() + i * 86400000);
-    const dateStr = fmtDate(d), dayNum = d.getDate();
+
+  // Leading blank cells so the 1st lines up with its weekday
+  for (let i = 0; i < startOffset; i++) {
+    grid.innerHTML += '<div class="cal-day blank"></div>';
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const dateStr = fmtDate(date);
     const isToday = dateStr === today;
-    const isOtherMonth = d.getMonth() !== startMonth && d.getMonth() !== endMonth;
     const nPlans = planCounts[dateStr] || 0, nEvents = eventCounts[dateStr] || 0, nCheckins = checkinCounts[dateStr] || 0;
     let cls = 'cal-day';
     if (isToday) cls += ' today';
-    if (isOtherMonth) cls += ' other-month';
     let dots = '';
     for (let j = 0; j < nPlans; j++) dots += '<span class="cal-dot plan"></span>';
     for (let j = 0; j < nEvents; j++) dots += '<span class="cal-dot event"></span>';
     for (let j = 0; j < Math.min(nCheckins, 2); j++) dots += '<span class="cal-dot checkin"></span>';
-    grid.innerHTML += `<div class="${cls}" data-date="${dateStr}" onclick="navigateToDate('${dateStr}')"><span class="cal-day-num">${dayNum}</span><div class="cal-day-dots">${dots}</div></div>`;
+    grid.innerHTML += `<div class="${cls}" data-date="${dateStr}" onclick="navigateToDate('${dateStr}')"><span class="cal-day-num">${d}</span><div class="cal-day-dots">${dots}</div></div>`;
+  }
+
+  // Fill the last row so the grid always ends on a complete week
+  const remainder = (startOffset + daysInMonth) % 7;
+  if (remainder !== 0) {
+    for (let i = 0; i < 7 - remainder; i++) {
+      grid.innerHTML += '<div class="cal-day blank"></div>';
+    }
   }
 }
 
