@@ -679,7 +679,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v13.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v13.1</div>
     </div>
   </aside>
 
@@ -929,7 +929,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v13 — 打卡：添加弹窗(标题/周期) + 列表(标题/进度/剩余时间) + 年度总打卡/可配置目标/鼓励文案
+// amber的工作台 v13.1 — 修复计划分类：判断时间(截止时间)晚于当日自然日即归入「待完成」
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1591,8 +1591,17 @@ function eventRangeLabel(ev) {
 // 四分类规则（以「当日自然日」为基准，不再依赖选中查看日期）：
 //   已完成   — 所有已完成计划（不限日期）
 //   未完成   — 已超过截止时间（或日期已过）仍未完成
-//   今日任务 — 当日自然日的未完成计划
-//   待完成   — 明日及后续的未完成计划
+//   今日任务 — 判断时间 = 当日自然日的未完成计划
+//   待完成   — 判断时间晚于当日自然日的未完成计划（无论新建或修改）
+// 判断时间 = 截止时间所在自然日（未设置截止时间时回退到计划日期）
+function planEffectiveDate(p) {
+  if (p.deadline) {
+    const d = new Date(p.deadline);
+    if (!isNaN(d.getTime())) return fmtDate(d);
+  }
+  return p.date;
+}
+
 function getPlanSections(dateStr) {
   const today = fmtDate(new Date());
   const nowMs = Date.now();
@@ -1608,9 +1617,10 @@ function getPlanSections(dateStr) {
       if (!isNaN(dlMs) && dlMs < nowMs) { overdue.push(p); return; }
     }
 
-    if (p.date === today) { todayTasks.push(p); return; }  // 今日任务：当日自然日
-    if (p.date > today) { futureTasks.push(p); return; }   // 待完成：明日及后续
-    overdue.push(p);                                        // 日期已过且截止时间未设置/未过 → 未完成
+    const eff = planEffectiveDate(p);
+    if (eff === today) { todayTasks.push(p); return; }  // 今日任务：判断时间 = 当日自然日
+    if (eff > today) { futureTasks.push(p); return; }   // 待完成：判断时间晚于当日自然日
+    overdue.push(p);                                     // 判断时间已过 → 未完成
   });
 
   return { overdue, todayTasks, doneTasks, futureTasks };
@@ -1685,9 +1695,9 @@ function renderPlanPage() {
   const activeKey = state.planActiveSection;
   const activeItems = data[activeKey];
 
-  // Progress bar (今日完成率：仅统计当日自然日的计划)
+  // Progress bar (今日完成率：仅统计判断时间=当日自然日的计划)
   const todayStr = fmtDate(new Date());
-  const todayDone = state.plans.filter(p => p.date === todayStr && p.done).length;
+  const todayDone = state.plans.filter(p => planEffectiveDate(p) === todayStr && p.done).length;
   const todayAll = todayDone + data.today.length;
   const pct = todayAll ? Math.round(todayDone / todayAll * 100) : 0;
   $('#planProgress').innerHTML = `${todayDone}/${todayAll} · <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:${pct}%"></div></div>`;
@@ -2266,7 +2276,7 @@ function renderOvStats() {
 
 function renderOverviewModules() {
   const today = fmtDate(new Date());
-  const todayPlans = state.plans.filter(p => p.date === today);
+  const todayPlans = state.plans.filter(p => planEffectiveDate(p) === today);
   const undonePlans = todayPlans.filter(p => !p.done), donePlans = todayPlans.filter(p => p.done);
   const upcomingEvents = state.events.filter(e => e.date >= today).sort((a,b) => a.date > b.date ? 1 : -1).slice(0, 3);
   const checkinHabits = state.checkins;
@@ -2412,7 +2422,7 @@ $('#btnRemindOk').addEventListener('click', () => $('#remindOverlay').classList.
 function renderWidgetPanel() {
   const today = fmtDate(new Date());
   $('#wPlans').innerHTML = '';
-  const todayPlans = state.plans.filter(p => p.date === today);
+  const todayPlans = state.plans.filter(p => planEffectiveDate(p) === today);
   if (todayPlans.length === 0) $('#wPlans').innerHTML = '<li style="color:var(--gray-400);background:transparent">暂无计划</li>';
   else todayPlans.forEach(p => { const li = document.createElement('li'); if (p.done) li.className = 'done'; li.textContent = p.text; $('#wPlans').appendChild(li); });
   $('#wEvents').innerHTML = '';
