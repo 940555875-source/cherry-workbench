@@ -773,7 +773,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.2</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.3</div>
     </div>
   </aside>
 
@@ -1065,7 +1065,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.2 — 月历事件支持复制 / 移动至其他日期
+// amber的工作台 v14.3 — 总打卡完成计数改为单条进度 100% 计 1 次
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -2350,11 +2350,10 @@ function habitRemaining(period) {
   return days <= 0 ? '今天截止' : `剩余 ${days} 天`;
 }
 
+// 总打卡完成的计数：单条打卡进度达到 100%（当前周期内 count >= target）计 1 次完成，
+// 而非累计每次打卡动作（避免多次打卡被重复计数）。
 function checkinYearTotal() {
-  const prefix = new Date().getFullYear() + '-';
-  let total = 0;
-  state.checkins.forEach(h => (h.dates || []).forEach(d => { if (d.startsWith(prefix)) total++; }));
-  return total;
+  return state.checkins.filter(h => habitProgress(h).done).length;
 }
 
 function checkinTarget() {
@@ -2380,12 +2379,12 @@ function renderCheckinYear() {
   $('#checkinYear').innerHTML = `
     <div class="cy-head">
       <span class="cy-title">📅 ${new Date().getFullYear()} 年度打卡</span>
-      <span class="cy-count">${total} 次</span>
+      <span class="cy-count">${total} 项</span>
     </div>
     <div class="cy-row">
       <span>年度目标</span>
       <input type="number" class="cy-target-input" min="1" value="${target}" inputmode="numeric">
-      <span>次</span>
+      <span>项</span>
     </div>
     <div class="cy-bar"><div class="cy-fill" style="width:${pct}%"></div></div>
     <div class="cy-msg">${checkinEncouragement(total, target)}</div>`;
