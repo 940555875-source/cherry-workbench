@@ -239,6 +239,23 @@ body{
 .cal-ev.mstart{border-radius:5px 0 0 5px;background:var(--blue-500);padding-left:4px}
 .cal-ev.mmid{border-radius:0;background:var(--blue-400);justify-content:center;color:var(--blue-200);padding-left:2px;padding-right:2px}
 .cal-ev.mend{border-radius:0 5px 5px 0;background:var(--blue-500);justify-content:flex-end;padding-right:4px}
+/* Event action popup (编辑 / 复制 / 移动) */
+.ev-popup{
+  position:fixed;z-index:260;background:var(--white);border-radius:12px;
+  box-shadow:var(--shadow-lg);padding:6px;min-width:184px;border:1px solid var(--gray-100);
+}
+.ev-popup.hidden{display:none}
+.ev-popup-title{
+  font-size:12px;color:var(--gray-500);font-weight:600;padding:6px 12px;
+  border-bottom:1px solid var(--gray-100);margin-bottom:4px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;
+}
+.ev-popup-item{
+  display:block;width:100%;text-align:left;background:none;border:none;
+  padding:10px 12px;font-size:14px;cursor:pointer;border-radius:8px;
+  color:var(--gray-800);font-family:inherit;font-weight:500;
+}
+.ev-popup-item:hover{background:var(--gray-50)}
 .cal-checkin-badge{
   display:flex;align-items:center;justify-content:flex-end;gap:2px;
   font-size:9px;color:#4CAF50;font-weight:700;padding:1px 2px 0;
@@ -756,7 +773,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.1</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.2</div>
     </div>
   </aside>
 
@@ -928,6 +945,29 @@ body{
   </div>
 </div>
 
+<!-- === Move Event Modal (move an event to another date) === -->
+<div class="modal-overlay hidden" id="moveEventOverlay">
+  <div class="modal" style="max-width:360px">
+    <h2>📅 移动事件</h2>
+    <p class="modal-hint" id="moveEventTitle" style="font-size:14px;color:var(--gray-700);margin-bottom:6px"></p>
+    <label>移动到日期</label>
+    <input type="date" id="moveEventDate">
+    <p class="modal-hint">跨天事件会按原天数整体平移。</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnMoveEventCancel">取消</button>
+      <button class="btn btn-primary" id="btnMoveEventSave">移动</button>
+    </div>
+  </div>
+</div>
+
+<!-- === Event Action Menu (编辑 / 复制 / 移动) === -->
+<div class="ev-popup hidden" id="eventMenu">
+  <div class="ev-popup-title" id="eventMenuTitle"></div>
+  <button class="ev-popup-item" data-act="edit">✏️ 编辑事件</button>
+  <button class="ev-popup-item" data-act="copy">📋 复制事件</button>
+  <button class="ev-popup-item" data-act="move">📅 移动至其他日期</button>
+</div>
+
 <!-- === Plan Modal (add/edit) === -->
 <div class="modal-overlay hidden" id="planOverlay">
   <div class="modal" style="max-width:420px">
@@ -1025,7 +1065,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.1 — 打卡板块改造：次数制打卡(打卡次数/目标次数) + 周期进度 + 总览可点打卡
+// amber的工作台 v14.2 — 月历事件支持复制 / 移动至其他日期
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1587,7 +1627,7 @@ function renderCalendar() {
         chipCls = 'event';
         body = `<span class="ev-t">${escapeHtml(ev.time || '')}</span><span class="ev-txt">${escapeHtml(ev.title)}</span>`;
       }
-      chips.push(`<div class="cal-ev ${chipCls}" data-id="${ev.id}" onclick="editEvent('${ev.id}', event)">${body}</div>`);
+      chips.push(`<div class="cal-ev ${chipCls}" data-id="${ev.id}" onclick="openEventMenu('${ev.id}', event)">${body}</div>`);
     });
 
     const visible = chips.slice(0, MAX_CHIPS).join('');
@@ -1675,6 +1715,105 @@ function editEvent(id, e) {
   if (ev) openEventModal(ev.date, ev);
 }
 window.editEvent = editEvent;
+
+// ============================================================
+// EVENT ACTIONS — 复制 / 移动至其他日期 (opened from calendar chips)
+// ============================================================
+let _menuEventId = null;
+
+function openEventMenu(id, e) {
+  if (e) e.stopPropagation();
+  const ev = state.events.find(x => x.id === id);
+  if (!ev) return;
+  _menuEventId = id;
+  $('#eventMenuTitle').textContent = ev.title;
+  const menu = $('#eventMenu');
+  menu.classList.remove('hidden');
+  let x = e && e.clientX != null ? e.clientX : (window.innerWidth / 2 - 92);
+  let y = e && e.clientY != null ? e.clientY : (window.innerHeight / 2 - 80);
+  const mw = menu.offsetWidth || 184;
+  const mh = menu.offsetHeight || 160;
+  if (x + mw > window.innerWidth - 8) x = window.innerWidth - mw - 8;
+  if (y + mh > window.innerHeight - 8) y = window.innerHeight - mh - 8;
+  x = Math.max(8, x); y = Math.max(8, y);
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+}
+window.openEventMenu = openEventMenu;
+
+function closeEventMenu() { $('#eventMenu').classList.add('hidden'); }
+window.closeEventMenu = closeEventMenu;
+
+function copyEvent(id) {
+  const ev = state.events.find(x => x.id === id);
+  if (!ev) return;
+  closeEventMenu();
+  createRecord('events', {
+    id: 'e_' + Date.now(),
+    date: ev.date,
+    time: ev.time || '09:00',
+    title: ev.title + '（副本）',
+    end_date: ev.end_date || null,
+    end_time: ev.end_time || null,
+    desc_text: ev.desc_text || ''
+  });
+  renderEventPage(); renderCalendar(); renderOverviewModules(); renderWidgetPanel();
+  showDiagToast('已复制「' + ev.title + '」', 'online');
+}
+
+let _moveEventId = null;
+function openMoveEventModal(id) {
+  const ev = state.events.find(x => x.id === id);
+  if (!ev) return;
+  _moveEventId = id;
+  $('#moveEventTitle').textContent = '「' + ev.title + '」';
+  $('#moveEventDate').value = ev.date;
+  closeEventMenu();
+  $('#moveEventOverlay').classList.remove('hidden');
+}
+function closeMoveEventModal() { $('#moveEventOverlay').classList.add('hidden'); }
+
+function saveMoveEventModal() {
+  const newDate = $('#moveEventDate').value;
+  if (!newDate) { showDiagToast('请选择日期', 'error'); return; }
+  const ev = state.events.find(x => x.id === _moveEventId);
+  if (!ev) return;
+  const oldDate = ev.date;
+  const updates = { date: newDate };
+  if (ev.end_date && ev.end_date !== oldDate) {
+    // shift the end date by the same offset to preserve the event's duration
+    const oldMs = new Date(oldDate + 'T00:00:00').getTime();
+    const newMs = new Date(newDate + 'T00:00:00').getTime();
+    const endMs = new Date(ev.end_date + 'T00:00:00').getTime();
+    const shifted = fmtDate(new Date(endMs + (newMs - oldMs)));
+    updates.end_date = shifted < newDate ? newDate : shifted;
+  }
+  updateRecord('events', _moveEventId, updates);
+  closeMoveEventModal();
+  renderEventPage(); renderCalendar(); renderOverviewModules(); renderWidgetPanel();
+  showDiagToast('已移动到 ' + newDate, 'online');
+}
+
+// Event action menu wiring
+$('#eventMenu').addEventListener('click', e => {
+  const item = e.target.closest('.ev-popup-item');
+  if (!item || !_menuEventId) return;
+  const act = item.dataset.act, id = _menuEventId;
+  if (act === 'edit') { const ev = state.events.find(x => x.id === id); closeEventMenu(); if (ev) openEventModal(ev.date, ev); }
+  else if (act === 'copy') copyEvent(id);
+  else if (act === 'move') openMoveEventModal(id);
+});
+
+// Close the menu when clicking anywhere outside it (or outside a calendar chip)
+document.addEventListener('click', e => {
+  if (!$('#eventMenu').classList.contains('hidden') && !e.target.closest('#eventMenu') && !e.target.closest('.cal-ev')) {
+    closeEventMenu();
+  }
+});
+
+$('#btnMoveEventSave').addEventListener('click', saveMoveEventModal);
+$('#btnMoveEventCancel').addEventListener('click', closeMoveEventModal);
+$('#moveEventOverlay').addEventListener('click', e => { if (e.target === $('#moveEventOverlay')) closeMoveEventModal(); });
 
 function eventRangeLabel(ev) {
   const days = ['日','一','二','三','四','五','六'];
