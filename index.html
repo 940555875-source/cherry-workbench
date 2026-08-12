@@ -776,19 +776,20 @@ let state = {
 let DEVICE_ID = localStorage.getItem(LS_KEYS.deviceId);
 if (!DEVICE_ID) { DEVICE_ID = 'd_' + crypto.randomUUID(); localStorage.setItem(LS_KEYS.deviceId, DEVICE_ID); }
 
-let supabase = null;
+// SB wrapper avoids collision with global `supabase` from the supabase-js CDN
+let sb = null;
 let syncEnabled = false;
 
 function initSupabase() {
   try {
     const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
-    if (cfg.url && cfg.key) {
-      supabase = window.supabase.createClient(cfg.url, cfg.key);
+    if (cfg.url && cfg.key && window.supabase && window.supabase.createClient) {
+      sb = window.supabase.createClient(cfg.url, cfg.key);
       syncEnabled = true;
       return true;
     }
   } catch(e) {}
-  supabase = null;
+  sb = null;
   syncEnabled = false;
   return false;
 }
@@ -833,24 +834,24 @@ function withDeviceId(record) {
 
 /** Pull all records from a Supabase table (including tombstones) */
 async function cloudPull(tableName) {
-  if (!supabase) return [];
-  const { data, error } = await supabase.from(tableName).select('*').order('updated_at', { ascending: false });
+  if (!sb) return [];
+  const { data, error } = await sb.from(tableName).select('*').order('updated_at', { ascending: false });
   if (error) { console.warn('Pull error', tableName, error.message); return []; }
   return data || [];
 }
 
 /** Push (upsert) records to cloud */
 async function cloudPush(tableName, records) {
-  if (!supabase || !records.length) return;
-  const { error } = await supabase.from(tableName).upsert(records);
+  if (!sb || !records.length) return;
+  const { error } = await sb.from(tableName).upsert(records);
   if (error) console.warn('Push error', tableName, error.message);
 }
 
 /** Mark a record as deleted (tombstone) in cloud */
 async function cloudTombstone(tableName, id) {
-  if (!supabase) return;
+  if (!sb) return;
   const now = new Date().toISOString();
-  const { error } = await supabase.from(tableName).update({ deleted_at: now, updated_at: now }).eq('id', id);
+  const { error } = await sb.from(tableName).update({ deleted_at: now, updated_at: now }).eq('id', id);
   if (error) console.warn('Tombstone error', tableName, error.message);
 }
 
@@ -859,7 +860,7 @@ async function cloudTombstone(tableName, id) {
  * Returns merged local data (active records only, no tombstones)
  */
 async function fullSync(key) {
-  if (!syncEnabled || !supabase) return;
+  if (!syncEnabled || !sb) return;
 
   const tableName = TABLE_MAP[key];
   if (!tableName) return;
@@ -1082,7 +1083,7 @@ function cleanupOldTombstones() {
 // ============================================================
 
 async function testConnection() {
-  if (!supabase) {
+  if (!sb) {
     showDiagToast('未配置 Supabase，请先在设置中填写 URL 和 Key', 'error');
     return;
   }
@@ -1090,7 +1091,7 @@ async function testConnection() {
 
   try {
     // Test 1: Basic connectivity
-    const { error: e1 } = await supabase.from('plans').select('id').limit(1);
+    const { error: e1 } = await sb.from('plans').select('id').limit(1);
     if (e1) {
       if (e1.code === '42P01') {
         showDiagToast('表不存在 — 请先在 Supabase SQL Editor 中执行 supabase-setup.sql', 'error');
@@ -1103,7 +1104,7 @@ async function testConnection() {
     }
 
     // Test 2: Check table count
-    const { data, error: e2 } = await supabase.from('plans').select('id', { count: 'exact', head: true });
+    const { data, error: e2 } = await sb.from('plans').select('id', { count: 'exact', head: true });
     if (e2) {
       showDiagToast('连接成功但查询失败 — 请检查 RLS 策略', 'error');
       return;
@@ -1645,7 +1646,7 @@ $('#btnSettingsSave').addEventListener('click', () => {
     setSyncStatus('syncing', '同步中...');
     testConnection();
   } else {
-    supabase = null; syncEnabled = false;
+    sb = null; syncEnabled = false;
     setSyncStatus('offline', '仅本地');
   }
   $('#settingsOverlay').classList.add('hidden');
