@@ -496,6 +496,14 @@ body{
   transition:all .2s;
 }
 .checkin-habit-del:hover{background:#FFEBEE;color:#F44336}
+.checkin-undo{
+  width:26px;height:26px;border-radius:50%;border:1.5px solid var(--gray-200);
+  background:transparent;color:var(--gray-500);cursor:pointer;font-size:15px;line-height:1;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.checkin-undo:hover:not(:disabled){background:var(--gray-100);color:var(--gray-700);border-color:var(--gray-300)}
+.checkin-undo:disabled{opacity:.35;cursor:not-allowed}
+.checkin-habit.completed{border-left-color:#2E7D32;background:#F1F8E9}
 
 /* ===== Travel ===== */
 .travel-card{border-top:3px solid #5C9EC4}
@@ -576,6 +584,19 @@ body{
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .ov-module-item.done{text-decoration:line-through;opacity:.5}
+.ov-checkin-item{padding:8px;background:var(--gray-50);border-radius:8px}
+.ov-checkin-item.done{background:#F1F8E9}
+.ov-checkin-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.ov-checkin-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ov-checkin-count{font-size:12px;font-weight:700;color:#2E7D32;white-space:nowrap;margin-left:8px}
+.ov-checkin-bar{height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden;margin-bottom:8px}
+.ov-checkin-fill{height:100%;background:linear-gradient(90deg,#81C784,#4CAF50);border-radius:3px;transition:width .3s}
+.ov-checkin-btn{
+  width:100%;border:none;border-radius:8px;padding:6px 0;font-size:12.5px;font-weight:700;cursor:pointer;
+  background:#4CAF50;color:var(--white);transition:all .2s;
+}
+.ov-checkin-btn:hover:not(:disabled){background:#43A047}
+.ov-checkin-btn:disabled{background:#E8F5E9;color:#2E7D32;cursor:default}
 
 /* ===== Note Card ===== */
 .note-card{border-top:3px solid var(--blue-300)}
@@ -735,7 +756,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.1</div>
     </div>
   </aside>
 
@@ -954,6 +975,9 @@ body{
       <option value="季">季</option>
       <option value="年">年</option>
     </select>
+    <label>打卡次数（周期目标）</label>
+    <input type="text" id="cmTarget" placeholder="如：10 次" maxlength="5" inputmode="numeric">
+    <div class="modal-hint">仅支持填写数字，进度 = 已打卡次数 ÷ 目标次数</div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnCheckinCancel">取消</button>
       <button class="btn btn-primary" id="btnCheckinSave">保存</button>
@@ -1001,7 +1025,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.0 — 新增旅行板块：世界地图打点 + 国家进度
+// amber的工作台 v14.1 — 打卡板块改造：次数制打卡(打卡次数/目标次数) + 周期进度 + 总览可点打卡
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -2159,14 +2183,25 @@ function periodRange(period) {
   return { start, end };
 }
 
+// 单条打卡的周期目标次数（弹窗「打卡次数」填写项）
+function habitTarget(h) {
+  const t = parseInt(h.target, 10);
+  return (Number.isFinite(t) && t > 0) ? t : 1;
+}
+
+// 当前周期内已打卡次数（支持同一天多次打卡）
+function habitCount(h) {
+  const { start, end } = periodRange(habitPeriod(h));
+  const s = fmtDate(start), e = fmtDate(end);
+  return (h.dates || []).filter(d => d >= s && d <= e).length;
+}
+
 function habitProgress(h) {
   const period = habitPeriod(h);
-  const { start, end } = periodRange(period);
-  const totalDays = Math.round((end - start) / 86400000) + 1;
-  const s = fmtDate(start), e = fmtDate(end);
-  let done = 0;
-  (h.dates || []).forEach(d => { if (d >= s && d <= e) done++; });
-  return { period, done, totalDays };
+  const count = habitCount(h);
+  const target = habitTarget(h);
+  const pct = Math.min(100, Math.round(count / target * 100));
+  return { period, count, target, pct, done: count >= target };
 }
 
 function habitRemaining(period) {
@@ -2230,6 +2265,32 @@ function renderCheckinYear() {
   }
 }
 
+// 打卡一次（当前周期内 +1，支持同一天多次打卡）
+function checkinIncrement(id) {
+  const habit = state.checkins.find(h => h.id === id);
+  if (!habit) return;
+  if (!habit.dates) habit.dates = [];
+  habit.dates.push(fmtDate(new Date()));
+  updateRecord('checkins', habit.id, { dates: habit.dates });
+  renderCheckinPage(); renderCalendar(); renderOverviewModules();
+}
+
+// 撤回最近一次打卡（仅当前周期内）
+function checkinDecrement(id) {
+  const habit = state.checkins.find(h => h.id === id);
+  if (!habit || !habit.dates || habit.dates.length === 0) return;
+  const { start, end } = periodRange(habitPeriod(habit));
+  const s = fmtDate(start), e = fmtDate(end);
+  for (let i = habit.dates.length - 1; i >= 0; i--) {
+    if (habit.dates[i] >= s && habit.dates[i] <= e) {
+      habit.dates.splice(i, 1);
+      break;
+    }
+  }
+  updateRecord('checkins', habit.id, { dates: habit.dates });
+  renderCheckinPage(); renderCalendar(); renderOverviewModules();
+}
+
 function renderCheckinPage() {
   const list = $('#checkinHabits'), empty = $('#checkinEmpty');
   renderCheckinYear();
@@ -2237,29 +2298,27 @@ function renderCheckinPage() {
   if (state.checkins.length === 0) { list.classList.add('hidden'); empty.classList.remove('hidden'); return; }
   list.classList.remove('hidden'); empty.classList.add('hidden');
 
-  const today = fmtDate(new Date());
   const sorted = [...state.checkins].sort((a, b) => habitCreatedAt(a) - habitCreatedAt(b));
 
   sorted.forEach(habit => {
-    const { period, done, totalDays } = habitProgress(habit);
-    const pct = totalDays ? Math.min(100, Math.round(done / totalDays * 100)) : 0;
+    const { period, count, target, pct, done } = habitProgress(habit);
     const remaining = habitRemaining(period);
-    const doneToday = (habit.dates || []).includes(today);
     const div = document.createElement('div');
-    div.className = 'checkin-habit';
+    div.className = 'checkin-habit' + (done ? ' completed' : '');
     div.innerHTML = `
       <div class="checkin-habit-header">
         <span class="checkin-habit-name"><span class="emoji">🔥</span>${escapeHtml(habit.name)}</span>
-        <span class="checkin-period-badge">${period}</span>
+        <span class="checkin-period-badge">${period} · 目标 ${target} 次</span>
       </div>
       <div class="checkin-progress">
         <div class="cp-bar"><div class="cp-fill" style="width:${pct}%"></div></div>
-        <span class="cp-text">进度 ${done}/${totalDays}</span>
+        <span class="cp-text">${done ? '✅ 已完成' : `${count}/${target} 次`}</span>
       </div>
       <div class="checkin-footer">
         <span class="checkin-remaining">⏳ ${remaining}</span>
         <span class="checkin-actions">
-          <button class="checkin-toggle${doneToday ? ' done' : ''}" data-id="${habit.id}">${doneToday ? '✓ 已打卡' : '打卡'}</button>
+          <button class="checkin-undo" data-id="${habit.id}" title="撤回一次"${count === 0 ? ' disabled' : ''}>−</button>
+          <button class="checkin-toggle${done ? ' done' : ''}" data-id="${habit.id}">${done ? '✓ 已达成' : '+1 打卡'}</button>
           <button class="checkin-habit-del" data-id="${habit.id}" title="删除">×</button>
         </span>
       </div>`;
@@ -2269,19 +2328,10 @@ function renderCheckinPage() {
 
 $('#checkinHabits').addEventListener('click', e => {
   const toggleBtn = e.target.closest('.checkin-toggle');
+  const undoBtn = e.target.closest('.checkin-undo');
   const delBtn = e.target.closest('.checkin-habit-del');
-  if (toggleBtn) {
-    const habit = state.checkins.find(h => h.id === toggleBtn.dataset.id);
-    if (habit) {
-      if (!habit.dates) habit.dates = [];
-      const today = fmtDate(new Date());
-      const idx = habit.dates.indexOf(today);
-      if (idx >= 0) habit.dates.splice(idx, 1);
-      else habit.dates.push(today);
-      updateRecord('checkins', habit.id, { dates: habit.dates });
-      renderCheckinPage(); renderCalendar(); renderOverviewModules();
-    }
-  }
+  if (toggleBtn) checkinIncrement(toggleBtn.dataset.id);
+  if (undoBtn) checkinDecrement(undoBtn.dataset.id);
   if (delBtn) {
     if (confirm('删除这个打卡习惯？')) {
       deleteRecord('checkins', delBtn.dataset.id);
@@ -2295,6 +2345,7 @@ function openCheckinModal() {
   $('#checkinModalTitle').textContent = '➕ 添加打卡';
   $('#cmName').value = '';
   $('#cmPeriod').value = '月';
+  $('#cmTarget').value = '';
   $('#checkinOverlay').classList.remove('hidden');
   setTimeout(() => $('#cmName').focus(), 50);
 }
@@ -2303,7 +2354,9 @@ function saveCheckinModal() {
   const name = $('#cmName').value.trim();
   if (!name) { showDiagToast('请输入打卡标题'); return; }
   const period = $('#cmPeriod').value;
-  createRecord('checkins', { id: 'c_' + Date.now(), name, period, dates: [] });
+  const target = parseInt($('#cmTarget').value, 10);
+  if (!Number.isFinite(target) || target < 1) { showDiagToast('请填写有效的打卡次数（正整数）'); return; }
+  createRecord('checkins', { id: 'c_' + Date.now(), name, period, target, dates: [] });
   closeCheckinModal();
   renderCheckinPage(); renderOverviewModules();
 }
@@ -2313,10 +2366,13 @@ $('#btnCheckinCancel').addEventListener('click', closeCheckinModal);
 $('#checkinOverlay').addEventListener('click', e => { if (e.target === $('#checkinOverlay')) closeCheckinModal(); });
 $('#btnCheckinSave').addEventListener('click', saveCheckinModal);
 $('#cmName').addEventListener('keydown', e => { if (e.key === 'Enter') saveCheckinModal(); });
+// 次数仅支持填写数字：过滤所有非数字字符
+$('#cmTarget').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5); });
+$('#cmTarget').addEventListener('keydown', e => { if (e.key === 'Enter') saveCheckinModal(); });
 
 function calcStreak(dates) {
   if (!dates || dates.length === 0) return 0;
-  const sorted = [...dates].sort().reverse();
+  const sorted = [...new Set(dates)].sort().reverse();
   let streak = 1;
   const today = fmtDate(new Date()), yesterday = fmtDate(new Date(Date.now() - 86400000));
   if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
@@ -2331,12 +2387,15 @@ function calcStreak(dates) {
 // OVERVIEW MODULES + STATS
 // ============================================================
 
+function checkinCompletedCount() {
+  return state.checkins.filter(h => habitProgress(h).done).length;
+}
+
 function renderOvStats() {
   const today = fmtDate(new Date());
   const { overdue, todayTasks, doneTasks, futureTasks } = getPlanSections(today);
   const totalEvents = state.events.filter(e => e.date >= today).length;
   const totalCheckins = state.checkins.length;
-  const activeStreak = state.checkins.reduce((max, h) => Math.max(max, calcStreak(h.dates)), 0);
 
   $('#ovStats').innerHTML = `
     <div class="stat-card orange" onclick="goPlansSection('overdue')" style="cursor:pointer">
@@ -2346,7 +2405,7 @@ function renderOvStats() {
       <div class="stat-label">今日任务</div><div class="stat-value">${todayTasks.length}</div>
     </div>
     <div class="stat-card green" onclick="switchToPage('checkins')" style="cursor:pointer">
-      <div class="stat-label">打卡连续</div><div class="stat-value">${activeStreak}</div>
+      <div class="stat-label">打卡项目</div><div class="stat-value">${totalCheckins}</div>
     </div>
     <div class="stat-card blue" onclick="switchToPage('events')" style="cursor:pointer">
       <div class="stat-label">近期事件</div><div class="stat-value">${totalEvents}</div>
@@ -2358,7 +2417,8 @@ function renderOverviewModules() {
   const todayPlans = state.plans.filter(p => planEffectiveDate(p) === today);
   const undonePlans = todayPlans.filter(p => !p.done), donePlans = todayPlans.filter(p => p.done);
   const upcomingEvents = state.events.filter(e => e.date >= today).sort((a,b) => a.date > b.date ? 1 : -1).slice(0, 3);
-  const checkinHabits = state.checkins;
+  const checkinHabits = [...state.checkins].sort((a, b) => habitCreatedAt(a) - habitCreatedAt(b));
+  const checkinDone = checkinHabits.filter(h => habitProgress(h).done).length;
   const planPct = todayPlans.length ? Math.round(donePlans.length / todayPlans.length * 100) : 0;
 
   const container = $('#overviewModules');
@@ -2374,9 +2434,21 @@ function renderOverviewModules() {
       <div class="ov-module-header"><span class="ov-module-title">🔔 近期事件</span><span class="ov-module-badge blue">${state.events.filter(e=>e.date>=today).length}</span></div>
       ${upcomingEvents.length > 0 ? `<div class="ov-module-items">${upcomingEvents.map(e => `<div class="ov-module-item">📅 ${e.date.slice(5)} · ${escapeHtml(e.title)}</div>`).join('')}</div>` : '<div class="ov-module-preview">暂无近期事件</div>'}
     </div>
-    <div class="ov-module" onclick="switchToPage('checkins')">
-      <div class="ov-module-header"><span class="ov-module-title">✅ 打卡</span><span class="ov-module-badge green">${checkinHabits.length} 项</span></div>
-      ${checkinHabits.length > 0 ? `<div class="ov-module-items">${checkinHabits.map(h => `<div class="ov-module-item">🔥 ${escapeHtml(h.name)} · 连续 ${calcStreak(h.dates)} 天</div>`).join('')}</div>` : '<div class="ov-module-preview">还没有打卡习惯</div>'}
+    <div class="ov-module">
+      <div class="ov-module-header" onclick="switchToPage('checkins')" style="cursor:pointer">
+        <span class="ov-module-title">✅ 打卡</span>
+        <span class="ov-module-badge green">完成 ${checkinDone}/${checkinHabits.length} 项</span>
+      </div>
+      ${checkinHabits.length > 0 ? `<div class="ov-module-items">
+        ${checkinHabits.map(h => {
+          const p = habitProgress(h);
+          return `<div class="ov-checkin-item${p.done ? ' done' : ''}">
+            <div class="ov-checkin-row"><span class="ov-checkin-name">🔥 ${escapeHtml(h.name)}</span><span class="ov-checkin-count">${p.count}/${p.target}</span></div>
+            <div class="ov-checkin-bar"><div class="ov-checkin-fill" style="width:${p.pct}%"></div></div>
+            <button class="ov-checkin-btn" data-id="${h.id}"${p.done ? ' disabled' : ''}>${p.done ? '✓ 已完成' : '+1 打卡'}</button>
+          </div>`;
+        }).join('')}
+      </div>` : '<div class="ov-module-preview">还没有打卡习惯</div>'}
     </div>
     <div class="ov-module" style="text-align:center;padding:20px">
       <div style="font-size:28px;font-weight:300;letter-spacing:-1px" id="ovClock">--:--</div>
@@ -2385,6 +2457,12 @@ function renderOverviewModules() {
   updateClock();
   renderOvStats();
 }
+
+// 总览打卡模块：点击「+1 打卡」直接在当前周期内打卡一次
+$('#overviewModules').addEventListener('click', e => {
+  const btn = e.target.closest('.ov-checkin-btn');
+  if (btn) { e.stopPropagation(); checkinIncrement(btn.dataset.id); }
+});
 
 // ============================================================
 // TRAVEL — 世界地图打点 + 进度
