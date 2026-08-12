@@ -235,7 +235,6 @@ body{
 .cal-ev .ev-t{flex-shrink:0;font-weight:700;font-variant-numeric:tabular-nums}
 .cal-ev .ev-txt{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cal-ev.event{background:var(--blue-400)}
-.cal-ev.plan{background:var(--pink-300)}
 /* Multi-day event: continuous bar segments across the week */
 .cal-ev.mstart{border-radius:5px 0 0 5px;background:var(--blue-500);padding-left:4px}
 .cal-ev.mmid{border-radius:0;background:var(--blue-400);justify-content:center;color:var(--blue-200);padding-left:2px;padding-right:2px}
@@ -666,7 +665,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v10.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v11.0</div>
     </div>
   </aside>
 
@@ -898,7 +897,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v10 — 每日计划：添加弹窗(名称/截止时间/分类/备注) + 四分类切换列表 + 停留时长 + 计划详情弹窗
+// amber的工作台 v11 — 总览统计卡跳转对应分类 + 月历不再显示计划 + 计划详情状态可切换
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1412,10 +1411,6 @@ function eventsCoveringDate(dateStr) {
   });
 }
 
-function plansOnDate(dateStr) {
-  return state.plans.filter(p => p.date === dateStr && !p.done);
-}
-
 function renderCalendar() {
   const year = state.calYear, month = state.calMonth;
   const today = fmtDate(new Date());
@@ -1443,7 +1438,6 @@ function renderCalendar() {
     const dateStr = fmtDate(date);
     const isToday = dateStr === today;
     const evs = eventsCoveringDate(dateStr);
-    const plans = plansOnDate(dateStr);
     const nCheckin = state.checkins.reduce((n, h) => n + ((h.dates || []).includes(dateStr) ? 1 : 0), 0);
 
     const chips = [];
@@ -1459,10 +1453,6 @@ function renderCalendar() {
         body = `<span class="ev-t">${escapeHtml(ev.time || '')}</span><span class="ev-txt">${escapeHtml(ev.title)}</span>`;
       }
       chips.push(`<div class="cal-ev ${chipCls}" data-id="${ev.id}" onclick="editEvent('${ev.id}', event)">${body}</div>`);
-    });
-    // Plans: show title only (no time field)
-    plans.forEach(p => {
-      chips.push(`<div class="cal-ev plan" title="${escapeHtml(p.text)}"><span class="ev-txt">${escapeHtml(p.text)}</span></div>`);
     });
 
     const visible = chips.slice(0, MAX_CHIPS).join('');
@@ -1779,16 +1769,19 @@ let _detailPlanId = null;
 function openPlanDetail(p) {
   _detailPlanId = p.id;
   const cat = planCategory(p);
-  const status = p.done ? '已完成' : '未完成';
   const statusColor = p.done ? '#2E7D32' : '#E65100';
   $('#planDetailBody').innerHTML = `
-    <div style="display:grid;grid-template-columns:80px 1fr;row-gap:10px;column-gap:8px">
+    <div style="display:grid;grid-template-columns:80px 1fr;row-gap:10px;column-gap:8px;align-items:center">
       <span style="color:var(--gray-400)">计划名称</span><span style="font-weight:600">${escapeHtml(p.text)}</span>
       <span style="color:var(--gray-400)">截止时间</span><span>${escapeHtml(fmtDeadline(p.deadline))}</span>
       <span style="color:var(--gray-400)">计划分类</span><span>${cat}</span>
       <span style="color:var(--gray-400)">备注</span><span>${escapeHtml(p.note || '无')}</span>
       <span style="color:var(--gray-400)">停留时长</span><span>${fmtDuration(planDwell(p))}</span>
-      <span style="color:var(--gray-400)">计划状态</span><span style="color:${statusColor};font-weight:600">${status}</span>
+      <span style="color:var(--gray-400)">计划状态</span>
+      <span><select id="pdStatus" style="width:100%;padding:5px 8px;border:1px solid var(--gray-200);border-radius:6px;font-size:13px;color:${statusColor};font-weight:600">
+        <option value="0"${p.done ? '' : ' selected'}>未完成</option>
+        <option value="1"${p.done ? ' selected' : ''}>已完成</option>
+      </select></span>
     </div>`;
   $('#planDetailOverlay').classList.remove('hidden');
 }
@@ -1812,6 +1805,16 @@ $('#btnPlanDetailEdit').addEventListener('click', () => {
 });
 $('#btnPlanDetailClose').addEventListener('click', closePlanDetail);
 $('#planDetailOverlay').addEventListener('click', e => { if (e.target === $('#planDetailOverlay')) closePlanDetail(); });
+
+// Toggle plan status from the detail modal (已完成/未完成)
+$('#planDetailBody').addEventListener('change', e => {
+  if (e.target.id !== 'pdStatus') return;
+  const done = e.target.value === '1';
+  updateRecord('plans', _detailPlanId, { done });
+  renderPlanPage(); renderCalendar(); renderOverviewModules(); renderOvStats();
+  const p = state.plans.find(x => x.id === _detailPlanId);
+  if (p) openPlanDetail(p);
+});
 
 // ============================================================
 // EVENTS (with tombstone CRUD)
@@ -2082,10 +2085,10 @@ function renderOvStats() {
   const activeStreak = state.checkins.reduce((max, h) => Math.max(max, calcStreak(h.dates)), 0);
 
   $('#ovStats').innerHTML = `
-    <div class="stat-card orange" onclick="switchToPage('plans')" style="cursor:pointer">
+    <div class="stat-card orange" onclick="goPlansSection('overdue')" style="cursor:pointer">
       <div class="stat-label">未完成</div><div class="stat-value">${overdue.length}</div>
     </div>
-    <div class="stat-card pink" onclick="switchToPage('plans')" style="cursor:pointer">
+    <div class="stat-card pink" onclick="goPlansSection('today')" style="cursor:pointer">
       <div class="stat-label">今日任务</div><div class="stat-value">${todayTasks.length}</div>
     </div>
     <div class="stat-card green" onclick="switchToPage('checkins')" style="cursor:pointer">
@@ -2141,6 +2144,13 @@ function switchToPage(page) {
 }
 // Exposed globally for inline onclick handlers (stat cards + overview modules)
 window.switchToPage = switchToPage;
+
+// Overview stat cards jump to the matching plan category
+function goPlansSection(key) {
+  state.planActiveSection = key;
+  switchToPage('plans');
+}
+window.goPlansSection = goPlansSection;
 
 // ============================================================
 // CLOCK
