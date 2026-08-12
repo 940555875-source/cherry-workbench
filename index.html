@@ -357,6 +357,28 @@ body{
 .plan-item:hover .plan-del{opacity:1}
 .plan-del:hover{background:#FFEBEE;color:#F44336}
 .plan-empty{text-align:center;color:var(--gray-400);font-size:13px;padding:20px 0}
+.plan-item-body{flex:1;min-width:0}
+.plan-item-name{
+  font-size:14px;cursor:pointer;display:inline-block;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s;
+}
+.plan-item-name:hover{color:var(--pink-500);text-decoration:underline}
+.plan-item.done .plan-item-name{text-decoration:line-through;color:var(--gray-400)}
+.plan-item-meta{font-size:11px;color:var(--gray-400);margin-top:2px;display:flex;align-items:center;gap:6px}
+.plan-cat{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;line-height:1.7}
+.plan-cat.work{background:var(--blue-50);color:var(--blue-500)}
+.plan-cat.private{background:var(--pink-50);color:var(--pink-500)}
+.stat-card{cursor:pointer}
+.stat-card.active{outline:2px solid var(--blue-300);outline-offset:-2px}
+.modal select{
+  width:100%;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
+  padding:10px 14px;font-size:14px;outline:none;font-family:inherit;background:var(--gray-50);
+  transition:border-color .2s;
+}
+.modal select:focus{border-color:var(--blue-300);background:var(--white)}
+@media (max-width: 768px) {
+  .plan-add-bottom { margin-bottom: 60px; }
+}
 
 /* ===== ICS Import Row ===== */
 .ics-row{
@@ -644,7 +666,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v9.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v10.0</div>
     </div>
   </aside>
 
@@ -710,8 +732,7 @@ body{
           <div class="plan-empty" id="planEmpty">这一天还没有计划 🎉</div>
           <!-- Add at bottom -->
           <div class="plan-add-bottom">
-            <input type="text" id="planInput" placeholder="添加计划..." maxlength="200">
-            <button class="btn-add" id="btnAddPlan">添加计划</button>
+            <button class="btn-add" id="btnAddPlan" style="width:100%;padding:12px">➕ 添加计划</button>
           </div>
         </div>
       </div>
@@ -803,6 +824,40 @@ body{
   </div>
 </div>
 
+<!-- === Plan Modal (add/edit) === -->
+<div class="modal-overlay hidden" id="planOverlay">
+  <div class="modal" style="max-width:420px">
+    <h2 id="planModalTitle">➕ 添加计划</h2>
+    <label>计划名称</label>
+    <input type="text" id="pmName" placeholder="输入计划名称" maxlength="200">
+    <label>截止时间</label>
+    <input type="datetime-local" id="pmDeadline">
+    <label>计划分类</label>
+    <select id="pmCategory">
+      <option value="工作">工作</option>
+      <option value="私人">私人</option>
+    </select>
+    <label>备注（可选）</label>
+    <input type="text" id="pmNote" placeholder="备注" maxlength="200">
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnPlanCancel">取消</button>
+      <button class="btn btn-primary" id="btnPlanSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- === Plan Detail Modal === -->
+<div class="modal-overlay hidden" id="planDetailOverlay">
+  <div class="modal" style="max-width:420px">
+    <h2>📋 计划详情</h2>
+    <div id="planDetailBody" style="font-size:14px;line-height:1.9;color:var(--gray-700)"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnPlanDetailEdit">✏️ 编辑</button>
+      <button class="btn btn-primary" id="btnPlanDetailClose">关闭</button>
+    </div>
+  </div>
+</div>
+
 <!-- === Reminder Modal (event starting within 1 hour) === -->
 <div class="modal-overlay hidden" id="remindOverlay">
   <div class="modal" style="max-width:360px">
@@ -843,7 +898,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v9 — 月历外显事件(时间+标题) + 跨天事件连贯展示 + 提前1小时弹窗提醒 + 点击日期添加事件弹窗
+// amber的工作台 v10 — 每日计划：添加弹窗(名称/截止时间/分类/备注) + 四分类切换列表 + 停留时长 + 计划详情弹窗
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -875,6 +930,7 @@ let state = {
   calYear: new Date().getFullYear(),
   calMonth: new Date().getMonth(),
   planSelectedDate: fmtDate(new Date()),
+  planActiveSection: 'today',
   plans: [],
   events: [],
   checkins: [],
@@ -1533,15 +1589,55 @@ function getPlanSections(dateStr) {
   return { overdue, todayTasks, doneTasks, futureTasks };
 }
 
-function renderPlanStats(dateStr) {
-  const { overdue, todayTasks, doneTasks, futureTasks } = getPlanSections(dateStr);
-  const total = overdue.length + todayTasks.length + doneTasks.length + futureTasks.length;
+// Section metadata (tab order + colors)
+const SECTION_META = {
+  overdue: { title: '未完成',  cls: 'overdue',    dot: '#FF9800', color: 'orange' },
+  today:   { title: '今日任务', cls: 'today-sec',  dot: 'var(--pink-300)', color: 'pink' },
+  done:    { title: '已完成',  cls: 'done-sec',    dot: '#4CAF50', color: 'green' },
+  future:  { title: '待完成',  cls: 'future-sec',  dot: 'var(--blue-300)', color: 'blue' },
+};
+const SECTION_ORDER = ['overdue', 'today', 'done', 'future'];
 
-  $('#planStats').innerHTML = `
-    <div class="stat-card orange"><div class="stat-label">未完成</div><div class="stat-value">${overdue.length}</div></div>
-    <div class="stat-card pink"><div class="stat-label">今日任务</div><div class="stat-value">${todayTasks.length}</div></div>
-    <div class="stat-card green"><div class="stat-label">已完成</div><div class="stat-value">${doneTasks.length}</div></div>
-    <div class="stat-card blue"><div class="stat-label">待完成</div><div class="stat-value">${futureTasks.length}</div></div>`;
+function planCreatedMs(p) {
+  const t = p.created_at ? new Date(p.created_at).getTime() : NaN;
+  return isNaN(t) ? Date.now() : t;
+}
+
+// 停留时长 = 查看时间(now) - 新建时间(created_at)
+function planDwell(p) {
+  return Date.now() - planCreatedMs(p);
+}
+
+function fmtDuration(ms) {
+  if (!ms || ms < 0) ms = 0;
+  if (ms < 60000) return '刚刚';
+  const min = Math.floor(ms / 60000);
+  if (min < 60) return min + '分钟';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + '小时' + (min % 60 ? (min % 60) + '分' : '');
+  const day = Math.floor(hr / 24);
+  if (day < 7) return day + '天' + (hr % 24 ? (hr % 24) + '小时' : '');
+  const wk = Math.floor(day / 7);
+  return wk + '周';
+}
+
+function planCategory(p) {
+  return p.category === '私人' ? '私人' : '工作';
+}
+
+function fmtDeadline(s) {
+  if (!s) return '未设置';
+  return String(s).replace('T', ' ');
+}
+
+function renderPlanStats(dateStr, activeKey) {
+  const sections = getPlanSections(dateStr);
+  const data = { overdue: sections.overdue, today: sections.todayTasks, done: sections.doneTasks, future: sections.futureTasks };
+  $('#planStats').innerHTML = SECTION_ORDER.map(k => `
+    <div class="stat-card ${SECTION_META[k].color}${activeKey === k ? ' active' : ''}" data-sec="${k}">
+      <div class="stat-label">${SECTION_META[k].title}</div>
+      <div class="stat-value">${data[k].length}</div>
+    </div>`).join('');
 }
 
 function renderPlanPage() {
@@ -1551,58 +1647,58 @@ function renderPlanPage() {
   const days = ['日','一','二','三','四','五','六'];
   $('#planDateLabel').textContent = `${d.getFullYear()}年${months[d.getMonth()]}${d.getDate()}日 星期${days[d.getDay()]}`;
 
-  const { overdue, todayTasks, doneTasks, futureTasks } = getPlanSections(dateStr);
-  const totalNotDone = overdue.length + todayTasks.length;
-  const totalItems = totalNotDone + doneTasks.length + futureTasks.length;
-  const totalDone = state.plans.filter(p => p.done).length;
+  const sections = getPlanSections(dateStr);
+  const data = { overdue: sections.overdue, today: sections.todayTasks, done: sections.doneTasks, future: sections.futureTasks };
+
+  // 按新建时间从早到晚排序
+  Object.keys(data).forEach(k => data[k].sort((a, b) => planCreatedMs(a) - planCreatedMs(b)));
+
+  // Active section (tab)
+  if (!SECTION_ORDER.includes(state.planActiveSection)) state.planActiveSection = 'today';
+  const activeKey = state.planActiveSection;
+  const activeItems = data[activeKey];
 
   // Progress bar (today-focused)
-  const todayTotal = todayTasks.length + doneTasks.length;
-  const pct = todayTotal ? Math.round(doneTasks.length / todayTotal * 100) : 0;
-  $('#planProgress').innerHTML = `${doneTasks.length}/${todayTotal} · <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:${pct}%"></div></div>`;
+  const todayTotal = data.today.length + data.done.length;
+  const pct = todayTotal ? Math.round(data.done.length / todayTotal * 100) : 0;
+  $('#planProgress').innerHTML = `${data.done.length}/${todayTotal} · <div class="plan-progress-bar"><div class="plan-progress-fill" style="width:${pct}%"></div></div>`;
 
-  // Stats cards
-  renderPlanStats(dateStr);
+  renderPlanStats(dateStr, activeKey);
 
-  // Render sections
   const container = $('#planSections');
   const empty = $('#planEmpty');
   container.innerHTML = '';
 
-  const renderSection = (cls, title, items, dotColor) => {
-    if (items.length === 0) return '';
-    return `<div class="plan-section ${cls}">
-      <div class="plan-section-header">
-        <span class="sec-dot"></span>${title}
-        <span class="sec-count">${items.length} 条</span>
+  const renderItem = (p) => {
+    const dwell = fmtDuration(planDwell(p));
+    const cat = planCategory(p);
+    const catCls = cat === '工作' ? 'work' : 'private';
+    return `<li class="plan-item${p.done ? ' done' : ''}">
+      <button class="plan-check" data-id="${p.id}"></button>
+      <div class="plan-item-body">
+        <div class="plan-item-name" data-id="${p.id}" title="${escapeHtml(p.text)}">${escapeHtml(p.text)}</div>
+        <div class="plan-item-meta">
+          <span>⏱ 停留 ${dwell}</span>
+          <span class="plan-cat ${catCls}">${cat}</span>
+        </div>
       </div>
-      <ul class="plan-list">${items.map(p => `
-        <li class="plan-item${p.done ? ' done' : ''}">
-          <button class="plan-check" data-id="${p.id}"></button>
-          <span class="plan-text">${escapeHtml(p.text)}</span>
-          <button class="plan-del" data-id="${p.id}">×</button>
-        </li>`).join('')}</ul>
-    </div>`;
+      <button class="plan-del" data-id="${p.id}">×</button>
+    </li>`;
   };
 
-  const allEmpty = overdue.length + todayTasks.length + doneTasks.length + futureTasks.length === 0;
+  const totalAll = SECTION_ORDER.reduce((s, k) => s + data[k].length, 0);
 
-  container.innerHTML = 
-    renderSection('overdue', '未完成', overdue) +
-    renderSection('today-sec', '今日任务', todayTasks) +
-    renderSection('done-sec', '已完成', doneTasks) +
-    renderSection('future-sec', '待完成', futureTasks);
-
-  if (allEmpty) { container.classList.add('hidden'); empty.classList.remove('hidden'); }
-  else { container.classList.remove('hidden'); empty.classList.add('hidden'); }
-
-  // Show overdue items count in today view
-  if (dateStr === fmtDate(new Date()) && overdue.length > 0) {
-    // Items auto-rolled over — give a visual hint
-    const overdueSection = container.querySelector('.plan-section.overdue');
-    if (overdueSection) {
-      const header = overdueSection.querySelector('.plan-section-header');
-      if (header) header.innerHTML = header.innerHTML.replace('未完成', '未完成（已滚动至今天）');
+  if (totalAll === 0) {
+    container.classList.add('hidden'); empty.classList.remove('hidden');
+    empty.textContent = '这一天还没有计划 🎉';
+  } else {
+    container.classList.remove('hidden'); empty.classList.add('hidden');
+    const meta = SECTION_META[activeKey];
+    const header = `<div class="plan-section-header"><span class="sec-dot" style="background:${meta.dot}"></span>${meta.title}<span class="sec-count">${activeItems.length} 条</span></div>`;
+    if (activeItems.length === 0) {
+      container.innerHTML = `<div class="plan-section ${meta.cls}">${header}<div class="plan-empty">该分类暂无计划</div></div>`;
+    } else {
+      container.innerHTML = `<div class="plan-section ${meta.cls}">${header}<ul class="plan-list">${activeItems.map(renderItem).join('')}</ul></div>`;
     }
   }
 
@@ -1612,29 +1708,110 @@ function renderPlanPage() {
   $('#planToday').onclick = () => { state.planSelectedDate = fmtDate(new Date()); renderPlanPage(); };
 }
 
-// Event delegation for plan actions (square check + delete)
+// Stat-card tab switching (delegated on persistent container)
+$('#planStats').addEventListener('click', e => {
+  const card = e.target.closest('.stat-card');
+  if (!card || !card.dataset.sec) return;
+  state.planActiveSection = card.dataset.sec;
+  renderPlanPage();
+});
+
+// Event delegation for plan actions (check toggle + delete + open detail)
 $('#planSections').addEventListener('click', e => {
   const check = e.target.closest('.plan-check');
   const del = e.target.closest('.plan-del');
+  const name = e.target.closest('.plan-item-name');
   if (check) {
     const p = state.plans.find(x => x.id === check.dataset.id);
     if (p) { updateRecord('plans', p.id, { done: !p.done }); renderPlanPage(); renderCalendar(); renderOverviewModules(); renderOvStats(); }
-  }
-  if (del) {
+  } else if (del) {
     deleteRecord('plans', del.dataset.id);
     renderPlanPage(); renderCalendar(); renderOverviewModules(); renderOvStats();
+  } else if (name) {
+    const p = state.plans.find(x => x.id === name.dataset.id);
+    if (p) openPlanDetail(p);
   }
 });
 
-// Add plan button (bottom)
-$('#btnAddPlan').addEventListener('click', () => {
-  const text = $('#planInput').value.trim();
-  if (!text) return;
-  createRecord('plans', { id: 'p_' + Date.now(), date: state.planSelectedDate, text, done: false });
-  $('#planInput').value = '';
+// ============================================================
+// PLAN MODAL — add / edit (名称 / 截止时间 / 分类 / 备注)
+// ============================================================
+let _editingPlanId = null;
+
+function openPlanModal(planObj) {
+  _editingPlanId = planObj ? planObj.id : null;
+  $('#pmName').value = planObj ? (planObj.text || '') : '';
+  $('#pmDeadline').value = planObj ? (planObj.deadline || '') : (state.planSelectedDate + 'T18:00');
+  $('#pmCategory').value = planObj ? planCategory(planObj) : '工作';
+  $('#pmNote').value = planObj ? (planObj.note || '') : '';
+  $('#planModalTitle').textContent = planObj ? '✏️ 编辑计划' : '➕ 添加计划';
+  $('#planOverlay').classList.remove('hidden');
+  setTimeout(() => $('#pmName').focus(), 60);
+}
+window.openPlanModal = openPlanModal;
+
+function closePlanModal() {
+  $('#planOverlay').classList.add('hidden');
+}
+
+function savePlanModal() {
+  const text = $('#pmName').value.trim();
+  const deadline = $('#pmDeadline').value;
+  const category = $('#pmCategory').value;
+  const note = $('#pmNote').value.trim();
+  if (!text) { showDiagToast('请输入计划名称', 'error'); return; }
+
+  if (_editingPlanId) {
+    updateRecord('plans', _editingPlanId, { text, deadline: deadline || null, category, note });
+  } else {
+    createRecord('plans', { id: 'p_' + Date.now(), date: state.planSelectedDate, text, deadline: deadline || null, category, note, done: false });
+  }
+  closePlanModal();
   renderPlanPage(); renderCalendar(); renderOverviewModules(); renderOvStats();
+}
+window.savePlanModal = savePlanModal;
+
+// ============================================================
+// PLAN DETAIL MODAL — 名称 / 截止时间 / 分类 / 备注 / 停留时长 / 状态
+// ============================================================
+let _detailPlanId = null;
+
+function openPlanDetail(p) {
+  _detailPlanId = p.id;
+  const cat = planCategory(p);
+  const status = p.done ? '已完成' : '未完成';
+  const statusColor = p.done ? '#2E7D32' : '#E65100';
+  $('#planDetailBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:80px 1fr;row-gap:10px;column-gap:8px">
+      <span style="color:var(--gray-400)">计划名称</span><span style="font-weight:600">${escapeHtml(p.text)}</span>
+      <span style="color:var(--gray-400)">截止时间</span><span>${escapeHtml(fmtDeadline(p.deadline))}</span>
+      <span style="color:var(--gray-400)">计划分类</span><span>${cat}</span>
+      <span style="color:var(--gray-400)">备注</span><span>${escapeHtml(p.note || '无')}</span>
+      <span style="color:var(--gray-400)">停留时长</span><span>${fmtDuration(planDwell(p))}</span>
+      <span style="color:var(--gray-400)">计划状态</span><span style="color:${statusColor};font-weight:600">${status}</span>
+    </div>`;
+  $('#planDetailOverlay').classList.remove('hidden');
+}
+window.openPlanDetail = openPlanDetail;
+
+function closePlanDetail() {
+  $('#planDetailOverlay').classList.add('hidden');
+}
+
+$('#btnAddPlan').addEventListener('click', () => openPlanModal(null));
+$('#btnPlanSave').addEventListener('click', savePlanModal);
+$('#btnPlanCancel').addEventListener('click', closePlanModal);
+$('#planOverlay').addEventListener('click', e => { if (e.target === $('#planOverlay')) closePlanModal(); });
+$('#pmName').addEventListener('keydown', e => { if (e.key === 'Enter') savePlanModal(); });
+
+$('#btnPlanDetailEdit').addEventListener('click', () => {
+  const p = state.plans.find(x => x.id === _detailPlanId);
+  if (!p) return;
+  closePlanDetail();
+  openPlanModal(p);
 });
-$('#planInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btnAddPlan').click(); });
+$('#btnPlanDetailClose').addEventListener('click', closePlanDetail);
+$('#planDetailOverlay').addEventListener('click', e => { if (e.target === $('#planDetailOverlay')) closePlanDetail(); });
 
 // ============================================================
 // EVENTS (with tombstone CRUD)
