@@ -441,40 +441,54 @@ body{
 
 /* ===== Check-in ===== */
 .checkin-card{border-top:3px solid #4CAF50}
-.checkin-add-wrap{display:flex;gap:8px;margin-bottom:16px}
-.checkin-add-wrap input{
-  flex:1;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);
-  padding:10px 14px;font-size:14px;outline:none;font-family:inherit;
-  background:var(--gray-50);transition:border-color .2s;
+.checkin-year{
+  background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border-radius:var(--radius-sm);
+  padding:16px;margin-bottom:16px;
 }
-.checkin-add-wrap input:focus{border-color:#4CAF50;background:var(--white)}
-.btn-checkin-add{
-  padding:10px 18px;border:none;border-radius:var(--radius-xs);
-  background:#4CAF50;color:var(--white);
-  font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;
+.cy-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cy-title{font-size:15px;font-weight:700;color:#2E7D32}
+.cy-count{font-size:22px;font-weight:800;color:#2E7D32}
+.cy-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--gray-600)}
+.cy-target-input{
+  width:64px;border:1.5px solid #C8E6C9;border-radius:var(--radius-xs);
+  padding:4px 8px;font-size:13px;text-align:center;font-family:inherit;background:var(--white);
+  outline:none;color:#2E7D32;font-weight:700;transition:border-color .2s;
 }
-.btn-checkin-add:hover{background:#43A047}
+.cy-target-input:focus{border-color:#4CAF50}
+.cy-bar{height:10px;background:var(--gray-200);border-radius:6px;overflow:hidden;margin-bottom:10px}
+.cy-fill{height:100%;background:linear-gradient(90deg,#66BB6A,#43A047);border-radius:6px;transition:width .4s}
+.cy-msg{font-size:12.5px;color:#558B2F;line-height:1.6}
+.checkin-add-btn{
+  width:100%;padding:12px;border:1.5px dashed #A5D6A7;border-radius:var(--radius-sm);
+  background:var(--gray-50);color:#43A047;font-size:14px;font-weight:700;cursor:pointer;
+  transition:all .2s;margin-bottom:16px;
+}
+.checkin-add-btn:hover{background:#E8F5E9;border-color:#66BB6A}
 .checkin-habits{display:flex;flex-direction:column;gap:12px}
 .checkin-habit{
   background:var(--gray-50);border-radius:var(--radius-sm);padding:14px;transition:all .2s;
+  border-left:3px solid #4CAF50;
 }
 .checkin-habit-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .checkin-habit-name{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
 .checkin-habit-name .emoji{font-size:18px}
-.checkin-streak{
-  font-size:11px;color:#4CAF50;font-weight:600;
-  background:#E8F5E9;padding:3px 10px;border-radius:12px;
+.checkin-period-badge{
+  font-size:11px;font-weight:700;color:#2E7D32;background:#E8F5E9;
+  padding:3px 10px;border-radius:12px;white-space:nowrap;
 }
-.checkin-days{display:flex;gap:3px;flex-wrap:wrap}
-.checkin-day{
-  width:28px;height:28px;border-radius:6px;border:1.5px solid var(--gray-200);
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:11px;transition:all .2s;background:var(--white);
-  color:var(--gray-500);position:relative;
+.checkin-progress{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cp-bar{flex:1;height:8px;background:var(--gray-200);border-radius:5px;overflow:hidden}
+.cp-fill{height:100%;background:linear-gradient(90deg,#81C784,#4CAF50);border-radius:5px;transition:width .3s}
+.cp-text{font-size:12px;color:var(--gray-600);font-weight:600;white-space:nowrap}
+.checkin-footer{display:flex;align-items:center;justify-content:space-between}
+.checkin-remaining{font-size:12px;color:var(--gray-500)}
+.checkin-actions{display:flex;align-items:center;gap:8px}
+.checkin-toggle{
+  border:none;border-radius:14px;padding:5px 14px;font-size:12.5px;font-weight:700;
+  cursor:pointer;transition:all .2s;background:#4CAF50;color:var(--white);
 }
-.checkin-day:hover{border-color:#4CAF50}
-.checkin-day.checked{background:#4CAF50;border-color:#4CAF50;color:var(--white)}
-.checkin-day.today{border-color:#4CAF50;border-width:2px;font-weight:700}
+.checkin-toggle:hover{background:#43A047}
+.checkin-toggle.done{background:#E8F5E9;color:#2E7D32}
 .checkin-habit-del{
   width:26px;height:26px;border-radius:50%;border:none;
   background:transparent;color:var(--gray-400);cursor:pointer;
@@ -665,7 +679,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v12.0</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v13.0</div>
     </div>
   </aside>
 
@@ -765,10 +779,8 @@ body{
       <div class="card checkin-card">
         <div class="card-header"><span class="card-title">✅ 打卡</span></div>
         <div class="card-body">
-          <div class="checkin-add-wrap">
-            <input type="text" id="checkinInput" placeholder="添加打卡习惯（如：早起、运动、阅读）" maxlength="50">
-            <button class="btn-checkin-add" id="btnAddCheckin">添加</button>
-          </div>
+          <div class="checkin-year" id="checkinYear"></div>
+          <button class="checkin-add-btn" id="btnAddCheckin">➕ 添加打卡</button>
           <div class="checkin-habits" id="checkinHabits"></div>
           <div class="plan-empty" id="checkinEmpty">还没有打卡习惯，添加一个吧 💪</div>
         </div>
@@ -857,6 +869,26 @@ body{
   </div>
 </div>
 
+<!-- === Check-in Modal (add) === -->
+<div class="modal-overlay hidden" id="checkinOverlay">
+  <div class="modal" style="max-width:420px">
+    <h2 id="checkinModalTitle">➕ 添加打卡</h2>
+    <label>打卡标题</label>
+    <input type="text" id="cmName" placeholder="如：早起、运动、阅读" maxlength="50">
+    <label>打卡周期</label>
+    <select id="cmPeriod">
+      <option value="周">周</option>
+      <option value="月" selected>月</option>
+      <option value="季">季</option>
+      <option value="年">年</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnCheckinCancel">取消</button>
+      <button class="btn btn-primary" id="btnCheckinSave">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- === Reminder Modal (event starting within 1 hour) === -->
 <div class="modal-overlay hidden" id="remindOverlay">
   <div class="modal" style="max-width:360px">
@@ -897,7 +929,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v12 — 计划四分类重定义：已完成=全部完成 / 未完成=超截止时间 / 今日任务=当日自然日 / 待完成=明日及后续
+// amber的工作台 v13 — 打卡：添加弹窗(标题/周期) + 列表(标题/进度/剩余时间) + 年度总打卡/可配置目标/鼓励文案
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -2006,47 +2038,158 @@ bindIcsImporter();
 // ============================================================
 // CHECK-INS (with tombstone CRUD)
 // ============================================================
+function habitPeriod(h) { return h.period || '周'; }
+
+function habitCreatedAt(h) {
+  if (h.created_at) return new Date(h.created_at).getTime();
+  const ds = (h.dates || []).slice().sort();
+  if (ds.length) return new Date(ds[0] + 'T00:00:00').getTime();
+  return Date.now();
+}
+
+// Start/end of the current cycle for a given period (周/月/季/年)
+function periodRange(period) {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  let start, end;
+  if (period === '周') {
+    const dow = (now.getDay() + 6) % 7; // Monday = 0
+    start = new Date(y, m, d - dow);
+    end = new Date(y, m, d - dow + 6);
+  } else if (period === '月') {
+    start = new Date(y, m, 1);
+    end = new Date(y, m + 1, 0);
+  } else if (period === '季') {
+    const q = Math.floor(m / 3);
+    start = new Date(y, q * 3, 1);
+    end = new Date(y, q * 3 + 3, 0);
+  } else { // 年
+    start = new Date(y, 0, 1);
+    end = new Date(y, 11, 31);
+  }
+  return { start, end };
+}
+
+function habitProgress(h) {
+  const period = habitPeriod(h);
+  const { start, end } = periodRange(period);
+  const totalDays = Math.round((end - start) / 86400000) + 1;
+  const s = fmtDate(start), e = fmtDate(end);
+  let done = 0;
+  (h.dates || []).forEach(d => { if (d >= s && d <= e) done++; });
+  return { period, done, totalDays };
+}
+
+function habitRemaining(period) {
+  const { end } = periodRange(period);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const days = Math.round((end - today) / 86400000);
+  return days <= 0 ? '今天截止' : `剩余 ${days} 天`;
+}
+
+function checkinYearTotal() {
+  const prefix = new Date().getFullYear() + '-';
+  let total = 0;
+  state.checkins.forEach(h => (h.dates || []).forEach(d => { if (d.startsWith(prefix)) total++; }));
+  return total;
+}
+
+function checkinTarget() {
+  const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
+  const t = parseInt(cfg.checkinTarget, 10);
+  return (Number.isFinite(t) && t > 0) ? t : 365;
+}
+
+function checkinEncouragement(total, target) {
+  if (total === 0) return '新的一年，从养成一个小习惯开始，迈出第一步吧 🌱';
+  const r = target ? total / target : 0;
+  if (r >= 1) return '恭喜！已超额完成年度目标，自律的你闪闪发光 🌟';
+  if (r >= 0.8) return '就差最后冲刺，稳稳拿下年度目标，冲鸭！🏆';
+  if (r >= 0.5) return '已经过半，你比自己想象中更坚持，继续加油 💪';
+  if (r >= 0.25) return '渐入佳境，保持这个节奏，目标越来越近 ✨';
+  return '千里之行始于足下，每一点积累都会开花结果 🌸';
+}
+
+function renderCheckinYear() {
+  const total = checkinYearTotal();
+  const target = checkinTarget();
+  const pct = target ? Math.min(100, Math.round(total / target * 100)) : 0;
+  $('#checkinYear').innerHTML = `
+    <div class="cy-head">
+      <span class="cy-title">📅 ${new Date().getFullYear()} 年度打卡</span>
+      <span class="cy-count">${total} 次</span>
+    </div>
+    <div class="cy-row">
+      <span>年度目标</span>
+      <input type="number" class="cy-target-input" min="1" value="${target}" inputmode="numeric">
+      <span>次</span>
+    </div>
+    <div class="cy-bar"><div class="cy-fill" style="width:${pct}%"></div></div>
+    <div class="cy-msg">${checkinEncouragement(total, target)}</div>`;
+  const ti = $('#checkinYear .cy-target-input');
+  if (ti) {
+    const saveTarget = () => {
+      const v = parseInt(ti.value, 10);
+      if (!Number.isFinite(v) || v <= 0) { renderCheckinYear(); return; }
+      const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
+      cfg.checkinTarget = v;
+      localStorage.setItem(LS_KEYS.config, JSON.stringify(cfg));
+      renderCheckinYear();
+    };
+    ti.addEventListener('change', saveTarget);
+    ti.addEventListener('blur', saveTarget);
+  }
+}
+
 function renderCheckinPage() {
   const list = $('#checkinHabits'), empty = $('#checkinEmpty');
+  renderCheckinYear();
   list.innerHTML = '';
   if (state.checkins.length === 0) { list.classList.add('hidden'); empty.classList.remove('hidden'); return; }
   list.classList.remove('hidden'); empty.classList.add('hidden');
 
-  const days = [];
-  for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); days.push(fmtDate(d)); }
   const today = fmtDate(new Date());
+  const sorted = [...state.checkins].sort((a, b) => habitCreatedAt(a) - habitCreatedAt(b));
 
-  state.checkins.forEach(habit => {
-    const dates = habit.dates || [];
-    const streak = calcStreak(dates);
+  sorted.forEach(habit => {
+    const { period, done, totalDays } = habitProgress(habit);
+    const pct = totalDays ? Math.min(100, Math.round(done / totalDays * 100)) : 0;
+    const remaining = habitRemaining(period);
+    const doneToday = (habit.dates || []).includes(today);
     const div = document.createElement('div');
     div.className = 'checkin-habit';
     div.innerHTML = `
       <div class="checkin-habit-header">
         <span class="checkin-habit-name"><span class="emoji">🔥</span>${escapeHtml(habit.name)}</span>
-        <span class="checkin-streak">连续 ${streak} 天</span>
+        <span class="checkin-period-badge">${period}</span>
       </div>
-      <div class="checkin-days">${days.map(d => {
-        const checked = dates.includes(d), isToday = d === today;
-        return `<button class="checkin-day${checked?' checked':''}${isToday?' today':''}" data-date="${d}" data-habit="${habit.id}" title="${d}">${d.slice(-2)}</button>`;
-      }).join('')}</div>
-      <button class="checkin-habit-del" data-id="${habit.id}" style="margin-top:8px;float:right">删除</button>`;
+      <div class="checkin-progress">
+        <div class="cp-bar"><div class="cp-fill" style="width:${pct}%"></div></div>
+        <span class="cp-text">进度 ${done}/${totalDays}</span>
+      </div>
+      <div class="checkin-footer">
+        <span class="checkin-remaining">⏳ ${remaining}</span>
+        <span class="checkin-actions">
+          <button class="checkin-toggle${doneToday ? ' done' : ''}" data-id="${habit.id}">${doneToday ? '✓ 已打卡' : '打卡'}</button>
+          <button class="checkin-habit-del" data-id="${habit.id}" title="删除">×</button>
+        </span>
+      </div>`;
     list.appendChild(div);
   });
 }
 
 $('#checkinHabits').addEventListener('click', e => {
-  const dayBtn = e.target.closest('.checkin-day');
+  const toggleBtn = e.target.closest('.checkin-toggle');
   const delBtn = e.target.closest('.checkin-habit-del');
-  if (dayBtn) {
-    const habitId = dayBtn.dataset.habit, date = dayBtn.dataset.date;
-    const habit = state.checkins.find(h => h.id === habitId);
+  if (toggleBtn) {
+    const habit = state.checkins.find(h => h.id === toggleBtn.dataset.id);
     if (habit) {
       if (!habit.dates) habit.dates = [];
-      const idx = habit.dates.indexOf(date);
+      const today = fmtDate(new Date());
+      const idx = habit.dates.indexOf(today);
       if (idx >= 0) habit.dates.splice(idx, 1);
-      else habit.dates.push(date);
-      updateRecord('checkins', habitId, { dates: habit.dates });
+      else habit.dates.push(today);
+      updateRecord('checkins', habit.id, { dates: habit.dates });
       renderCheckinPage(); renderCalendar(); renderOverviewModules();
     }
   }
@@ -2058,14 +2201,29 @@ $('#checkinHabits').addEventListener('click', e => {
   }
 });
 
-$('#btnAddCheckin').addEventListener('click', () => {
-  const name = $('#checkinInput').value.trim();
-  if (!name) return;
-  createRecord('checkins', { id: 'c_' + Date.now(), name, dates: [] });
-  $('#checkinInput').value = '';
+// --- Check-in add modal ---
+function openCheckinModal() {
+  $('#checkinModalTitle').textContent = '➕ 添加打卡';
+  $('#cmName').value = '';
+  $('#cmPeriod').value = '月';
+  $('#checkinOverlay').classList.remove('hidden');
+  setTimeout(() => $('#cmName').focus(), 50);
+}
+function closeCheckinModal() { $('#checkinOverlay').classList.add('hidden'); }
+function saveCheckinModal() {
+  const name = $('#cmName').value.trim();
+  if (!name) { showDiagToast('请输入打卡标题'); return; }
+  const period = $('#cmPeriod').value;
+  createRecord('checkins', { id: 'c_' + Date.now(), name, period, dates: [] });
+  closeCheckinModal();
   renderCheckinPage(); renderOverviewModules();
-});
-$('#checkinInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btnAddCheckin').click(); });
+}
+
+$('#btnAddCheckin').addEventListener('click', openCheckinModal);
+$('#btnCheckinCancel').addEventListener('click', closeCheckinModal);
+$('#checkinOverlay').addEventListener('click', e => { if (e.target === $('#checkinOverlay')) closeCheckinModal(); });
+$('#btnCheckinSave').addEventListener('click', saveCheckinModal);
+$('#cmName').addEventListener('keydown', e => { if (e.key === 'Enter') saveCheckinModal(); });
 
 function calcStreak(dates) {
   if (!dates || dates.length === 0) return 0;
