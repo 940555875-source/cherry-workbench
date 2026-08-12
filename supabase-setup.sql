@@ -1,6 +1,7 @@
 -- ============================================================
--- amber的工作台 - Supabase 数据库建表脚本（v3 墓碑机制）
+-- amber的工作台 - Supabase 数据库建表脚本（v4 对齐当前数据模型）
 -- 在 Supabase SQL Editor 中执行此脚本的全部内容
+-- 覆盖表：plans / events / checkins / travels / links
 -- ============================================================
 
 -- 1. 每日计划表
@@ -9,6 +10,9 @@ CREATE TABLE IF NOT EXISTS plans (
   date TEXT NOT NULL,
   text TEXT NOT NULL DEFAULT '',
   done BOOLEAN NOT NULL DEFAULT FALSE,
+  deadline TEXT,
+  category TEXT NOT NULL DEFAULT '',
+  note TEXT NOT NULL DEFAULT '',
   device_id TEXT NOT NULL DEFAULT '',
   deleted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -22,6 +26,8 @@ CREATE TABLE IF NOT EXISTS events (
   time TEXT NOT NULL DEFAULT '',
   title TEXT NOT NULL DEFAULT '',
   desc_text TEXT NOT NULL DEFAULT '',
+  end_date TEXT,
+  end_time TEXT,
   device_id TEXT NOT NULL DEFAULT '',
   deleted_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -32,6 +38,8 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE TABLE IF NOT EXISTS checkins (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL DEFAULT '',
+  period TEXT NOT NULL DEFAULT 'daily',
+  target INTEGER NOT NULL DEFAULT 1,
   dates JSONB NOT NULL DEFAULT '[]',
   device_id TEXT NOT NULL DEFAULT '',
   deleted_at TIMESTAMPTZ,
@@ -39,15 +47,17 @@ CREATE TABLE IF NOT EXISTS checkins (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 4. 便签表（单条记录）
-CREATE TABLE IF NOT EXISTS notes (
-  id TEXT PRIMARY KEY DEFAULT 'default',
-  content TEXT NOT NULL DEFAULT '',
+-- 4. 旅行打点表
+CREATE TABLE IF NOT EXISTS travels (
+  id TEXT PRIMARY KEY,
+  code TEXT NOT NULL DEFAULT '',
+  name TEXT NOT NULL DEFAULT '',
+  visited_at TIMESTAMPTZ,
   device_id TEXT NOT NULL DEFAULT '',
   deleted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-INSERT INTO notes (id, content) VALUES ('default', '') ON CONFLICT (id) DO NOTHING;
 
 -- 5. 快捷链接表
 CREATE TABLE IF NOT EXISTS links (
@@ -76,7 +86,7 @@ DO $$
 DECLARE
   t TEXT;
 BEGIN
-  FOR t IN SELECT unnest(ARRAY['plans','events','checkins','notes','links']) LOOP
+  FOR t IN SELECT unnest(ARRAY['plans','events','checkins','travels','links']) LOOP
     EXECUTE format('
       DROP TRIGGER IF EXISTS trg_%I_updated_at ON %I;
       CREATE TRIGGER trg_%I_updated_at
@@ -92,10 +102,11 @@ END $$;
 CREATE OR REPLACE FUNCTION cleanup_tombstones()
 RETURNS void AS $$
 BEGIN
-  DELETE FROM plans   WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '30 days';
-  DELETE FROM events  WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '30 days';
+  DELETE FROM plans    WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '30 days';
+  DELETE FROM events   WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '30 days';
   DELETE FROM checkins WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '30 days';
-  DELETE FROM links   WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '30 days';
+  DELETE FROM travels  WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '30 days';
+  DELETE FROM links    WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL '30 days';
 END;
 $$ LANGUAGE plpgsql;
 
@@ -116,7 +127,7 @@ END $$;
 ALTER TABLE plans    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE checkins ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notes    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE travels  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE links    ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
@@ -127,7 +138,7 @@ DO $$
 DECLARE
   t TEXT;
 BEGIN
-  FOR t IN SELECT unnest(ARRAY['plans','events','checkins','notes','links']) LOOP
+  FOR t IN SELECT unnest(ARRAY['plans','events','checkins','travels','links']) LOOP
     EXECUTE format('
       DROP POLICY IF EXISTS "Allow anon access on %I" ON %I;
       CREATE POLICY "Allow anon access on %I"
@@ -140,10 +151,10 @@ END $$;
 -- ============================================================
 -- 索引
 -- ============================================================
-CREATE INDEX IF NOT EXISTS idx_plans_date        ON plans(date);
-CREATE INDEX IF NOT EXISTS idx_plans_deleted_at  ON plans(deleted_at);
-CREATE INDEX IF NOT EXISTS idx_events_date       ON events(date);
-CREATE INDEX IF NOT EXISTS idx_events_deleted_at ON events(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_plans_date          ON plans(date);
+CREATE INDEX IF NOT EXISTS idx_plans_deleted_at    ON plans(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_events_date         ON events(date);
+CREATE INDEX IF NOT EXISTS idx_events_deleted_at   ON events(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_checkins_deleted_at ON checkins(deleted_at);
-CREATE INDEX IF NOT EXISTS idx_links_deleted_at  ON links(deleted_at);
-CREATE INDEX IF NOT EXISTS idx_notes_updated_at  ON notes(updated_at);
+CREATE INDEX IF NOT EXISTS idx_travels_deleted_at  ON travels(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_links_deleted_at    ON links(deleted_at);

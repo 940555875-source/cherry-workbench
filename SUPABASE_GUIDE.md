@@ -54,7 +54,7 @@
 5. 点击右下角 **「Run」** 按钮（或按 `Cmd+Enter`）
 6. 看到 **"Success. No rows returned"** 即表示成功
 
-> 🔍 验证：左侧菜单进入 **「Table Editor」**，应该能看到 `plans`、`events`、`checkins`、`notes`、`links` 五张表。
+> 🔍 验证：左侧菜单进入 **「Table Editor」**，应该能看到 `plans`、`events`、`checkins`、`travels`、`links` 五张表。
 
 ---
 

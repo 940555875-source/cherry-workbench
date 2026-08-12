@@ -773,7 +773,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.3</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.4</div>
     </div>
   </aside>
 
@@ -1065,7 +1065,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.3 — 总打卡完成计数改为单条进度 100% 计 1 次
+// amber的工作台 v14.4 — 旅行打点补 id、对齐 Supabase 同步 schema
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -2715,7 +2715,7 @@ function onTravelMapClick(e) {
     if (rec) deleteRecord('travels', rec.id);
     showTravelToast(`已取消：${name}`);
   } else {
-    createRecord('travels', { code, name, visitedAt: new Date().toISOString() });
+    createRecord('travels', { id: 't_' + Date.now() + '_' + code, code, name, visited_at: new Date().toISOString() });
     showTravelToast(`✅ 已记录：${name}`);
   }
   renderTravelPage();
