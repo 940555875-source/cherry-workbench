@@ -636,27 +636,6 @@ body{
       </div>
 
       <div class="overview-modules" id="overviewModules"></div>
-
-      <div class="card note-card">
-        <div class="card-header"><span class="card-title">📝 便签</span></div>
-        <div class="card-body">
-          <textarea class="note-area" id="noteArea" placeholder="写点什么..."></textarea>
-        </div>
-        <div class="note-footer">
-          <span class="note-saved saved" id="noteSaved">✓ 已保存</span>
-          <span id="noteWordCount">0 字</span>
-        </div>
-      </div>
-
-      <div class="card" style="border-top:3px solid var(--blue-300)">
-        <div class="card-header"><span class="card-title">🔗 快捷链接</span></div>
-        <div class="link-add-wrap" style="display:flex;gap:6px;margin-bottom:14px">
-          <input type="text" id="linkNameInput" placeholder="名称" maxlength="30" style="flex:2;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);padding:8px 12px;font-size:13px;outline:none;font-family:inherit;background:var(--gray-50)">
-          <input type="url" id="linkUrlInput" placeholder="https://" maxlength="500" style="flex:3;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);padding:8px 12px;font-size:13px;outline:none;font-family:inherit;background:var(--gray-50)">
-          <button id="btnAddLink" style="padding:8px 14px;border:none;border-radius:var(--radius-xs);background:var(--blue-300);color:var(--white);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">添加</button>
-        </div>
-        <ul class="link-list" id="linkList"></ul>
-      </div>
     </div>
 
     <!-- PAGE: 每日计划 -->
@@ -741,7 +720,6 @@ body{
 <div class="widget-overlay" id="widgetOverlay"></div>
 <div class="widget-panel" id="widgetPanel">
   <div class="widget-header"><h3>amber 挂件</h3><button class="widget-close" id="btnWidgetClose">✕</button></div>
-  <div class="widget-section"><h4>📝 便签</h4><div class="widget-mini-note" id="wNote">暂无内容</div></div>
   <div class="widget-section"><h4>📋 今日计划</h4><ul class="widget-mini-todos" id="wPlans"></ul></div>
   <div class="widget-section"><h4>🔔 近期事件</h4><ul class="widget-mini-todos" id="wEvents"></ul></div>
 </div>
@@ -777,8 +755,8 @@ const $$ = s => document.querySelectorAll(s);
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
-  notes: 'amber_note_v3', links: 'amber_links_v3', config: 'amber_config',
-  deviceId: 'amber_device_id', todos: 'amber_todos',
+  links: 'amber_links_v3', config: 'amber_config',
+  deviceId: 'amber_device_id',
 };
 
 // --- State ---
@@ -789,9 +767,7 @@ let state = {
   plans: [],
   events: [],
   checkins: [],
-  notes: '',
   links: [],
-  todos: [],
 };
 
 // ============================================================
@@ -1021,44 +997,6 @@ function deleteRecord(key, id) {
   }
 }
 
-// Note operations (special single-record)
-function saveNote() {
-  const now = new Date().toISOString();
-  const noteObj = { id: 'default', content: state.notes, updated_at: now, device_id: DEVICE_ID };
-  localStorage.setItem(LS_KEYS.notes, JSON.stringify(noteObj));
-  if (syncEnabled && supabase) {
-    supabase.from('notes').upsert(noteObj).then(({ error }) => {
-      if (!error) setSyncStatus('online', '已同步');
-    });
-  }
-}
-
-async function loadNote() {
-  // Load local first
-  try {
-    const local = JSON.parse(localStorage.getItem(LS_KEYS.notes) || '{}');
-    state.notes = local.content || '';
-  } catch(e) { state.notes = ''; }
-
-  // Pull from cloud
-  if (syncEnabled && supabase) {
-    try {
-      const { data, error } = await supabase.from('notes').select('*').eq('id', 'default').maybeSingle();
-      if (!error && data) {
-        const cloudTime = new Date(data.updated_at || 0).getTime();
-        const localTime = new Date((JSON.parse(localStorage.getItem(LS_KEYS.notes) || '{}')).updated_at || 0).getTime();
-        if (!data.deleted_at && cloudTime > localTime) {
-          state.notes = data.content || '';
-          localStorage.setItem(LS_KEYS.notes, JSON.stringify({ content: state.notes, updated_at: data.updated_at, device_id: DEVICE_ID }));
-        }
-      }
-    } catch(e) {}
-  }
-
-  $('#noteArea').value = state.notes;
-  updateNoteStats();
-}
-
 // ============================================================
 // INIT + DATA LOAD
 // ============================================================
@@ -1078,7 +1016,7 @@ async function init() {
     setSyncStatus('syncing', '同步中...');
     try {
       await Promise.all([
-        fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), loadNote(),
+        fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'),
       ]);
       // After merge, re-render
       renderAll();
@@ -1102,10 +1040,6 @@ function loadLocalData() {
   try { state.events = JSON.parse(localStorage.getItem(LS_KEYS.events) || '[]').filter(r => !r.deleted_at); } catch(e) { state.events = []; }
   try { state.checkins = JSON.parse(localStorage.getItem(LS_KEYS.checkins) || '[]').filter(r => !r.deleted_at); } catch(e) { state.checkins = []; }
   try { state.links = JSON.parse(localStorage.getItem(LS_KEYS.links) || '[]').filter(r => !r.deleted_at); } catch(e) { state.links = []; }
-  try { state.todos = JSON.parse(localStorage.getItem(LS_KEYS.todos) || '[]'); } catch(e) { state.todos = []; }
-  try { state.notes = (JSON.parse(localStorage.getItem(LS_KEYS.notes) || '{}')).content || ''; } catch(e) { state.notes = ''; }
-  $('#noteArea').value = state.notes;
-  updateNoteStats();
 }
 
 function renderAll() {
@@ -1115,7 +1049,6 @@ function renderAll() {
   if (state.currentPage === 'overview' || state.currentPage === 'events') renderEventPage();
   if (state.currentPage === 'overview' || state.currentPage === 'checkins') renderCheckinPage();
   renderOverviewModules();
-  renderLinks();
 }
 
 async function periodicSync() {
@@ -1123,7 +1056,7 @@ async function periodicSync() {
   setSyncStatus('syncing', '同步中...');
   try {
     await Promise.all([
-      fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), loadNote(),
+      fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'),
     ]);
     renderAll();
   } catch(e) {
@@ -1180,7 +1113,7 @@ async function testConnection() {
     showDiagToast('连接成功 ✓ — 云端同步已就绪', 'online');
 
     // Do a full sync after successful test
-    fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links'); loadNote();
+    fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links');
   } catch(e) {
     showDiagToast('网络错误 — 无法连接到 Supabase，请检查网络', 'error');
   }
@@ -1675,61 +1608,10 @@ function updateClock() {
 setInterval(updateClock, 10000);
 
 // ============================================================
-// LINKS (with tombstone CRUD)
-// ============================================================
-function renderLinks() {
-  const list = $('#linkList');
-  list.innerHTML = state.links.map(l => `
-    <li style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-xs);transition:all .2s">
-      <a href="${escapeHtml(l.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;flex:1;min-width:0">
-        <span style="width:28px;height:28px;border-radius:6px;background:var(--blue-100);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--blue-500);flex-shrink:0">${getDomainInitial(l.url)}</span>
-        <span style="flex:1;min-width:0"><span style="font-size:14px;font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(l.name)}</span><span style="font-size:11px;color:var(--gray-400)">${escapeHtml(getDomain(l.url))}</span></span>
-      </a>
-      <button data-id="${l.id}" style="width:24px;height:24px;border-radius:50%;border:none;background:transparent;color:var(--gray-400);cursor:pointer;font-size:14px;flex-shrink:0" class="link-del-btn">×</button>
-    </li>`).join('');
-}
-
-$('#linkList').addEventListener('click', e => {
-  const del = e.target.closest('.link-del-btn') || e.target.closest('button');
-  if (del && del.dataset.id) { e.preventDefault(); deleteRecord('links', del.dataset.id); renderLinks(); }
-});
-
-$('#btnAddLink').addEventListener('click', () => {
-  const name = $('#linkNameInput').value.trim();
-  let url = $('#linkUrlInput').value.trim();
-  if (!name || !url) return;
-  if (!url.startsWith('http')) url = 'https://' + url;
-  createRecord('links', { id: 'l_' + Date.now(), name, url });
-  renderLinks();
-  $('#linkNameInput').value = ''; $('#linkUrlInput').value = '';
-});
-
-// ============================================================
-// NOTE
-// ============================================================
-let noteSaveTimer;
-$('#noteArea').addEventListener('input', () => {
-  state.notes = $('#noteArea').value;
-  updateNoteStats();
-  $('#noteSaved').textContent = '保存中...'; $('#noteSaved').className = 'note-saved';
-  clearTimeout(noteSaveTimer);
-  noteSaveTimer = setTimeout(() => {
-    saveNote();
-    $('#noteSaved').textContent = '✓ 已保存'; $('#noteSaved').className = 'note-saved saved';
-  }, 500);
-});
-
-function updateNoteStats() {
-  const len = state.notes.replace(/\s/g,'').length;
-  if ($('#noteWordCount')) $('#noteWordCount').textContent = `${len} 字`;
-}
-
-// ============================================================
 // WIDGET
 // ============================================================
 function renderWidgetPanel() {
   const today = fmtDate(new Date());
-  $('#wNote').textContent = state.notes.trim() ? state.notes.substring(0,100) + (state.notes.length>100?'...':'') : '暂无内容';
   $('#wPlans').innerHTML = '';
   const todayPlans = state.plans.filter(p => p.date === today);
   if (todayPlans.length === 0) $('#wPlans').innerHTML = '<li style="color:var(--gray-400);background:transparent">暂无计划</li>';
@@ -1772,8 +1654,7 @@ $('#btnSettingsSave').addEventListener('click', () => {
 $('#btnClearData').addEventListener('click', () => {
   if (confirm('确定清除所有本地数据？不可恢复！')) {
     Object.values(LS_KEYS).forEach(k => localStorage.removeItem(k));
-    state = { ...state, plans: [], events: [], checkins: [], notes: '', links: [], todos: [] };
-    $('#noteArea').value = '';
+    state = { ...state, plans: [], events: [], checkins: [], links: [] };
     renderAll();
     $('#settingsOverlay').classList.add('hidden');
   }
@@ -1811,8 +1692,7 @@ function getDomainInitial(url) {
 document.addEventListener('keydown', e => {
   if ((e.metaKey||e.ctrlKey) && e.key === 's') {
     e.preventDefault();
-    saveNote();
-    $('#noteSaved').textContent = '✓ 已保存'; $('#noteSaved').className = 'note-saved saved';
+    // Cmd+S no longer saves notes (notes module removed)
   }
 });
 
