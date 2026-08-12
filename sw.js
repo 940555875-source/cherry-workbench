@@ -1,8 +1,8 @@
-// amber的工作台 Service Worker v5
+// amber的工作台 Service Worker v6
 // Strategy: HTML uses network-first so updates are immediately picked up;
 // static assets use cache-first for fast reload.
 
-const VERSION = 'amber-workbench-v5';
+const VERSION = 'amber-workbench-v6';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

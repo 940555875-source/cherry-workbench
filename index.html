@@ -198,10 +198,12 @@ body{
 .cal-month-label{font-size:15px;font-weight:600;color:var(--gray-700);min-width:100px;text-align:center}
 /* Calendar grid: 7 cols x 5 rows, equal-height rows for stable layout */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(5,1fr);gap:6px;text-align:center}
+/* Weekday header only needs a single row — must NOT inherit the 5-row template */
+.cal-grid.weekdays{grid-template-rows:auto;margin-bottom:4px}
 .cal-weekday{
   font-size:11px;font-weight:600;color:var(--gray-400);
   padding:6px 0;text-transform:uppercase;letter-spacing:.5px;
-  grid-row:1 / 2;display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;
 }
 /* Use a grid-row span per day cell so layout is exact */
 .cal-day{
@@ -622,6 +624,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v6.0</div>
     </div>
   </aside>
 
@@ -658,7 +661,7 @@ body{
           </div>
         </div>
         <div class="card-body">
-          <div class="cal-grid" id="calWeekdays"></div>
+          <div class="cal-grid weekdays" id="calWeekdays"></div>
           <div class="cal-grid" id="calGrid"></div>
         </div>
       </div>
@@ -1330,6 +1333,8 @@ function navigateToDate(dateStr) {
   $$('.nav-item, .mobile-nav-item').forEach(b => { b.classList.toggle('active', b.dataset.page === 'plans'); });
   renderPlanPage();
 }
+// Exposed globally for inline onclick handlers (calendar day cells)
+window.navigateToDate = navigateToDate;
 
 // ============================================================
 // DAILY PLANS — 4-section layout with square checkboxes + auto-carry
@@ -1779,6 +1784,8 @@ function switchToPage(page) {
   if (page === 'events') renderEventPage();
   if (page === 'checkins') renderCheckinPage();
 }
+// Exposed globally for inline onclick handlers (stat cards + overview modules)
+window.switchToPage = switchToPage;
 
 // ============================================================
 // CLOCK
