@@ -1,7 +1,7 @@
 {
-  "name": "cherry的工作台",
-  "short_name": "cherry",
-  "description": "cherry的个人工作台 - 便签、待办、快捷链接",
+  "name": "amber的工作台",
+  "short_name": "amber",
+  "description": "amber的个人工作台 - 便签、待办、快捷链接",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#E3F2FD",

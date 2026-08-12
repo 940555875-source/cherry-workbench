@@ -6,11 +6,11 @@
 <meta name="theme-color" content="#7EB8DA">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="cherry的工作台">
+<meta name="apple-mobile-web-app-title" content="amber的工作台">
 <link rel="icon" href="/icons/icon-48x48.png">
 <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 <link rel="manifest" href="/manifest.json">
-<title>cherry的工作台</title>
+<title>amber的工作台</title>
 <style>
 /* ===== Reset & Base ===== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -336,8 +336,8 @@ body{
 <!-- ===== Header ===== -->
 <header class="header">
   <div class="header-left">
-    <div class="app-icon">cherry</div>
-    <span class="app-title">cherry的工作台</span>
+    <div class="app-icon">amber</div>
+    <span class="app-title">amber的工作台</span>
   </div>
   <div class="header-right">
     <div class="sync-status offline" id="syncStatus" title="连接状态">
@@ -408,7 +408,7 @@ body{
 <div class="widget-overlay" id="widgetOverlay"></div>
 <div class="widget-panel" id="widgetPanel">
   <div class="widget-header">
-    <h3>cherry 挂件</h3>
+    <h3>amber 挂件</h3>
     <button class="widget-close" id="btnWidgetClose">✕</button>
   </div>
   <div class="widget-clock">
@@ -453,7 +453,7 @@ body{
 
 <script>
 // ============================================================
-// cherry的工作台 - 主应用逻辑
+// amber的工作台 - 主应用逻辑
 // ============================================================
 
 // --- DOM Refs ---
@@ -528,7 +528,7 @@ function registerSW() {
 // --- Config ---
 function loadConfig() {
   try {
-    const saved = localStorage.getItem('cherry_config');
+    const saved = localStorage.getItem('amber_config');
     if (saved) {
       supabaseConfig = JSON.parse(saved);
       supabaseUrl.value = supabaseConfig.url || '';
@@ -542,7 +542,7 @@ function saveConfig() {
     url: supabaseUrl.value.trim(),
     key: supabaseKey.value.trim()
   };
-  localStorage.setItem('cherry_config', JSON.stringify(supabaseConfig));
+  localStorage.setItem('amber_config', JSON.stringify(supabaseConfig));
   initSupabase();
 }
 
@@ -599,7 +599,7 @@ async function pullFromCloud() {
     const { data: cloudTodos } = await supabase.from('todos').select('*').order('created_at', { ascending: true });
     if (cloudTodos && cloudTodos.length > 0) {
       // Merge: cloud wins if newer
-      const localTodos = JSON.parse(localStorage.getItem('cherry_todos') || '[]');
+      const localTodos = JSON.parse(localStorage.getItem('amber_todos') || '[]');
       const merged = mergeData(localTodos, cloudTodos, 'id');
       todos = merged.map(t => ({ id: t.id, text: t.text, done: t.done, created_at: t.created_at }));
       saveTodos();
@@ -608,7 +608,7 @@ async function pullFromCloud() {
     // Pull links
     const { data: cloudLinks } = await supabase.from('links').select('*').order('created_at', { ascending: true });
     if (cloudLinks && cloudLinks.length > 0) {
-      const localLinks = JSON.parse(localStorage.getItem('cherry_links') || '[]');
+      const localLinks = JSON.parse(localStorage.getItem('amber_links') || '[]');
       const merged = mergeData(localLinks, cloudLinks, 'id');
       links = merged.map(l => ({ id: l.id, name: l.name, url: l.url, created_at: l.created_at }));
       saveLinks();
@@ -617,7 +617,7 @@ async function pullFromCloud() {
     // Pull note
     const { data: cloudNotes } = await supabase.from('notes').select('*').order('updated_at', { ascending: false }).limit(1);
     if (cloudNotes && cloudNotes.length > 0) {
-      const localNote = JSON.parse(localStorage.getItem('cherry_note') || '{"content":"","updated_at":0}');
+      const localNote = JSON.parse(localStorage.getItem('amber_note') || '{"content":"","updated_at":0}');
       if (new Date(cloudNotes[0].updated_at).getTime() > localNote.updated_at) {
         noteContent = cloudNotes[0].content || '';
         noteArea.value = noteContent;
@@ -655,27 +655,27 @@ async function pushToCloud(table, data) {
 // --- Local Data ---
 function loadLocalData() {
   try {
-    todos = JSON.parse(localStorage.getItem('cherry_todos') || '[]');
+    todos = JSON.parse(localStorage.getItem('amber_todos') || '[]');
   } catch (e) { todos = []; }
   try {
-    links = JSON.parse(localStorage.getItem('cherry_links') || '[]');
+    links = JSON.parse(localStorage.getItem('amber_links') || '[]');
   } catch (e) { links = []; }
   try {
-    const noteData = JSON.parse(localStorage.getItem('cherry_note') || '{"content":"","updated_at":0}');
+    const noteData = JSON.parse(localStorage.getItem('amber_note') || '{"content":"","updated_at":0}');
     noteContent = noteData.content || '';
     noteArea.value = noteContent;
   } catch (e) { noteContent = ''; }
 }
 
 function saveTodos() {
-  localStorage.setItem('cherry_todos', JSON.stringify(todos));
+  localStorage.setItem('amber_todos', JSON.stringify(todos));
   if (isOnline) {
     pushToCloud('todos', todos.map(t => ({ ...t, updated_at: new Date().toISOString() })));
   }
 }
 
 function saveLinks() {
-  localStorage.setItem('cherry_links', JSON.stringify(links));
+  localStorage.setItem('amber_links', JSON.stringify(links));
   if (isOnline) {
     pushToCloud('links', links.map(l => ({ ...l, updated_at: new Date().toISOString() })));
   }
@@ -683,7 +683,7 @@ function saveLinks() {
 
 function saveNote() {
   const data = { content: noteContent, updated_at: Date.now() };
-  localStorage.setItem('cherry_note', JSON.stringify(data));
+  localStorage.setItem('amber_note', JSON.stringify(data));
   if (isOnline) {
     pushToCloud('notes', [{ id: 'default', content: noteContent, updated_at: new Date().toISOString() }]);
   }
@@ -947,9 +947,9 @@ $('#btnSettingsSave').addEventListener('click', () => {
 
 $('#btnClearData').addEventListener('click', () => {
   if (confirm('确定要清除所有本地数据吗？此操作不可恢复！')) {
-    localStorage.removeItem('cherry_todos');
-    localStorage.removeItem('cherry_links');
-    localStorage.removeItem('cherry_note');
+    localStorage.removeItem('amber_todos');
+    localStorage.removeItem('amber_links');
+    localStorage.removeItem('amber_note');
     todos = [];
     links = [];
     noteContent = '';
