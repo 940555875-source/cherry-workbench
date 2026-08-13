@@ -776,7 +776,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.12</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.13</div>
     </div>
   </aside>
 
@@ -1071,11 +1071,11 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.12 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
+// amber的工作台 v14.13 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
 // ============================================================
 
 // 全局版本号（用于界面诊断，确保用户看到的是最新代码）
-const APP_VERSION = 'v14.12';
+const APP_VERSION = 'v14.13';
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
 function reportBootError(title, err) {
@@ -3106,6 +3106,8 @@ function clearAllCaches() {
     location.reload(true);
   }
 }
+// 暴露到全局（HTML onclick 需要全局函数）
+window.clearAllCaches = clearAllCaches;
 
 function escapeHtml(s) {
   const d = document.createElement('div');
