@@ -776,7 +776,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.11</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.12</div>
     </div>
   </aside>
 
@@ -893,7 +893,8 @@ body{
         <div class="card-body">
           <div class="travel-progress" id="travelProgress"></div>
           <div class="travel-map-wrap" id="travelMapWrap"></div>
-          <div class="travel-hint" id="travelHint">💡 点击地图上的国家即可打点 / 取消</div>
+          <div class="travel-hint" id="travelHint">💡 点击地图上的国家即可打点 / 取消 <span id="mapDebug" style="color:#999"></span></div>
+          <button onclick="clearAllCaches()" style="display:block;margin:0 auto 14px;padding:6px 14px;font-size:12px;border:1px solid var(--gray-300);border-radius:8px;background:var(--white);color:var(--gray-600);cursor:pointer">🔄 清除缓存并刷新</button>
           <div class="travel-country-list" id="travelCountryList"></div>
         </div>
       </div>
@@ -1070,8 +1071,11 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.11 — 地图渲染加防御性try-catch+DOM API降级+可见错误提示
+// amber的工作台 v14.12 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
 // ============================================================
+
+// 全局版本号（用于界面诊断，确保用户看到的是最新代码）
+const APP_VERSION = 'v14.12';
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
 function reportBootError(title, err) {
@@ -2760,72 +2764,80 @@ function renderTravelPage() {
     <div class="tp-msg">${escapeHtml(msg)}</div>
   `;
 
-  // 地图（防御性渲染：try-catch + DOM降级 + 可见错误提示）
+  // 地图（防御性渲染：DOM API 优先，innerHTML 兜底，失败显示错误 + 可见诊断）
   const mapWrap = $('#travelMapWrap');
   const existingSvg = mapWrap.querySelector('svg');
+  let mapMode = 'cached';
   if (!existingSvg) {
+    mapMode = 'none';
     try {
-      // 方法1：innerHTML（大多数浏览器正常）
-      const svgHTML = buildTravelSVG();
-      mapWrap.innerHTML = svgHTML;
-      // 验证：确认SVG真的被插入了
-      if (!mapWrap.querySelector('svg')) {
-        throw new Error('innerHTML后SVG不存在，可能字符串过大');
-      }
+      // 方法1（优先）：DOM API 逐节点构建 —— 避免 610KB 大字符串，移动端更稳
+      mapWrap.innerHTML = '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'travel-svg');
+      svg.setAttribute('viewBox', WORLD_MAP.v);
+      svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+      const gSov = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      gSov.setAttribute('fill', '#E8E8E8');
+      gSov.setAttribute('stroke', '#C8C8C8');
+      gSov.setAttribute('stroke-width', '0.4');
+      WORLD_MAP.s.forEach(s => {
+        const { id, zh, path } = _splitLoc(s);
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('id', 't-' + id);
+        p.setAttribute('class', 't-sov');
+        p.setAttribute('data-id', id);
+        p.setAttribute('data-name', zh);
+        p.setAttribute('data-type', 'sov');
+        p.setAttribute('d', path);
+        gSov.appendChild(p);
+      });
+
+      const gReg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      gReg.setAttribute('fill', '#F5F5F5');
+      gReg.setAttribute('stroke', '#D8D8D8');
+      gReg.setAttribute('stroke-width', '0.4');
+      WORLD_MAP.r.forEach(s => {
+        const { id, zh, path } = _splitLoc(s);
+        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('id', 't-' + id);
+        p.setAttribute('class', 't-region');
+        p.setAttribute('data-id', id);
+        p.setAttribute('data-name', zh);
+        p.setAttribute('data-type', 'region');
+        p.setAttribute('d', path);
+        gReg.appendChild(p);
+      });
+
+      svg.appendChild(gSov);
+      svg.appendChild(gReg);
+      mapWrap.appendChild(svg);
+      mapMode = 'dom';
+      if (!mapWrap.querySelector('svg')) throw new Error('DOM API 构建后 SVG 不存在');
     } catch(e) {
-      console.error('[地图] innerHTML方式失败:', e.message);
+      console.error('[地图] DOM API 失败:', e.message);
       try {
-        // 方法2：DOM API逐节点构建（避免大字符串）
-        mapWrap.innerHTML = '';
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('class', 'travel-svg');
-        svg.setAttribute('viewBox', WORLD_MAP.v);
-        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-
-        const gSov = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        gSov.setAttribute('fill', '#E8E8E8');
-        gSov.setAttribute('stroke', '#C8C8C8');
-        gSov.setAttribute('stroke-width', '0.4');
-        WORLD_MAP.s.forEach(s => {
-          const { id, zh, path } = _splitLoc(s);
-          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          p.id = 't-' + id;
-          p.className.baseVal = 't-sov';
-          p.setAttribute('data-id', id);
-          p.setAttribute('data-name', zh);
-          p.setAttribute('data-type', 'sov');
-          p.setAttribute('d', path);
-          gSov.appendChild(p);
-        });
-
-        const gReg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        gReg.setAttribute('fill', '#F5F5F5');
-        gReg.setAttribute('stroke', '#D8D8D8');
-        gReg.setAttribute('stroke-width', '0.4');
-        WORLD_MAP.r.forEach(s => {
-          const { id, zh, path } = _splitLoc(s);
-          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          p.id = 't-' + id;
-          p.className.baseVal = 't-region';
-          p.setAttribute('data-id', id);
-          p.setAttribute('data-name', zh);
-          p.setAttribute('data-type', 'region');
-          p.setAttribute('d', path);
-          gReg.appendChild(p);
-        });
-
-        svg.appendChild(gSov);
-        svg.appendChild(gReg);
-        mapWrap.appendChild(svg);
+        // 方法2（兜底）：innerHTML 注入完整 SVG 字符串
+        const svgHTML = buildTravelSVG();
+        mapWrap.innerHTML = svgHTML;
+        mapMode = 'html';
+        if (!mapWrap.querySelector('svg')) throw new Error('innerHTML 后 SVG 不存在');
       } catch(e2) {
-        console.error('[地图] DOM API也失败:', e2.message);
-        mapWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#e65100;background:#fff3e0;border-radius:8px;font-size:13px">⚠️ 地图加载失败<br><small style="color:#999">' + escapeHtml(e2.message) + '</small><br><button onclick="this.closest(\'.travel-map-wrap\').dataset.rendered=\'\';renderTravelPage()" style="margin-top:8px;padding:4px14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px">重试</button></div>';
+        console.error('[地图] 两种方式都失败:', e2.message);
+        mapMode = 'error';
+        mapWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#e65100;background:#fff3e0;border-radius:8px;font-size:13px">⚠️ 地图加载失败<br><small style="color:#999">' + escapeHtml(e2.message) + '</small><br><button onclick="clearAllCaches()" style="margin-top:8px;padding:4px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px">清除缓存重试</button></div>';
       }
     }
     const finalSvg = mapWrap.querySelector('svg');
-    if (finalSvg) {
-      finalSvg.addEventListener('click', onTravelMapClick);
-    }
+    if (finalSvg) finalSvg.addEventListener('click', onTravelMapClick);
+  }
+
+  // 可见诊断：实时显示运行版本 + 地图节点数 + 渲染方式（方便排查「还是空白」）
+  const dbg = $('#mapDebug');
+  if (dbg) {
+    const n = mapWrap.querySelectorAll('path[data-id]').length;
+    dbg.textContent = ` [运行 ${APP_VERSION} · 地图节点 ${n} · ${mapMode}]`;
   }
 
   // 应用当前 visited 状态
@@ -3071,6 +3083,27 @@ function registerSW() {
     // Use a relative path so this resolves correctly on GitHub Pages
     // (deployed under /cherry-workbench/, not the domain root).
     navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+    // 新版 Service Worker 接管页面时，自动重载一次，确保当前运行的 JS 是最新版
+    // （避免旧 SW 滞留导致用户一直看到旧代码）
+    let _swReloading = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (_swReloading) return;
+      _swReloading = true;
+      location.reload();
+    });
+  }
+}
+
+// 清除所有 Service Worker 缓存并强制刷新（解决「部署了但手机还是旧版」的问题）
+function clearAllCaches() {
+  try {
+    if ('caches' in window) {
+      caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))).then(() => location.reload(true));
+    } else {
+      location.reload(true);
+    }
+  } catch (e) {
+    location.reload(true);
   }
 }
 

@@ -1,8 +1,8 @@
-// amber的工作台 Service Worker v14.11
-// Strategy: HTML uses network-first so updates are immediately picked up;
-// static assets use cache-first for fast reload.
+// amber的工作台 Service Worker v14.12
+// Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
+// the latest code (never a stale cached index.html); static assets cache-first.
 
-const VERSION = 'amber-workbench-v14.11';
+const VERSION = 'amber-workbench-v14.12';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
@@ -78,7 +78,8 @@ async function cacheFirst(request) {
 
 async function networkFirst(request) {
   try {
-    const res = await fetch(request);
+    // cache:'no-cache' 强制向网络重新校验，绝不使用 HTTP 缓存中的旧 HTML
+    const res = await fetch(request, { cache: 'no-cache' });
     if (res.ok) {
       const c = await caches.open(STATIC_CACHE);
       c.put(request, res.clone());
