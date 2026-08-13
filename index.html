@@ -776,7 +776,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.16</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.17</div>
     </div>
   </aside>
 
@@ -1071,11 +1071,11 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.16 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
+// amber的工作台 v14.17 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
 // ============================================================
 
 // 全局版本号（用于界面诊断，确保用户看到的是最新代码）
-const APP_VERSION = 'v14.16';
+const APP_VERSION = 'v14.17';
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
 function reportBootError(title, err) {
@@ -2745,73 +2745,114 @@ function buildTravelSVG() {
 function renderTravelPage() {
   const mapWrap = $('#travelMapWrap');
   
-  // 如果地图已渲染，只更新 visited 状态即可
-  if (mapWrap && mapWrap.querySelector('svg[data-rendered="1"]')) {
+  // 进度卡（立即渲染，不依赖异步）
+  _renderTravelProgress();
+  _renderTravelList();
+  
+  // 如果地图已加载，只更新 visited 状态
+  const existingObj = mapWrap ? mapWrap.querySelector('object') : null;
+  if (existingObj && existingObj.dataset.loaded === '1') {
     _updateTravelVisitedUI();
-    _renderTravelList();
     return;
   }
   
-  // 首次进入：异步加载数据
+  // 首次进入：用 <object> 加载外部 SVG 文件（iOS Safari 对外部 SVG 100% 兼容，绕过 inline 解析问题）
   if (mapWrap) {
-    mapWrap.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray-500);font-size:14px">⏳ 正在加载世界地图...</div>';
+    if (!existingObj) {
+      mapWrap.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray-500);font-size:14px">⏳ 正在加载世界地图...</div>';
+    }
+    // 创建 object 元素加载外部 SVG
+    const obj = document.createElement('object');
+    obj.type = 'image/svg+xml';
+    obj.data = './world-map.svg';
+    obj.style.cssText = 'width:100%;height:auto;display:block;pointer-events:auto';
+    obj.id = 'travelMapObj';
+    
+    obj.addEventListener('load', () => {
+      // SVG 加载完成
+      obj.dataset.loaded = '1';
+      // 注入 visited 样式规则到 SVG 文档
+      try {
+        const svgDoc = obj.contentDocument;
+        if (svgDoc) {
+          const style = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'style');
+          style.textContent = '.t-visited { fill: #4CAF50 !important; stroke: #2E7D32 !important; stroke-width: 0.6 !important; }';
+          svgDoc.documentElement.appendChild(style);
+          // 委托点击事件
+          const svgRoot = svgDoc.documentElement;
+          svgRoot.addEventListener('click', onTravelMapClick);
+          // 替换加载提示为已加载的 object
+          if (mapWrap.contains(obj)) {
+            // obj 已经在 DOM 里了，移除加载提示
+            const loading = mapWrap.querySelector('.travel-loading');
+            if (loading) loading.remove();
+          }
+          _updateTravelVisitedUI();
+          const dbg = $('#mapDebug');
+          if (dbg) {
+            const n = svgDoc.querySelectorAll('path[data-id]').length;
+            dbg.textContent = ' [' + APP_VERSION + ' · ' + n + '节点 · object加载完成]';
+          }
+        } else {
+          throw new Error('contentDocument 不可访问');
+        }
+      } catch(e) {
+        console.error('[旅行] SVG document 访问失败:', e);
+        const dbg = $('#mapDebug');
+        if (dbg) dbg.textContent = ' [SVG访问受限: ' + e.message + ']';
+      }
+    });
+    
+    obj.addEventListener('error', () => {
+      mapWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#e65100;background:#fff3e0;border-radius:8px;font-size:13px">⚠️ 地图加载失败<br><button onclick="window.clearAllCaches()" style="margin-top:8px;padding:4px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px">清除缓存重试</button></div>';
+    });
+    
+    // 移除加载提示，添加 object
+    const loadingEl = mapWrap.querySelector('.travel-loading');
+    if (loadingEl) loadingEl.remove();
+    mapWrap.appendChild(obj);
   }
   
-  Promise.all([
-    fetch('./travel-sets.json').then(r => r.ok ? r.json() : Promise.reject(new Error('travel-sets.json ' + r.status))),
-    fetch('./world-map.json').then(r => r.ok ? r.json() : Promise.reject(new Error('world-map.json ' + r.status)))
-  ]).then(([sets, wm]) => {
-    // 注入到全局
+  // 加载 travel-sets.json 用于进度计算（独立的，可以后台跑）
+  fetch('./travel-sets.json').then(r => r.ok ? r.json() : Promise.reject(new Error(r.status))).then(sets => {
     TRAVEL_SOVEREIGN = new Set(sets.sov);
     TRAVEL_REGIONS = new Set(sets.reg);
     TOTAL_COUNTRIES = sets.total;
-    WORLD_MAP = wm;
-    
-    // 进度卡
-    const visited = _visitedSet();
-    let soverCount = 0, regionCount = 0;
-    visited.forEach(code => {
-      if (TRAVEL_SOVEREIGN.has(code)) soverCount++;
-      else if (TRAVEL_REGIONS.has(code)) regionCount++;
-    });
-    const pct = (soverCount / TOTAL_COUNTRIES) * 100;
-    const msg = _travelEncourage(pct, soverCount + regionCount);
-    
-    if ($('#travelProgress')) {
-      $('#travelProgress').innerHTML = `
-        <div class="tp-row">
-          <div class="tp-num">${soverCount}<small>/ ${TOTAL_COUNTRIES} 个国家</small></div>
-          <div class="tp-region">${regionCount > 0 ? `+ ${regionCount} 个地区` : ''}</div>
-        </div>
-        <div class="tp-bar"><div class="tp-fill" style="width:${pct.toFixed(1)}%"></div></div>
-        <div class="tp-msg">${escapeHtml(msg)}</div>
-      `;
-    }
-    
-    // 渲染地图 SVG（用 innerHTML 一次性注入，已验证稳定）
-    const svgHTML = buildTravelSVG();
-    mapWrap.innerHTML = svgHTML;
-    const svg = mapWrap.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('data-rendered', '1');
-      svg.addEventListener('click', onTravelMapClick);
-    }
-    
-    // 应用 visited 样式 + 渲染列表
+    _renderTravelProgress();
     _updateTravelVisitedUI();
     _renderTravelList();
-    
-    const dbg = $('#mapDebug');
-    if (dbg) {
-      const n = mapWrap.querySelectorAll('path[data-id]').length;
-      dbg.textContent = ` [${APP_VERSION} · ${n}节点 · 加载完成]`;
-    }
   }).catch(err => {
-    console.error('[旅行] 数据加载失败:', err);
-    if (mapWrap) {
-      mapWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#e65100;background:#fff3e0;border-radius:8px;font-size:13px">⚠️ 地图数据加载失败<br><small style="color:#999">' + escapeHtml(err.message) + '</small><br><button onclick="window.clearAllCaches()" style="margin-top:8px;padding:4px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px">清除缓存重试</button></div>';
-    }
+    console.warn('[旅行] travel-sets.json 加载失败，进度计算可能不准:', err);
+    // Fallback：使用默认数据
+    TRAVEL_SOVEREIGN = TRAVEL_SOVEREIGN || new Set();
+    TRAVEL_REGIONS = TRAVEL_REGIONS || new Set();
+    TOTAL_COUNTRIES = TOTAL_COUNTRIES || 195;
+    _renderTravelProgress();
   });
+}
+
+// 辅助：渲染进度卡
+function _renderTravelProgress() {
+  const visited = _visitedSet();
+  let soverCount = 0, regionCount = 0;
+  visited.forEach(code => {
+    if (TRAVEL_SOVEREIGN && TRAVEL_SOVEREIGN.has && TRAVEL_SOVEREIGN.has(code)) soverCount++;
+    else if (TRAVEL_REGIONS && TRAVEL_REGIONS.has && TRAVEL_REGIONS.has(code)) regionCount++;
+  });
+  const total = TOTAL_COUNTRIES || 195;
+  const pct = (soverCount / total) * 100;
+  const msg = _travelEncourage(pct, soverCount + regionCount);
+  
+  if ($('#travelProgress')) {
+    $('#travelProgress').innerHTML = `
+      <div class="tp-row">
+        <div class="tp-num">${soverCount}<small>/ ${total} 个国家</small></div>
+        <div class="tp-region">${regionCount > 0 ? `+ ${regionCount} 个地区` : ''}</div>
+      </div>
+      <div class="tp-bar"><div class="tp-fill" style="width:${pct.toFixed(1)}%"></div></div>
+      <div class="tp-msg">${escapeHtml(msg)}</div>
+    `;
+  }
 }
 
 // 辅助：仅更新 visited 样式（地图已渲染时调用）
@@ -2819,9 +2860,12 @@ function _updateTravelVisitedUI() {
   const visited = _visitedSet();
   const mapWrap = $('#travelMapWrap');
   if (!mapWrap) return;
-  mapWrap.querySelectorAll('path[data-id]').forEach(p => {
-    p.classList.toggle('t-visited', visited.has(p.dataset.id));
-  });
+  const obj = mapWrap.querySelector('object');
+  if (obj && obj.contentDocument) {
+    obj.contentDocument.querySelectorAll('path[data-id]').forEach(p => {
+      p.classList.toggle('t-visited', visited.has(p.dataset.id));
+    });
+  }
 }
 
 // 辅助：渲染已去国家列表
