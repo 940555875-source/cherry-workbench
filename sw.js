@@ -1,8 +1,9 @@
-// amber的工作台 Service Worker v14.15
+// amber的工作台 Service Worker v14.16
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
+// v14.16: world-map.json + travel-sets.json 独立懒加载，地图数据从脚本分离
 
-const VERSION = 'amber-workbench-v14.15';
+const VERSION = 'amber-workbench-v14.16';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
@@ -10,6 +11,8 @@ const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
+  './world-map.json',
+  './travel-sets.json',
   './icons/icon-48x48.png',
   './icons/icon-72x72.png',
   './icons/icon-96x96.png',
