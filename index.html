@@ -384,6 +384,9 @@ body{
 .plan-cat{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:600;line-height:1.7}
 .plan-cat.work{background:var(--blue-50);color:var(--blue-500)}
 .plan-cat.private{background:var(--pink-50);color:var(--pink-500)}
+.plan-deadline{color:var(--gray-600);font-weight:600}
+.plan-deadline.overdue{color:#E53935}
+.plan-deadline.none{color:var(--gray-400);font-weight:400}
 .stat-card{cursor:pointer}
 .stat-card.active{outline:2px solid var(--blue-300);outline-offset:-2px}
 .modal select{
@@ -773,7 +776,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.7</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.8</div>
     </div>
   </aside>
 
@@ -1065,7 +1068,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.7 — 同步状态真实化（拉取/上传失败不再假变绿）
+// amber的工作台 v14.8 — 计划列表按截止时间排序并外显截止时间
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1907,6 +1910,32 @@ function planCreatedMs(p) {
   return isNaN(t) ? Date.now() : t;
 }
 
+// 排序键：截止时间（无截止时间的按计划日期当天 23:59:59 兜底，排在有截止时间之后）
+function planDeadlineMs(p) {
+  if (p.deadline) {
+    const t = new Date(p.deadline).getTime();
+    if (!isNaN(t)) return t;
+  }
+  if (p.date) {
+    const t = new Date(p.date + 'T23:59:59').getTime();
+    if (!isNaN(t)) return t;
+  }
+  return Infinity;
+}
+
+// 截止时间外显标签：跨年时带年份，其余省略年份
+function planDeadlineLabel(p) {
+  if (!p.deadline) return '';
+  const d = new Date(p.deadline);
+  if (isNaN(d.getTime())) return '';
+  const y = d.getFullYear() !== new Date().getFullYear() ? d.getFullYear() + '-' : '';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${y}${mm}-${dd} ${hh}:${mi}`;
+}
+
 // 停留时长 = 查看时间(now) - 新建时间(created_at)
 function planDwell(p) {
   return Date.now() - planCreatedMs(p);
@@ -1954,8 +1983,8 @@ function renderPlanPage() {
   const sections = getPlanSections(dateStr);
   const data = { overdue: sections.overdue, today: sections.todayTasks, done: sections.doneTasks, future: sections.futureTasks };
 
-  // 按新建时间从早到晚排序
-  Object.keys(data).forEach(k => data[k].sort((a, b) => planCreatedMs(a) - planCreatedMs(b)));
+  // 按截止时间从早到晚排序（无截止时间的按计划日期兜底排后）
+  Object.keys(data).forEach(k => data[k].sort((a, b) => planDeadlineMs(a) - planDeadlineMs(b)));
 
   // Active section (tab)
   if (!SECTION_ORDER.includes(state.planActiveSection)) state.planActiveSection = 'today';
@@ -1979,11 +2008,17 @@ function renderPlanPage() {
     const dwell = fmtDuration(planDwell(p));
     const cat = planCategory(p);
     const catCls = cat === '工作' ? 'work' : 'private';
+    const dl = planDeadlineLabel(p);
+    const dlOverdue = !p.done && dl && planDeadlineMs(p) < Date.now();
+    const dlHtml = dl
+      ? `<span class="plan-deadline${dlOverdue ? ' overdue' : ''}">⏰ 截止 ${dl}</span>`
+      : `<span class="plan-deadline none">⏰ 无截止</span>`;
     return `<li class="plan-item${p.done ? ' done' : ''}">
       <button class="plan-check" data-id="${p.id}"></button>
       <div class="plan-item-body">
         <div class="plan-item-name" data-id="${p.id}" title="${escapeHtml(p.text)}">${escapeHtml(p.text)}</div>
         <div class="plan-item-meta">
+          ${dlHtml}
           <span>⏱ 停留 ${dwell}</span>
           <span class="plan-cat ${catCls}">${cat}</span>
         </div>
