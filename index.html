@@ -776,7 +776,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.13</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.14</div>
     </div>
   </aside>
 
@@ -1071,11 +1071,11 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.13 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
+// amber的工作台 v14.14 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
 // ============================================================
 
 // 全局版本号（用于界面诊断，确保用户看到的是最新代码）
-const APP_VERSION = 'v14.13';
+const APP_VERSION = 'v14.14';
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
 function reportBootError(title, err) {
@@ -2764,80 +2764,116 @@ function renderTravelPage() {
     <div class="tp-msg">${escapeHtml(msg)}</div>
   `;
 
-  // 地图（防御性渲染：DOM API 优先，innerHTML 兜底，失败显示错误 + 可见诊断）
+  // 地图（v14.14: 激进诊断 —— 每一步都写可见状态到进度卡）
   const mapWrap = $('#travelMapWrap');
   const existingSvg = mapWrap.querySelector('svg');
   let mapMode = 'cached';
+  let mapDiag = '';
+  
+  // 诊断辅助：把状态写到进度卡消息区（100%会显示）
+  function diag(msg) {
+    mapDiag = msg;
+    const el = document.querySelector('.tp-msg');
+    if (el) el.textContent = escapeHtml(msg) + ' | ' + escapeHtml(msg);
+    console.log('[地图诊断]', msg);
+  }
+
   if (!existingSvg) {
     mapMode = 'none';
+    diag('🗺️ 正在渲染地图...');
+    
+    // 先测试：最小 SVG 能否渲染
     try {
-      // 方法1（优先）：DOM API 逐节点构建 —— 避免 610KB 大字符串，移动端更稳
-      mapWrap.innerHTML = '';
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('class', 'travel-svg');
-      svg.setAttribute('viewBox', WORLD_MAP.v);
-      svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-
-      const gSov = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      gSov.setAttribute('fill', '#E8E8E8');
-      gSov.setAttribute('stroke', '#C8C8C8');
-      gSov.setAttribute('stroke-width', '0.4');
-      WORLD_MAP.s.forEach(s => {
-        const { id, zh, path } = _splitLoc(s);
-        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        p.setAttribute('id', 't-' + id);
-        p.setAttribute('class', 't-sov');
-        p.setAttribute('data-id', id);
-        p.setAttribute('data-name', zh);
-        p.setAttribute('data-type', 'sov');
-        p.setAttribute('d', path);
-        gSov.appendChild(p);
-      });
-
-      const gReg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      gReg.setAttribute('fill', '#F5F5F5');
-      gReg.setAttribute('stroke', '#D8D8D8');
-      gReg.setAttribute('stroke-width', '0.4');
-      WORLD_MAP.r.forEach(s => {
-        const { id, zh, path } = _splitLoc(s);
-        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        p.setAttribute('id', 't-' + id);
-        p.setAttribute('class', 't-region');
-        p.setAttribute('data-id', id);
-        p.setAttribute('data-name', zh);
-        p.setAttribute('data-type', 'region');
-        p.setAttribute('d', path);
-        gReg.appendChild(p);
-      });
-
-      svg.appendChild(gSov);
-      svg.appendChild(gReg);
-      mapWrap.appendChild(svg);
-      mapMode = 'dom';
-      if (!mapWrap.querySelector('svg')) throw new Error('DOM API 构建后 SVG 不存在');
-    } catch(e) {
-      console.error('[地图] DOM API 失败:', e.message);
+      mapWrap.innerHTML = '<svg class="travel-svg" viewBox="0 0 100 50" style="width:100%;height:auto;display:block"><rect width="100" height="50" fill="#eee" stroke="#ccc"/></svg>';
+      if (!mapWrap.querySelector('svg')) throw new Error('最小SVG不可见');
+      diag('✅ 最小SVG正常，开始构建世界地图...');
+    } catch(e0) {
+      console.error('[地图] 最小SVG测试失败:', e0.message);
+      diag('❌ SVG不可用: ' + e0.message);
+      mapMode = 'svg-broken';
+    }
+    
+    if (mapMode !== 'svg-broken') {
       try {
-        // 方法2（兜底）：innerHTML 注入完整 SVG 字符串
-        const svgHTML = buildTravelSVG();
-        mapWrap.innerHTML = svgHTML;
-        mapMode = 'html';
-        if (!mapWrap.querySelector('svg')) throw new Error('innerHTML 后 SVG 不存在');
-      } catch(e2) {
-        console.error('[地图] 两种方式都失败:', e2.message);
-        mapMode = 'error';
-        mapWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#e65100;background:#fff3e0;border-radius:8px;font-size:13px">⚠️ 地图加载失败<br><small style="color:#999">' + escapeHtml(e2.message) + '</small><br><button onclick="clearAllCaches()" style="margin-top:8px;padding:4px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px">清除缓存重试</button></div>';
+        // 方法1：DOM API 逐节点构建
+        mapWrap.innerHTML = '';
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'travel-svg');
+        svg.setAttribute('viewBox', WORLD_MAP.v);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.style.cssText = 'width:100%;height:auto;display:block';
+
+        const gSov = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        gSov.setAttribute('fill', '#E8E8E8');
+        gSov.setAttribute('stroke', '#C8C8C8');
+        gSov.setAttribute('stroke-width', '0.4');
+        
+        diag('构建主权国路径 (' + WORLD_MAP.s.length + ')...');
+        let sovCount = 0;
+        WORLD_MAP.s.forEach(s => {
+          const { id, zh, path } = _splitLoc(s);
+          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          p.id = 't-' + id;
+          p.setAttribute('class', 't-sov');
+          p.setAttribute('data-id', id);
+          p.setAttribute('data-name', zh);
+          p.setAttribute('data-type', 'sov');
+          p.setAttribute('d', path);
+          gSov.appendChild(p);
+          sovCount++;
+        });
+
+        const gReg = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        gReg.setAttribute('fill', '#F5F5F5');
+        gReg.setAttribute('stroke', '#D8D8D8');
+        gReg.setAttribute('stroke-width', '0.4');
+        
+        diag('构建地区路径 (' + WORLD_MAP.r.length + ')...');
+        WORLD_MAP.r.forEach(s => {
+          const { id, zh, path } = _splitLoc(s);
+          const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          p.id = 't-' + id;
+          p.setAttribute('class', 't-region');
+          p.setAttribute('data-id', id);
+          p.setAttribute('data-name', zh);
+          p.setAttribute('data-type', 'region');
+          p.setAttribute('d', path);
+          gReg.appendChild(p);
+        });
+
+        svg.appendChild(gSov);
+        svg.appendChild(gReg);
+        mapWrap.appendChild(svg);
+        mapMode = 'dom (' + sovCount + '+' + WORLD_MAP.r.length + ')';
+        diag('✅ 地图渲染完成! ' + mapMode);
+        
+        if (!mapWrap.querySelector('svg')) throw new Error('DOM API 后SVG不存在');
+      } catch(e) {
+        console.error('[地图] DOM API 失败:', e.message);
+        diag('DOM失败，尝试innerHTML... ' + e.message);
+        try {
+          const svgHTML = buildTravelSVG();
+          mapWrap.innerHTML = svgHTML;
+          mapMode = 'html';
+          diag('✅ innerHTML成功');
+          if (!mapWrap.querySelector('svg')) throw new Error('innerHTML后SVG不存在');
+        } catch(e2) {
+          console.error('[地图] 全部失败:', e2.message);
+          mapMode = 'error: ' + e2.message;
+          diag('❌ 地图失败: ' + e2.message);
+          mapWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#e65100;background:#fff3e0;border-radius:8px;font-size:13px">⚠️ 地图加载失败<br><small style="color:#999">' + escapeHtml(e2.message) + '</small><br><button onclick="window.clearAllCaches()" style="margin-top:8px;padding:4px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px">清除缓存重试</button></div>';
+        }
       }
     }
     const finalSvg = mapWrap.querySelector('svg');
     if (finalSvg) finalSvg.addEventListener('click', onTravelMapClick);
   }
 
-  // 可见诊断：实时显示运行版本 + 地图节点数 + 渲染方式（方便排查「还是空白」）
+  // 可见诊断
   const dbg = $('#mapDebug');
   if (dbg) {
     const n = mapWrap.querySelectorAll('path[data-id]').length;
-    dbg.textContent = ` [运行 ${APP_VERSION} · 地图节点 ${n} · ${mapMode}]`;
+    dbg.textContent = ` [${APP_VERSION} · ${n}节点 · ${mapMode}]`;
   }
 
   // 应用当前 visited 状态
