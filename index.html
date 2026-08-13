@@ -776,7 +776,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.8</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.9</div>
     </div>
   </aside>
 
@@ -1062,13 +1062,15 @@ body{
 <!-- === Boot Error Banner (shows any uncaught JS error so we can debug) === -->
 <div id="bootError" style="display:none;position:fixed;bottom:16px;left:16px;right:16px;z-index:999;background:#fee;border:1px solid #f88;border-radius:10px;padding:12px 16px;font-size:13px;color:#a00;box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:40vh;overflow:auto;font-family:ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase JS is loaded NON-BLOCKING with CDN fallback (see loadSupabaseScript),
+     so a slow/unreachable CDN (e.g. jsdelivr in mainland China) can never block
+     the rest of the UI — including the travel map — from rendering. -->
 <script>
 (function(){
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.8 — 计划列表按截止时间排序并外显截止时间
+// amber的工作台 v14.9 — supabase-js 改为非阻塞+双CDN兜底加载，旅游地图不再被 CDN 阻塞
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1141,6 +1143,33 @@ function initSupabase() {
   sb = null;
   syncEnabled = false;
   return false;
+}
+
+// Non-blocking loader with CDN fallback (jsdelivr → unpkg).
+// Replaces the old parser-blocking <script src> that could hang the whole page
+// (and thus the travel map) when the CDN was slow/unreachable (mainland China).
+let _supaLoading = null;
+function loadSupabaseScript() {
+  if (window.supabase && window.supabase.createClient) return Promise.resolve(true);
+  if (_supaLoading) return _supaLoading;
+  const cdns = [
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+    'https://unpkg.com/@supabase/supabase-js@2',
+  ];
+  _supaLoading = new Promise((resolve) => {
+    let i = 0;
+    const tryNext = () => {
+      if (i >= cdns.length) { resolve(false); return; }
+      const s = document.createElement('script');
+      s.src = cdns[i++];
+      s.async = true;
+      s.onload = () => resolve(true);
+      s.onerror = () => { s.remove(); tryNext(); };
+      document.head.appendChild(s);
+    };
+    tryNext();
+  });
+  return _supaLoading;
 }
 
 // ============================================================
@@ -1369,27 +1398,33 @@ async function init() {
   const safe = (label, fn) => { try { fn(); } catch(e) { reportBootError(label, e); } };
 
   safe('initSyncPills', () => initSyncPills());
-  let hasConfig = false;
-  safe('initSupabase', () => { hasConfig = initSupabase(); });
   safe('loadLocalData', () => loadLocalData());
   safe('initCalendar', () => initCalendar());
   safe('initNavigation', () => initNavigation());
 
   safe('renderAll', () => renderAll());
 
-  if (hasConfig) {
-    setSyncStatus('syncing', '同步中...');
-    try {
-      const syncResults = await Promise.all([
-        fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), fullSync('travels'),
-      ]);
-      if (syncResults.every(Boolean)) setSyncStatus('online', '已同步');
-      safe('renderAll after sync', () => renderAll());
-    } catch(e) {
-      console.warn('Initial sync failed', e.message);
-      setSyncStatus('error', '同步失败');
-    }
-  }
+  // Supabase is loaded NON-BLOCKING. The whole UI (incl. the travel map) is
+  // already usable at this point, regardless of CDN speed. Sync initializes
+  // once the script is ready.
+  safe('supabase load', () => {
+    loadSupabaseScript().then(ok => {
+      if (!ok) { setSyncStatus('offline', '未连接'); return; }
+      const hasConfig = initSupabase();
+      if (hasConfig) {
+        setSyncStatus('syncing', '同步中...');
+        Promise.all([
+          fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), fullSync('travels'),
+        ]).then(results => {
+          if (results.every(Boolean)) setSyncStatus('online', '已同步');
+          safe('renderAll after sync', () => renderAll());
+        }).catch(e => {
+          console.warn('Initial sync failed', e.message);
+          setSyncStatus('error', '同步失败');
+        });
+      }
+    });
+  });
 
   safe('cleanupOldTombstones', () => cleanupOldTombstones());
   safe('periodicSync setup', () => setInterval(periodicSync, 300000));
@@ -2943,14 +2978,18 @@ $('#btnSettingsSave').addEventListener('click', () => {
   const cfg = { url: normalizeSupabaseUrl($('#supabaseUrl').value), key: $('#supabaseKey').value.trim() };
   localStorage.setItem(LS_KEYS.config, JSON.stringify(cfg));
   if (cfg.url && cfg.key) {
-    initSupabase();
-    setSyncStatus('syncing', '同步中...');
-    testConnection();
+    loadSupabaseScript().then(ok => {
+      if (!ok) { setSyncStatus('offline', '未连接'); $('#settingsOverlay').classList.add('hidden'); return; }
+      initSupabase();
+      setSyncStatus('syncing', '同步中...');
+      testConnection();
+      $('#settingsOverlay').classList.add('hidden');
+    });
   } else {
     sb = null; syncEnabled = false;
     setSyncStatus('offline', '仅本地');
+    $('#settingsOverlay').classList.add('hidden');
   }
-  $('#settingsOverlay').classList.add('hidden');
 });
 
 $('#btnClearData').addEventListener('click', () => {
