@@ -1,8 +1,8 @@
-// amber的工作台 Service Worker v14.14
+// amber的工作台 Service Worker v14.15
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
 
-const VERSION = 'amber-workbench-v14.14';
+const VERSION = 'amber-workbench-v14.15';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

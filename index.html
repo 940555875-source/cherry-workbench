@@ -776,7 +776,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.14</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.15</div>
     </div>
   </aside>
 
@@ -1071,11 +1071,11 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.14 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
+// amber的工作台 v14.15 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
 // ============================================================
 
 // 全局版本号（用于界面诊断，确保用户看到的是最新代码）
-const APP_VERSION = 'v14.14';
+const APP_VERSION = 'v14.15';
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
 function reportBootError(title, err) {
@@ -2745,6 +2745,9 @@ function buildTravelSVG() {
 }
 
 function renderTravelPage() {
+  // v14.15: 激进诊断 —— 写到页面标题（100%可见）
+  document.title = '🗺️ 1-进入renderTravelPage';
+  
   const visited = _visitedSet();
   let soverCount = 0, regionCount = 0;
   visited.forEach(code => {
@@ -2753,6 +2756,8 @@ function renderTravelPage() {
   });
   const pct = (soverCount / TOTAL_COUNTRIES) * 100;
   const msg = _travelEncourage(pct, soverCount + regionCount);
+
+  document.title = '🗺️ 2-进度卡OK';
 
   // 进度卡
   $('#travelProgress').innerHTML = `
@@ -2764,15 +2769,18 @@ function renderTravelPage() {
     <div class="tp-msg">${escapeHtml(msg)}</div>
   `;
 
-  // 地图（v14.14: 激进诊断 —— 每一步都写可见状态到进度卡）
+  // 地图（v14.15: 激进诊断 —— 每一步都写可见状态到进度卡 + 页面标题）
   const mapWrap = $('#travelMapWrap');
-  const existingSvg = mapWrap.querySelector('svg');
+  document.title = '🗺️ 3-mapWrap=' + !!mapWrap;
+  
+  const existingSvg = mapWrap ? mapWrap.querySelector('svg') : null;
   let mapMode = 'cached';
   let mapDiag = '';
   
-  // 诊断辅助：把状态写到进度卡消息区（100%会显示）
+  // 诊断辅助：同时写进度卡 + 页面标题
   function diag(msg) {
     mapDiag = msg;
+    document.title = '🗺️ ' + msg;
     const el = document.querySelector('.tp-msg');
     if (el) el.textContent = escapeHtml(msg) + ' | ' + escapeHtml(msg);
     console.log('[地图诊断]', msg);
@@ -2881,6 +2889,9 @@ function renderTravelPage() {
     const id = p.dataset.id;
     p.classList.toggle('t-visited', visited.has(id));
   });
+  
+  // 恢复标题
+  document.title = 'amber的工作台';
 
   // 已去国家列表
   const list = state.travels.slice().sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
