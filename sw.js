@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.17
+// amber的工作台 Service Worker v14.19
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.17: 改用 <object> 加载外部 world-map.svg，绕过 iOS inline 解析限制
+// v14.19: 删除旅行功能（地图在iOS Safari无法稳定渲染），清理world-map相关资源
 
-const VERSION = 'amber-workbench-v14.17';
+const VERSION = 'amber-workbench-v14.19';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
@@ -11,8 +11,6 @@ const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
-  './world-map.svg',
-  './travel-sets.json',
   './icons/icon-48x48.png',
   './icons/icon-72x72.png',
   './icons/icon-96x96.png',

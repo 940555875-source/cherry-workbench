@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+// TRAVEL sets 已移除
+var TRAVEL_SOVEREIGN = null, TRAVEL_REGIONS = null, TOTAL_COUNTRIES = 0;
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -772,11 +773,10 @@ body{
       <button class="nav-item" data-page="plans"><span class="nav-emoji">📋</span> 每日计划</button>
       <button class="nav-item" data-page="events"><span class="nav-emoji">🔔</span> 事件提醒</button>
       <button class="nav-item" data-page="checkins"><span class="nav-emoji">✅</span> 打卡</button>
-      <button class="nav-item" data-page="travels"><span class="nav-emoji">🌍</span> 旅行</button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.18</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.19</div>
     </div>
   </aside>
 
@@ -884,22 +884,6 @@ body{
       </div>
     </div>
 
-    <!-- PAGE: 旅行 -->
-    <div class="page" id="page-travels">
-      <div class="card travel-card">
-        <div class="card-header">
-          <span class="card-title">🌍 旅行足迹</span>
-        </div>
-        <div class="card-body">
-          <div class="travel-progress" id="travelProgress"></div>
-          <div class="travel-map-wrap" id="travelMapWrap"></div>
-          <div class="travel-hint" id="travelHint">💡 点击地图上的国家即可打点 / 取消 <span id="mapDebug" style="color:#999"></span></div>
-          <button onclick="clearAllCaches()" style="display:block;margin:0 auto 14px;padding:6px 14px;font-size:12px;border:1px solid var(--gray-300);border-radius:8px;background:var(--white);color:var(--gray-600);cursor:pointer">🔄 清除缓存并刷新</button>
-          <div class="travel-country-list" id="travelCountryList"></div>
-        </div>
-      </div>
-    </div>
-  </main>
 
   <!-- === Mobile Bottom Nav === -->
   <nav class="mobile-nav" id="mobileNav">
@@ -908,7 +892,6 @@ body{
       <button class="mobile-nav-item" data-page="plans"><span class="mni-icon">📋</span>计划</button>
       <button class="mobile-nav-item" data-page="events"><span class="mni-icon">🔔</span>事件</button>
       <button class="mobile-nav-item" data-page="checkins"><span class="mni-icon">✅</span>打卡</button>
-      <button class="mobile-nav-item" data-page="travels"><span class="mni-icon">🌍</span>旅行</button>
     </div>
   </nav>
 
@@ -1071,11 +1054,8 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.18 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
+// amber的工作台 v14.19 — supabase-js 改为非阻塞+双CDN兜底加载，旅游地图不再被 CDN 阻塞
 // ============================================================
-
-// 全局版本号（用于界面诊断，确保用户看到的是最新代码）
-const APP_VERSION = 'v14.18';
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
 function reportBootError(title, err) {
@@ -1093,7 +1073,7 @@ window.addEventListener('unhandledrejection', e => reportBootError('Promise 未�
 // --- World Map data (195 sovereign countries + 3 China regions) ---
 // Generated from @svg-maps/world (CC BY 4.0). China borders simplified.
 // 注：本地图为简化示意图，边界精度有限，仅作为旅行足迹可视化辅助。
-// WORLD_MAP 已迁移到 world-map.json，按需懒加载
+// WORLD_MAP 已移除（旅行功能下线）
 var WORLD_MAP = null;
 // --- Helpers ---
 const $ = s => document.querySelector(s);
@@ -1418,7 +1398,7 @@ async function init() {
       if (hasConfig) {
         setSyncStatus('syncing', '同步中...');
         Promise.all([
-          fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), fullSync('travels'),
+          fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'),
         ]).then(results => {
           if (results.every(Boolean)) setSyncStatus('online', '已同步');
           safe('renderAll after sync', () => renderAll());
@@ -1459,7 +1439,7 @@ async function periodicSync() {
   setSyncStatus('syncing', '同步中...');
   try {
     const syncResults = await Promise.all([
-      fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'), fullSync('travels'),
+      fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'),
     ]);
     if (syncResults.every(Boolean)) setSyncStatus('online', '已同步');
     renderAll();
@@ -1470,7 +1450,7 @@ async function periodicSync() {
 
 function cleanupOldTombstones() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
-  ['plans', 'events', 'checkins', 'links', 'travels'].forEach(key => {
+  ['plans', 'events', 'checkins', 'links'].forEach(key => {
     try {
       const all = JSON.parse(localStorage.getItem(LS_KEYS[key]) || '[]');
       const cleaned = all.filter(r => !r.deleted_at || r.deleted_at > thirtyDaysAgo);
@@ -1517,7 +1497,7 @@ async function testConnection() {
     showDiagToast('连接成功 ✓ — 云端同步已就绪', 'online');
 
     // Do a full sync after successful test
-    fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links'); fullSync('travels');
+    fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links');
   } catch(e) {
     showDiagToast('网络错误 — 无法连接到 Supabase，请检查网络', 'error');
   }
@@ -2701,221 +2681,6 @@ $('#overviewModules').addEventListener('click', e => {
   if (btn) { e.stopPropagation(); checkinIncrement(btn.dataset.id); }
 });
 
-// ============================================================
-// TRAVEL — 世界地图打点 + 进度
-// ============================================================
-
-// TRAVEL sets 已迁移到 travel-sets.json，按需懒加载
-var TRAVEL_SOVEREIGN = null, TRAVEL_REGIONS = null, TOTAL_COUNTRIES = 0;
-
-// 辅助：把紧凑格式 [id, zh, path] 解构为对象
-function _splitLoc(s) {
-  return { id: s[0], zh: s[1], path: s[2] };
-}
-
-// 已打点国家集合（仅 ISO code）
-function _visitedSet() {
-  return new Set(state.travels.map(t => t.code).filter(Boolean));
-}
-
-function _travelEncourage(pct, visitedCount) {
-  if (visitedCount === 0) return '🌱 从一个国家开始，迈出你的第一步';
-  if (visitedCount < 5)   return '🚀 起点已迈出，继续探索更多风景';
-  if (visitedCount < 15)  return '✈️ 不错的开始，世界在等你';
-  if (pct < 10)           return '🗺️ 已经触及世界的一小部分，继续加油';
-  if (pct < 25)           return '🌐 见多识广，你是世界的探索者';
-  if (pct < 50)           return '🏆 已踏足近半地球，名副其实的旅行家';
-  if (pct < 75)           return '🌟 足迹遍布大半个世界，令人敬佩';
-  if (pct < 100)          return '🎯 距离走遍全球只差最后一步！';
-  return '🌈 已走遍全球每一个国家，了不起的旅行家！';
-}
-
-// 构建地图SVG的HTML字符串（供innerHTML方式使用）
-function buildTravelSVG() {
-  return `<svg class="travel-svg" viewBox="${WORLD_MAP.v}" preserveAspectRatio="xMidYMid meet">
-    <g fill="#E8E8E8" stroke="#C8C8C8" stroke-width="0.4">
-      ${WORLD_MAP.s.map(s => { const {id,zh,path}=_splitLoc(s); return `<path id="t-${id}" class="t-sov" data-id="${id}" data-name="${escapeHtml(zh)}" data-type="sov" d="${path}"/>`; }).join('')}
-    </g>
-    <g fill="#F5F5F5" stroke="#D8D8D8" stroke-width="0.4">
-      ${WORLD_MAP.r.map(s => { const {id,zh,path}=_splitLoc(s); return `<path id="t-${id}" class="t-region" data-id="${id}" data-name="${escapeHtml(zh)}" data-type="region" d="${path}"/>`; }).join('')}
-    </g>
-  </svg>`;
-}
-
-function renderTravelPage() {
-  const mapWrap = $('#travelMapWrap');
-  
-  // 进度卡（立即渲染，不依赖异步）
-  _renderTravelProgress();
-  _renderTravelList();
-  
-  // 如果地图已加载，只更新 visited 状态
-  const existingObj = mapWrap ? mapWrap.querySelector('object') : null;
-  if (existingObj && existingObj.dataset.loaded === '1') {
-    _updateTravelVisitedUI();
-    return;
-  }
-  
-  // 首次进入：用 <object> 加载外部 SVG 文件（iOS Safari 对外部 SVG 100% 兼容，绕过 inline 解析问题）
-  if (mapWrap) {
-    // 清空 mapWrap 准备加载
-    mapWrap.innerHTML = '';
-    // 创建 object 元素加载外部 SVG
-    const obj = document.createElement('object');
-    obj.type = 'image/svg+xml';
-    obj.data = './world-map.svg';
-    obj.style.cssText = 'width:100%;height:auto;display:block;pointer-events:auto';
-    obj.id = 'travelMapObj';
-    
-    obj.addEventListener('load', () => {
-      // SVG 加载完成
-      obj.dataset.loaded = '1';
-      // 注入 visited 样式规则到 SVG 文档
-      try {
-        const svgDoc = obj.contentDocument;
-        if (svgDoc) {
-          const style = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'style');
-          style.textContent = '.t-visited { fill: #4CAF50 !important; stroke: #2E7D32 !important; stroke-width: 0.6 !important; }';
-          svgDoc.documentElement.appendChild(style);
-          // 委托点击事件
-          const svgRoot = svgDoc.documentElement;
-          svgRoot.addEventListener('click', onTravelMapClick);
-          _updateTravelVisitedUI();
-          const dbg = $('#mapDebug');
-          if (dbg) {
-            const n = svgDoc.querySelectorAll('path[data-id]').length;
-            dbg.textContent = ' [' + APP_VERSION + ' · ' + n + '节点 · object加载完成]';
-          }
-        } else {
-          throw new Error('contentDocument 不可访问');
-        }
-      } catch(e) {
-        console.error('[旅行] SVG document 访问失败:', e);
-        const dbg = $('#mapDebug');
-        if (dbg) dbg.textContent = ' [SVG访问受限: ' + e.message + ']';
-      }
-    });
-    
-    obj.addEventListener('error', () => {
-      mapWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#e65100;background:#fff3e0;border-radius:8px;font-size:13px">⚠️ 地图加载失败<br><button onclick="window.clearAllCaches()" style="margin-top:8px;padding:4px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px">清除缓存重试</button></div>';
-    });
-    
-    mapWrap.appendChild(obj);
-  }
-  
-  // 加载 travel-sets.json 用于进度计算（独立的，可以后台跑）
-  fetch('./travel-sets.json').then(r => r.ok ? r.json() : Promise.reject(new Error(r.status))).then(sets => {
-    TRAVEL_SOVEREIGN = new Set(sets.sov);
-    TRAVEL_REGIONS = new Set(sets.reg);
-    TOTAL_COUNTRIES = sets.total;
-    _renderTravelProgress();
-    _updateTravelVisitedUI();
-    _renderTravelList();
-  }).catch(err => {
-    console.warn('[旅行] travel-sets.json 加载失败，进度计算可能不准:', err);
-    // Fallback：使用默认数据
-    TRAVEL_SOVEREIGN = TRAVEL_SOVEREIGN || new Set();
-    TRAVEL_REGIONS = TRAVEL_REGIONS || new Set();
-    TOTAL_COUNTRIES = TOTAL_COUNTRIES || 195;
-    _renderTravelProgress();
-  });
-}
-
-// 辅助：渲染进度卡
-function _renderTravelProgress() {
-  const visited = _visitedSet();
-  let soverCount = 0, regionCount = 0;
-  visited.forEach(code => {
-    if (TRAVEL_SOVEREIGN && TRAVEL_SOVEREIGN.has && TRAVEL_SOVEREIGN.has(code)) soverCount++;
-    else if (TRAVEL_REGIONS && TRAVEL_REGIONS.has && TRAVEL_REGIONS.has(code)) regionCount++;
-  });
-  const total = TOTAL_COUNTRIES || 195;
-  const pct = (soverCount / total) * 100;
-  const msg = _travelEncourage(pct, soverCount + regionCount);
-  
-  if ($('#travelProgress')) {
-    $('#travelProgress').innerHTML = `
-      <div class="tp-row">
-        <div class="tp-num">${soverCount}<small>/ ${total} 个国家</small></div>
-        <div class="tp-region">${regionCount > 0 ? `+ ${regionCount} 个地区` : ''}</div>
-      </div>
-      <div class="tp-bar"><div class="tp-fill" style="width:${pct.toFixed(1)}%"></div></div>
-      <div class="tp-msg">${escapeHtml(msg)}</div>
-    `;
-  }
-}
-
-// 辅助：仅更新 visited 样式（地图已渲染时调用）
-function _updateTravelVisitedUI() {
-  const visited = _visitedSet();
-  const mapWrap = $('#travelMapWrap');
-  if (!mapWrap) return;
-  const obj = mapWrap.querySelector('object');
-  if (obj && obj.contentDocument) {
-    obj.contentDocument.querySelectorAll('path[data-id]').forEach(p => {
-      p.classList.toggle('t-visited', visited.has(p.dataset.id));
-    });
-  }
-}
-
-// 辅助：渲染已去国家列表
-function _renderTravelList() {
-  const list = state.travels.slice().sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-  const listEl = $('#travelCountryList');
-  if (!listEl) return;
-  if (list.length === 0) {
-    listEl.innerHTML = '<div style="text-align:center;color:var(--gray-400);font-size:13px;padding:14px">还没有去过任何国家，点击地图开始记录 ✈️</div>';
-  } else {
-    listEl.innerHTML = list.map(t => {
-      const isRegion = TRAVEL_REGIONS && TRAVEL_REGIONS.has(t.code);
-      const name = t.name || (isRegion ? `中国${({tw:'台湾',hk:'香港',mo:'澳门'}[t.code]||t.code)}` : (t.code || ''));
-      return `<div class="travel-country-item">
-        <span class="travel-country-name">${isRegion ? '<span class="badge">中国</span>' : ''}${escapeHtml(name)}</span>
-        <button class="travel-country-del" data-code="${escapeHtml(t.code)}" title="移除">×</button>
-      </div>`;
-    }).join('');
-    listEl.querySelectorAll('.travel-country-del').forEach(btn => {
-      btn.addEventListener('click', () => onTravelDelete(btn.dataset.code));
-    });
-  }
-}
-
-function onTravelMapClick(e) {
-  const path = e.target.closest('path[data-id]');
-  if (!path) return;
-  const code = path.dataset.id;
-  const name = path.dataset.name;
-  const visited = _visitedSet();
-  if (visited.has(code)) {
-    // 取消
-    const rec = state.travels.find(t => t.code === code);
-    if (rec) deleteRecord('travels', rec.id);
-    showTravelToast(`已取消：${name}`);
-  } else {
-    createRecord('travels', { id: 't_' + Date.now() + '_' + code, code, name, visited_at: new Date().toISOString() });
-    showTravelToast(`✅ 已记录：${name}`);
-  }
-  renderTravelPage();
-}
-
-function onTravelDelete(code) {
-  const rec = state.travels.find(t => t.code === code);
-  if (!rec) return;
-  deleteRecord('travels', rec.id);
-  showTravelToast('已移除');
-  renderTravelPage();
-}
-
-function showTravelToast(text) {
-  const old = document.querySelector('.travel-toast');
-  if (old) old.remove();
-  const t = document.createElement('div');
-  t.className = 'travel-toast';
-  t.textContent = text;
-  document.body.appendChild(t);
-  setTimeout(() => t.remove(), 1400);
-}
-
 function switchToPage(page) {
   state.currentPage = page;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2925,7 +2690,6 @@ function switchToPage(page) {
   if (page === 'plans') { state.planSelectedDate = fmtDate(new Date()); renderPlanPage(); }
   if (page === 'events') renderEventPage();
   if (page === 'checkins') renderCheckinPage();
-  if (page === 'travels') renderTravelPage();
 }
 // Exposed globally for inline onclick handlers (stat cards + overview modules)
 window.switchToPage = switchToPage;
@@ -3097,31 +2861,8 @@ function registerSW() {
     // Use a relative path so this resolves correctly on GitHub Pages
     // (deployed under /cherry-workbench/, not the domain root).
     navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
-    // 新版 Service Worker 接管页面时，自动重载一次，确保当前运行的 JS 是最新版
-    // （避免旧 SW 滞留导致用户一直看到旧代码）
-    let _swReloading = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (_swReloading) return;
-      _swReloading = true;
-      location.reload();
-    });
   }
 }
-
-// 清除所有 Service Worker 缓存并强制刷新（解决「部署了但手机还是旧版」的问题）
-function clearAllCaches() {
-  try {
-    if ('caches' in window) {
-      caches.keys().then(ks => Promise.all(ks.map(k => caches.delete(k)))).then(() => location.reload(true));
-    } else {
-      location.reload(true);
-    }
-  } catch (e) {
-    location.reload(true);
-  }
-}
-// 暴露到全局（HTML onclick 需要全局函数）
-window.clearAllCaches = clearAllCaches;
 
 function escapeHtml(s) {
   const d = document.createElement('div');
