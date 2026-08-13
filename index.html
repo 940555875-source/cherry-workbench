@@ -776,7 +776,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.17</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.18</div>
     </div>
   </aside>
 
@@ -1071,11 +1071,11 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.17 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
+// amber的工作台 v14.18 — SW强制拉取最新HTML + 地图诊断 + DOM API优先渲染
 // ============================================================
 
 // 全局版本号（用于界面诊断，确保用户看到的是最新代码）
-const APP_VERSION = 'v14.17';
+const APP_VERSION = 'v14.18';
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
 function reportBootError(title, err) {
@@ -2758,9 +2758,8 @@ function renderTravelPage() {
   
   // 首次进入：用 <object> 加载外部 SVG 文件（iOS Safari 对外部 SVG 100% 兼容，绕过 inline 解析问题）
   if (mapWrap) {
-    if (!existingObj) {
-      mapWrap.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--gray-500);font-size:14px">⏳ 正在加载世界地图...</div>';
-    }
+    // 清空 mapWrap 准备加载
+    mapWrap.innerHTML = '';
     // 创建 object 元素加载外部 SVG
     const obj = document.createElement('object');
     obj.type = 'image/svg+xml';
@@ -2781,12 +2780,6 @@ function renderTravelPage() {
           // 委托点击事件
           const svgRoot = svgDoc.documentElement;
           svgRoot.addEventListener('click', onTravelMapClick);
-          // 替换加载提示为已加载的 object
-          if (mapWrap.contains(obj)) {
-            // obj 已经在 DOM 里了，移除加载提示
-            const loading = mapWrap.querySelector('.travel-loading');
-            if (loading) loading.remove();
-          }
           _updateTravelVisitedUI();
           const dbg = $('#mapDebug');
           if (dbg) {
@@ -2807,9 +2800,6 @@ function renderTravelPage() {
       mapWrap.innerHTML = '<div style="padding:20px;text-align:center;color:#e65100;background:#fff3e0;border-radius:8px;font-size:13px">⚠️ 地图加载失败<br><button onclick="window.clearAllCaches()" style="margin-top:8px;padding:4px 14px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;font-size:12px">清除缓存重试</button></div>';
     });
     
-    // 移除加载提示，添加 object
-    const loadingEl = mapWrap.querySelector('.travel-loading');
-    if (loadingEl) loadingEl.remove();
     mapWrap.appendChild(obj);
   }
   
