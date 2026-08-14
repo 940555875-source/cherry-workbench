@@ -559,6 +559,73 @@ body{
 }
 .travel-img-preview.visible{display:block}
 
+/* ===== Annual Budget ===== */
+.budget-years{display:flex;gap:8px;margin-bottom:14px}
+.budget-year-btn{
+  border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);
+  border-radius:16px;padding:5px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.budget-year-btn.active{background:#66BB6A;border-color:#66BB6A;color:#fff}
+.budget-summary{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;
+}
+.bs-card{
+  background:var(--gray-50);border-radius:var(--radius-sm);padding:12px;text-align:center;
+}
+.bs-card.bs-over{background:#FFF3E0;border:1px solid #FFE0B2}
+.bs-label{font-size:11px;color:var(--gray-500);margin-bottom:4px;font-weight:600}
+.bs-value{font-size:18px;font-weight:800;color:var(--gray-800);line-height:1.2;white-space:nowrap}
+.bs-card.bs-over .bs-value{color:#E65100}
+.bs-value small{font-size:11px;color:var(--gray-400);font-weight:600}
+.bs-bar{height:8px;background:var(--gray-200);border-radius:5px;overflow:hidden;margin-top:8px}
+.bs-fill{height:100%;background:linear-gradient(90deg,#81C784,#66BB6A);border-radius:5px;transition:width .4s}
+.bs-fill.over{background:linear-gradient(90deg,#FFB74D,#E65100)}
+.budget-cats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.bc-item{
+  background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xs);
+  padding:10px 12px;display:flex;flex-direction:column;gap:4px;
+}
+.bc-head{display:flex;align-items:center;justify-content:space-between}
+.bc-name{font-size:13px;font-weight:700;color:var(--gray-700)}
+.bc-num{font-size:12px;font-weight:700;color:var(--gray-500)}
+.bc-num small{font-size:10px;color:var(--gray-400);font-weight:600}
+.bc-bar{height:6px;background:var(--gray-100);border-radius:4px;overflow:hidden}
+.bc-fill{height:100%;background:#66BB6A;border-radius:4px;transition:width .4s}
+.bc-fill.over{background:#E65100}
+.budget-month{
+  font-size:15px;font-weight:700;color:var(--gray-800);
+  padding:12px 0 6px;border-top:1px dashed var(--gray-200);margin-top:6px;
+}
+.budget-month:first-child{border-top:none;margin-top:0}
+.budget-list{list-style:none;display:flex;flex-direction:column;gap:0}
+.budget-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:var(--radius-xs);background:var(--gray-50);
+  transition:all .15s;cursor:pointer;
+}
+.budget-item:hover{background:#E8F5E9}
+.budget-status{
+  width:10px;height:10px;border-radius:50%;flex-shrink:0;
+  background:var(--gray-300);
+}
+.budget-status.done{background:#66BB6A}
+.budget-status.planned{background:#FFB74D}
+.budget-info{flex:1;min-width:0}
+.budget-title{font-size:13.5px;font-weight:500;color:var(--gray-800)}
+.budget-meta{font-size:11px;color:var(--gray-400);margin-top:2px}
+.budget-amounts{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.budget-budget{font-size:12px;color:var(--gray-500)}
+.budget-actual{font-size:13px;font-weight:700;color:var(--gray-800)}
+.budget-actual.over{color:#E65100}
+.budget-del{
+  width:24px;height:24px;border-radius:50%;border:none;
+  background:transparent;color:var(--gray-400);cursor:pointer;
+  font-size:15px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;opacity:0;flex-shrink:0;
+}
+.budget-item:hover .budget-del{opacity:1}
+.budget-del:hover{background:#FFEBEE;color:#F44336}
+
 /* ===== Check-in ===== */
 .checkin-card{border-top:3px solid #4CAF50}
 .checkin-year{
@@ -817,11 +884,12 @@ body{
       <button class="nav-item" data-page="plans"><span class="nav-emoji">📋</span> 每日计划</button>
       <button class="nav-item" data-page="events"><span class="nav-emoji">🔔</span> 事件提醒</button>
       <button class="nav-item" data-page="travels"><span class="nav-emoji">✈️</span> 旅行规划</button>
+      <button class="nav-item" data-page="budget"><span class="nav-emoji">💰</span> 年度预算</button>
       <button class="nav-item" data-page="checkins"><span class="nav-emoji">✅</span> 打卡</button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.23</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.24</div>
     </div>
   </aside>
 
@@ -960,6 +1028,28 @@ body{
     </div>
 
 
+    <!-- PAGE: 年度预算 -->
+    <div class="page" id="page-budget">
+      <div class="card travel-card" style="border-top-color:#66BB6A">
+        <div class="card-header">
+          <span class="card-title">💰 年度预算</span>
+          <button class="btn-add" id="btnAddBudget" style="background:#66BB6A">➕ 添加</button>
+        </div>
+        <div class="card-body">
+          <!-- Year switcher -->
+          <div class="budget-years" id="budgetYears"></div>
+          <!-- Summary cards -->
+          <div class="budget-summary" id="budgetSummary"></div>
+          <!-- Category breakdown -->
+          <div class="budget-cats" id="budgetCats"></div>
+          <!-- Detail list -->
+          <div id="budgetList"></div>
+          <div class="plan-empty" id="budgetEmpty">还没有预算记录，点击右上角添加 💰</div>
+        </div>
+      </div>
+    </div>
+
+
   <!-- === Mobile Bottom Nav === -->
   <nav class="mobile-nav" id="mobileNav">
     <div class="mobile-nav-items">
@@ -967,6 +1057,7 @@ body{
       <button class="mobile-nav-item" data-page="plans"><span class="mni-icon">📋</span>计划</button>
       <button class="mobile-nav-item" data-page="events"><span class="mni-icon">🔔</span>事件</button>
       <button class="mobile-nav-item" data-page="travels"><span class="mni-icon">✈️</span>旅行</button>
+      <button class="mobile-nav-item" data-page="budget"><span class="mni-icon">💰</span>预算</button>
       <button class="mobile-nav-item" data-page="checkins"><span class="mni-icon">✅</span>打卡</button>
     </div>
   </nav>
@@ -1148,6 +1239,63 @@ body{
   </div>
 </div>
 
+<!-- === Budget Modal (add/edit) === -->
+<div class="modal-overlay hidden" id="budgetOverlay">
+  <div class="modal" style="max-width:440px">
+    <h2 id="budgetModalTitle">➕ 添加预算</h2>
+    <div class="travel-form-grid">
+      <div class="form-group">
+        <label>年份</label>
+        <select id="bdYear"></select>
+      </div>
+      <div class="form-group">
+        <label>月份</label>
+        <select id="bdMonth"></select>
+      </div>
+      <div class="form-group form-group-full">
+        <label>时间范围（可选）</label>
+        <input type="text" id="bdRange" placeholder="如：1.1-1.4、3.12" maxlength="30">
+      </div>
+      <div class="form-group form-group-full">
+        <label>事项</label>
+        <input type="text" id="bdItem" placeholder="如：山西、肉毒+黄金微针" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label>分类</label>
+        <select id="bdCat">
+          <option value="旅游">旅游</option>
+          <option value="毛球">毛球</option>
+          <option value="医美">医美</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>状态</label>
+        <select id="bdStatus">
+          <option value="planned">计划中</option>
+          <option value="done">已完成</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>预算（元，可选）</label>
+        <input type="number" id="bdBudget" placeholder="如：5000" min="0" step="100">
+      </div>
+      <div class="form-group">
+        <label>实际花销（元，可选）</label>
+        <input type="number" id="bdActual" placeholder="如：4800" min="0" step="100">
+      </div>
+      <div class="form-group form-group-full">
+        <label>备注（可选）</label>
+        <input type="text" id="bdNote" placeholder="如：休假1天、机票2400+酒店1400" maxlength="200">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnBudgetCancel">取消</button>
+      <button class="btn btn-primary" id="btnBudgetSave" style="background:#66BB6A">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- === Settings Modal === -->
 <div class="modal-overlay hidden" id="settingsOverlay">
   <div class="modal">
@@ -1179,7 +1327,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.23 — 旅行规划大改版（倒计时+热力图+增强弹窗）
+// amber的工作台 v14.24 — 新增年度预算板块（25/26年预算表+汇总+分类+月度明细）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1206,7 +1354,7 @@ const $$ = s => document.querySelectorAll(s);
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
-  links: 'amber_links_v3', travels: 'amber_travels_v1', config: 'amber_config',
+  links: 'amber_links_v3', travels: 'amber_travels_v1', budget: 'amber_budget_v1', config: 'amber_config',
   deviceId: 'amber_device_id',
 };
 
@@ -1222,6 +1370,8 @@ let state = {
   checkins: [],
   links: [],
   travels: [],
+  budget: [],
+  budgetYear: new Date().getFullYear(),
 };
 
 // ============================================================
@@ -1314,7 +1464,7 @@ function setSyncStatus(status, label, detail) {
 // ============================================================
 
 // Map state keys to Supabase table names
-const TABLE_MAP = { plans: 'plans', events: 'events', checkins: 'checkins', links: 'links', travels: 'travels' };
+const TABLE_MAP = { plans: 'plans', events: 'events', checkins: 'checkins', links: 'links', travels: 'travels', budget: 'budget' };
 
 function withDeviceId(record) {
   return { ...record, device_id: DEVICE_ID };
@@ -1548,6 +1698,8 @@ function loadLocalData() {
   try { state.checkins = JSON.parse(localStorage.getItem(LS_KEYS.checkins) || '[]').filter(r => !r.deleted_at); } catch(e) { state.checkins = []; }
   try { state.links = JSON.parse(localStorage.getItem(LS_KEYS.links) || '[]').filter(r => !r.deleted_at); } catch(e) { state.links = []; }
   try { state.travels = JSON.parse(localStorage.getItem(LS_KEYS.travels) || '[]').filter(r => !r.deleted_at); } catch(e) { state.travels = []; }
+  try { state.budget = JSON.parse(localStorage.getItem(LS_KEYS.budget) || '[]').filter(r => !r.deleted_at); } catch(e) { state.budget = []; }
+  try { state.budgetYear = parseInt(localStorage.getItem('amber_budget_year') || String(new Date().getFullYear())); } catch(e) { state.budgetYear = new Date().getFullYear(); }
 }
 
 function renderAll() {
@@ -1685,6 +1837,7 @@ function initNavigation() {
     if (page === 'plans') renderPlanPage();
     if (page === 'events') renderEventPage();
     if (page === 'travels') renderTravelPage();
+    if (page === 'budget') renderBudgetPage();
     if (page === 'checkins') renderCheckinPage();
   };
 
@@ -2841,6 +2994,7 @@ function switchToPage(page) {
   if (page === 'plans') { state.planSelectedDate = fmtDate(new Date()); renderPlanPage(); }
   if (page === 'events') renderEventPage();
   if (page === 'travels') renderTravelPage();
+  if (page === 'budget') renderBudgetPage();
   if (page === 'checkins') renderCheckinPage();
 }
 // Exposed globally for inline onclick handlers (stat cards + overview modules)
@@ -3314,6 +3468,281 @@ $('#btnTravelSave').addEventListener('click', saveTravelModal);
 $('#btnTravelCancel').addEventListener('click', closeTravelModal);
 $('#travelOverlay').addEventListener('click', function(e) { if (e.target === $('#travelOverlay')) closeTravelModal(); });
 $('#tvDest').addEventListener('keydown', function(e) { if (e.key === 'Enter') saveTravelModal(); });
+
+// ============================================================
+// ANNUAL BUDGET — summary + categories + monthly detail
+// ============================================================
+
+// Seed data from the 腾讯文档「25年预算」sheet
+var BUDGET_SEED = [
+  // ===== 2025 (总预算 99048, 实花 113848) =====
+  {year:2025, month:1, range:'1.9～1.12', item:'马公', cat:'毛球', budget:3598, actual:3598, note:null},
+  {year:2025, month:1, range:'1.14～1.18', item:'印公', cat:'毛球', budget:null, actual:null, note:null},
+  {year:2025, month:1, range:'1.22', item:'刷酸/超皮秒', cat:'医美', budget:350, actual:350, note:null},
+  {year:2025, month:1, range:'/', item:'贵州', cat:'旅游', budget:null, actual:7000, note:null},
+  {year:2025, month:2, range:'2.13', item:'眼袋', cat:'医美', budget:7800, actual:7800, note:null},
+  {year:2025, month:3, range:'3.11～3.16', item:'全英', cat:'毛球', budget:null, actual:null, note:null},
+  {year:2025, month:3, range:'3.9', item:'头发', cat:'医美', budget:2500, actual:2500, note:null},
+  {year:2025, month:3, range:'3.17', item:'消脂', cat:'医美', budget:1500, actual:1500, note:null},
+  {year:2025, month:3, range:'3.29', item:'水光', cat:'医美', budget:null, actual:null, note:null},
+  {year:2025, month:4, range:'4.6', item:'热玛吉', cat:'医美', budget:9800, actual:9800, note:null},
+  {year:2025, month:4, range:'4.8～4.13', item:'亚锦', cat:'毛球', budget:5000, actual:5000, note:'2天'},
+  {year:2025, month:4, range:'4.27～5.4', item:'苏杯', cat:'毛球', budget:null, actual:null, note:null},
+  {year:2025, month:5, range:'5.1～5.4', item:'乌兹别克', cat:'旅游', budget:20000, actual:20000, note:null},
+  {year:2025, month:5, range:'5.27～6.1', item:'新公', cat:'毛球', budget:null, actual:7500, note:null},
+  {year:2025, month:6, range:'6.3～6.8', item:'印尼公开赛', cat:'毛球', budget:null, actual:null, note:null},
+  {year:2025, month:7, range:'7.15～7.20', item:'日公', cat:'毛球', budget:null, actual:3500, note:null},
+  {year:2025, month:7, range:'7.22～7.27', item:'中公', cat:'毛球', budget:null, actual:4000, note:null},
+  {year:2025, month:7, range:'/', item:'玻尿酸', cat:'医美', budget:null, actual:2000, note:null},
+  {year:2025, month:8, range:'8.25～8.31', item:'世锦', cat:'毛球', budget:20000, actual:15000, note:'4天'},
+  {year:2025, month:9, range:'/', item:'香港公开赛', cat:'毛球', budget:null, actual:2000, note:null},
+  {year:2025, month:9, range:'9.16～9.21', item:'中师', cat:'毛球', budget:3000, actual:400, note:null},
+  {year:2025, month:10, range:'10.1～10.7', item:'希腊', cat:'旅游', budget:18000, actual:21000, note:'2天'},
+  {year:2025, month:10, range:'10.13～10.19', item:'丹公', cat:'毛球', budget:null, actual:null, note:null},
+  {year:2025, month:10, range:'10.21～10.26', item:'法公', cat:'毛球', budget:null, actual:null, note:null},
+  {year:2025, month:11, range:'11', item:'全运', cat:'毛球', budget:2500, actual:900, note:null},
+  {year:2025, month:12, range:'12.10～12.14', item:'总决赛', cat:'毛球', budget:5000, actual:null, note:null},
+  // ===== 2026 (总预算 80000, 实花 58146) =====
+  {year:2026, month:1, range:'1.1-1.4', item:'山西', cat:'旅游', budget:5000, actual:4800, note:'休假1天'},
+  {year:2026, month:2, range:'2.18-2.25', item:'山西', cat:'旅游', budget:13000, actual:10000, note:'休假2天'},
+  {year:2026, month:2, range:'2.28', item:'光子', cat:'医美', budget:1299, actual:1299, note:null},
+  {year:2026, month:3, range:'3.22', item:'游泳冠军赛', cat:'其他', budget:360, actual:360, note:null},
+  {year:2026, month:3, range:'3.12', item:'美签', cat:'旅游', budget:2000, actual:1770, note:null},
+  {year:2026, month:3, range:'3.31', item:'染发', cat:'医美', budget:1680, actual:1680, note:null},
+  {year:2026, month:4, range:'4.15', item:'肉毒+黄金微针', cat:'医美', budget:5000, actual:6577, note:'黄金微针2598\n肉毒1299\n玻尿酸2680'},
+  {year:2026, month:4, range:'4.28-5.4', item:'丹麦', cat:'毛球', budget:14500, actual:14478, note:'休假3天\n签证1000+机票3400+酒店3800+门票3000+日常花销3500'},
+  {year:2026, month:7, range:'7.11-7.12', item:'排球-香港', cat:'毛球', budget:1500, actual:1500, note:null},
+  {year:2026, month:7, range:'7.21-7.26', item:'中公', cat:'毛球', budget:0, actual:3827, note:null},
+  {year:2026, month:9, range:'9.1～9.6', item:'中师', cat:'毛球', budget:2000, actual:null, note:null},
+  {year:2026, month:9, range:'9.15', item:'玻尿酸+黄金微针', cat:'医美', budget:4000, actual:null, note:null},
+  {year:2026, month:9, range:'9.23-9.27', item:'亚运', cat:'毛球', budget:8000, actual:5485, note:'休假3天\n机票2400+酒店1400+门票2000+日常花销2500'},
+  {year:2026, month:10, range:'10.1-10.9', item:'堪察加', cat:'旅游', budget:17000, actual:6370, note:'休假2天\n机票5800+tour7000+日常花销2000+酒店3500'},
+  {year:2026, month:12, range:'12.9-12.13', item:'总决赛', cat:'毛球', budget:4000, actual:null, note:null},
+];
+
+function seedBudgetData() {
+  if (state.budget.length === 0) {
+    BUDGET_SEED.forEach(function(b, i) {
+      var payload = {
+        year: b.year, month: b.month, range: b.range || null,
+        item: b.item, cat: b.cat || '其他',
+        budget: (b.budget === null || b.budget === undefined) ? null : b.budget,
+        actual: (b.actual === null || b.actual === undefined) ? null : b.actual,
+        note: b.note || null,
+        done: b.actual !== null && b.actual !== undefined
+      };
+      createRecord('budget', { id: 'b_' + b.year + '_' + i, ...payload });
+    });
+    state.budget = JSON.parse(localStorage.getItem(LS_KEYS.budget) || '[]').filter(function(r){ return !r.deleted_at; });
+  }
+}
+
+var BUDGET_CAT_COLORS = { '旅游':'#42A5F5', '毛球':'#FFA726', '医美':'#EC7FA0', '其他':'#9E9E9E' };
+
+function budgetN(v) {
+  if (v === null || v === undefined || v === '') return null;
+  var n = parseFloat(String(v).replace(/,/g, ''));
+  return isNaN(n) ? null : n;
+}
+
+function fmtMoney(n) {
+  if (n === null || n === undefined) return '—';
+  return '¥' + Math.round(n).toLocaleString();
+}
+
+function renderBudgetPage() {
+  seedBudgetData();
+
+  // --- Year switcher ---
+  var years = {};
+  state.budget.forEach(function(b){ years[b.year] = true; });
+  var yList = Object.keys(years).map(Number).sort().reverse();
+  var yWrap = $('#budgetYears');
+  yWrap.innerHTML = '';
+  yList.forEach(function(y) {
+    var btn = document.createElement('button');
+    btn.className = 'budget-year-btn' + (y === state.budgetYear ? ' active' : '');
+    btn.textContent = y + '年';
+    btn.dataset.year = y;
+    yWrap.appendChild(btn);
+  });
+  yWrap.addEventListener('click', function(e) {
+    var btn = e.target.closest('.budget-year-btn');
+    if (!btn) return;
+    state.budgetYear = parseInt(btn.dataset.year);
+    localStorage.setItem('amber_budget_year', state.budgetYear);
+    renderBudgetPage();
+  });
+
+  // --- Filter by year ---
+  var list = state.budget.filter(function(b){ return b.year === state.budgetYear; });
+  var empty = $('#budgetEmpty'), listEl = $('#budgetList');
+  if (list.length === 0) { listEl.classList.add('hidden'); empty.classList.remove('hidden'); $('#budgetSummary').innerHTML=''; $('#budgetCats').innerHTML=''; return; }
+  listEl.classList.remove('hidden'); empty.classList.add('hidden');
+
+  // --- Summary cards ---
+  var totalBudget = 0, totalActual = 0, hasBudget = false;
+  list.forEach(function(b) {
+    var bd = budgetN(b.budget), ac = budgetN(b.actual);
+    if (bd !== null) { totalBudget += bd; hasBudget = true; }
+    if (ac !== null) totalActual += ac;
+  });
+  var remaining = totalBudget - totalActual;
+  var pct = totalBudget > 0 ? (totalActual / totalBudget * 100) : 0;
+  var over = remaining < 0;
+  $('#budgetSummary').innerHTML =
+    '<div class="bs-card"><div class="bs-label">总预算</div><div class="bs-value">' + fmtMoney(totalBudget) + '</div>' +
+      (hasBudget ? '<div class="bs-bar"><div class="bs-fill' + (pct>100?' over':'') + '" style="width:' + Math.min(100,pct) + '%"></div></div>' : '') +
+    '</div>' +
+    '<div class="bs-card"><div class="bs-label">已花</div><div class="bs-value">' + fmtMoney(totalActual) + '</div>' +
+      '<div class="bs-bar"><div class="bs-fill' + (pct>100?' over':'') + '" style="width:' + Math.min(100,pct) + '%"></div></div>' +
+    '</div>' +
+    '<div class="bs-card' + (over ? ' bs-over' : '') + '"><div class="bs-label">' + (over ? '超支' : '剩余') + '</div><div class="bs-value">' + fmtMoney(Math.abs(remaining)) + '</div></div>';
+
+  // --- Category breakdown ---
+  var cats = {};
+  list.forEach(function(b) {
+    var c = b.cat || '其他';
+    if (!cats[c]) cats[c] = { budget: 0, actual: 0, count: 0 };
+    var bd = budgetN(b.budget), ac = budgetN(b.actual);
+    if (bd !== null) cats[c].budget += bd;
+    if (ac !== null) cats[c].actual += ac;
+    cats[c].count++;
+  });
+  var catHtml = '';
+  Object.keys(cats).forEach(function(c) {
+    var d = cats[c];
+    var p = d.budget > 0 ? (d.actual / d.budget * 100) : (d.actual > 0 ? 100 : 0);
+    var color = BUDGET_CAT_COLORS[c] || '#9E9E9E';
+    catHtml += '<div class="bc-item">' +
+      '<div class="bc-head"><span class="bc-name">' + c + '</span><span class="bc-num">' + fmtMoney(d.actual) + ' <small>/ ' + fmtMoney(d.budget) + '</small></span></div>' +
+      '<div class="bc-bar"><div class="bc-fill' + (p>100?' over':'') + '" style="width:' + Math.min(100,p) + '%;background:' + color + '"></div></div>' +
+      '</div>';
+  });
+  $('#budgetCats').innerHTML = catHtml;
+
+  // --- Monthly detail ---
+  listEl.innerHTML = '';
+  var sorted = [...list].sort(function(a,b){ return a.month - b.month; });
+  var months = {};
+  sorted.forEach(function(b) {
+    if (!months[b.month]) months[b.month] = [];
+    months[b.month].push(b);
+  });
+  Object.keys(months).map(Number).sort(function(a,b){return a-b;}).forEach(function(m) {
+    var mh = document.createElement('div');
+    mh.className = 'budget-month';
+    mh.textContent = m + '月';
+    listEl.appendChild(mh);
+
+    var ul = document.createElement('ul');
+    ul.className = 'budget-list';
+    months[m].forEach(function(b) {
+      var li = document.createElement('li');
+      li.className = 'budget-item';
+      var bd = budgetN(b.budget), ac = budgetN(b.actual);
+      var over = ac !== null && bd !== null && ac > bd;
+      li.innerHTML =
+        '<div class="budget-status ' + (b.done ? 'done' : 'planned') + '"></div>' +
+        '<div class="budget-info">' +
+          '<div class="budget-title">' + escapeHtml(b.item || '') + '</div>' +
+          '<div class="budget-meta">' + (b.range ? escapeHtml(b.range) + ' · ' : '') + escapeHtml(b.cat || '') + (b.note ? ' · ' + escapeHtml(b.note.replace(/\n/g,' ')) : '') + '</div>' +
+        '</div>' +
+        '<div class="budget-amounts">' +
+          '<span class="budget-actual' + (over ? ' over' : '') + '">' + fmtMoney(ac) + '</span>' +
+          '<span class="budget-budget">预算 ' + fmtMoney(bd) + '</span>' +
+        '</div>' +
+        '<button class="budget-del" data-id="' + b.id + '">×</button>';
+      ul.appendChild(li);
+    });
+    listEl.appendChild(ul);
+  });
+}
+
+// Budget list click delegation: edit / delete
+$('#budgetList').addEventListener('click', function(e) {
+  var del = e.target.closest('.budget-del');
+  if (del) { deleteRecord('budget', del.dataset.id); renderBudgetPage(); return; }
+  var item = e.target.closest('.budget-item');
+  if (item) {
+    var id = item.querySelector('.budget-del').dataset.id;
+    var b = state.budget.find(function(x){ return x.id === id; });
+    if (b) openBudgetModal(b);
+  }
+});
+
+// --- Budget modal ---
+var _editingBudgetId = null;
+
+function initBudgetSelects() {
+  var ySel = $('#bdYear'), mSel = $('#bdMonth');
+  if (ySel.options.length > 0) return;
+  var now = new Date();
+  for (var y = now.getFullYear() - 1; y <= now.getFullYear() + 2; y++) {
+    var o = document.createElement('option'); o.value = y; o.textContent = y + '年'; ySel.appendChild(o);
+  }
+  for (var m = 1; m <= 12; m++) {
+    var o2 = document.createElement('option'); o2.value = m; o2.textContent = m + '月'; mSel.appendChild(o2);
+  }
+}
+
+function openBudgetModal(bObj) {
+  _editingBudgetId = bObj ? bObj.id : null;
+  $('#budgetModalTitle').textContent = bObj ? '✏️ 编辑预算' : '➕ 添加预算';
+  initBudgetSelects();
+  if (bObj) {
+    $('#bdYear').value = bObj.year;
+    $('#bdMonth').value = bObj.month || 1;
+    $('#bdRange').value = bObj.range || '';
+    $('#bdItem').value = bObj.item || '';
+    $('#bdCat').value = bObj.cat || '其他';
+    $('#bdStatus').value = bObj.done ? 'done' : 'planned';
+    $('#bdBudget').value = bObj.budget === null || bObj.budget === undefined ? '' : bObj.budget;
+    $('#bdActual').value = bObj.actual === null || bObj.actual === undefined ? '' : bObj.actual;
+    $('#bdNote').value = bObj.note || '';
+  } else {
+    var n = new Date();
+    $('#bdYear').value = state.budgetYear || n.getFullYear();
+    $('#bdMonth').value = n.getMonth() + 1;
+    $('#bdRange').value = ''; $('#bdItem').value = '';
+    $('#bdCat').value = '旅游'; $('#bdStatus').value = 'planned';
+    $('#bdBudget').value = ''; $('#bdActual').value = ''; $('#bdNote').value = '';
+  }
+  $('#budgetOverlay').classList.remove('hidden');
+  setTimeout(function(){ $('#bdItem').focus(); }, 100);
+}
+
+function closeBudgetModal() { $('#budgetOverlay').classList.add('hidden'); _editingBudgetId = null; }
+
+function saveBudgetModal() {
+  var year = parseInt($('#bdYear').value);
+  var month = parseInt($('#bdMonth').value);
+  var item = $('#bdItem').value.trim();
+  var range = $('#bdRange').value.trim() || null;
+  var cat = $('#bdCat').value;
+  var done = $('#bdStatus').value === 'done';
+  var budget = $('#bdBudget').value ? budgetN($('#bdBudget').value) : null;
+  var actual = $('#bdActual').value ? budgetN($('#bdActual').value) : null;
+  var note = $('#bdNote').value.trim() || null;
+  if (!item) { showDiagToast('请填写事项', 'error'); return; }
+
+  var payload = { year: year, month: month, range: range, item: item, cat: cat, budget: budget, actual: actual, note: note, done: done };
+  if (_editingBudgetId) {
+    updateRecord('budget', _editingBudgetId, payload);
+  } else {
+    createRecord('budget', { id: 'b_' + Date.now(), ...payload });
+  }
+  state.budgetYear = year;
+  localStorage.setItem('amber_budget_year', year);
+  closeBudgetModal();
+  renderBudgetPage();
+}
+
+$('#btnAddBudget').addEventListener('click', function() { openBudgetModal(); });
+$('#btnBudgetSave').addEventListener('click', saveBudgetModal);
+$('#btnBudgetCancel').addEventListener('click', closeBudgetModal);
+$('#budgetOverlay').addEventListener('click', function(e) { if (e.target === $('#budgetOverlay')) closeBudgetModal(); });
+$('#bdItem').addEventListener('keydown', function(e) { if (e.key === 'Enter') saveBudgetModal(); });
 
 // ============================================================
 // SETTINGS
