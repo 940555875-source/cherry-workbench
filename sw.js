@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.26
+// amber的工作台 Service Worker v14.27
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.26: 旅行热力图支持腾讯地图渲染（轨迹线+热力点），设置页可配 Key，无 Key 自动回退圆点
+// v14.27: 修复travels/budget未纳入云端同步（PC端看不到移动端数据）+总览tab新增「旅行-下一次出发」与「当年预算进度」卡片
 
-const VERSION = 'amber-workbench-v14.26';
+const VERSION = 'amber-workbench-v14.27';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

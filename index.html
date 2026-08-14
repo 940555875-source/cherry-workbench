@@ -734,6 +734,20 @@ body{
 }
 .ov-checkin-btn:hover:not(:disabled){background:#43A047}
 .ov-checkin-btn:disabled{background:#E8F5E9;color:#2E7D32;cursor:default}
+/* Next trip (overview) */
+.ov-nexttrip-dest{font-size:18px;font-weight:800;color:#E65100;margin:6px 0 4px;text-align:center}
+.ov-nexttrip-cd{font-size:24px;font-weight:900;color:#EF6C00;text-align:center;line-height:1.1}
+.ov-nexttrip-cd small{font-size:12px;color:var(--gray-500);font-weight:600}
+.ov-nexttrip-date{font-size:11px;color:var(--gray-400);text-align:center;margin-top:4px}
+/* Budget progress (overview) */
+.ov-bd-row{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0}
+.ov-bd-label{font-size:12px;color:var(--gray-500);font-weight:600}
+.ov-bd-num{font-size:15px;font-weight:800;color:var(--gray-800)}
+.ov-bd-num small{font-size:11px;color:var(--gray-400);font-weight:600;margin-left:2px}
+.ov-bd-num.over{color:#E65100}
+.ov-bd-bar{height:8px;background:var(--gray-200);border-radius:5px;overflow:hidden;margin-top:8px}
+.ov-bd-fill{height:100%;background:linear-gradient(90deg,#81C784,#66BB6A);border-radius:5px;transition:width .4s}
+.ov-bd-fill.over{background:linear-gradient(90deg,#FFB74D,#E65100)}
 
 /* ===== Note Card ===== */
 .note-card{border-top:3px solid var(--blue-300)}
@@ -894,7 +908,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.26</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.27</div>
     </div>
   </aside>
 
@@ -1348,7 +1362,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.26 — 旅行热力图支持腾讯地图（轨迹线+热力点），设置页可配 Key
+// amber的工作台 v14.27 — 修复travels/budget同步遗漏+总览新增旅行&预算卡片
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1695,6 +1709,7 @@ async function init() {
         setSyncStatus('syncing', '同步中...');
         Promise.all([
           fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'),
+          fullSync('travels'), fullSync('budget'),
         ]).then(results => {
           if (results.every(Boolean)) setSyncStatus('online', '已同步');
           safe('renderAll after sync', () => renderAll());
@@ -1738,6 +1753,7 @@ async function periodicSync() {
   try {
     const syncResults = await Promise.all([
       fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'),
+      fullSync('travels'), fullSync('budget'),
     ]);
     if (syncResults.every(Boolean)) setSyncStatus('online', '已同步');
     renderAll();
@@ -1796,6 +1812,7 @@ async function testConnection() {
 
     // Do a full sync after successful test
     fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links');
+    fullSync('travels'); fullSync('budget');
   } catch(e) {
     showDiagToast('网络错误 — 无法连接到 Supabase，请检查网络', 'error');
   }
@@ -2955,6 +2972,10 @@ function renderOvStats() {
 }
 
 function renderOverviewModules() {
+  // Ensure seed data exists before computing overview stats (first-time visit)
+  seedTravelData();
+  seedBudgetData();
+
   const today = fmtDate(new Date());
   const todayPlans = state.plans.filter(p => planEffectiveDate(p) === today);
   const undonePlans = todayPlans.filter(p => !p.done), donePlans = todayPlans.filter(p => p.done);
@@ -2962,6 +2983,39 @@ function renderOverviewModules() {
   const checkinHabits = [...state.checkins].sort((a, b) => habitCreatedAt(a) - habitCreatedAt(b));
   const checkinDone = checkinHabits.filter(h => habitProgress(h).done).length;
   const planPct = todayPlans.length ? Math.round(donePlans.length / todayPlans.length * 100) : 0;
+
+  // Next trip (overview card)
+  let nextTripHtml = '<div class="ov-module-preview">还没有旅行计划</div>';
+  const nextTrip = findNextTrip();
+  if (nextTrip) {
+    const d = daysUntil(nextTrip);
+    const cd = d <= 0 ? '🎉 <small>即将出发</small>' : d + ' <small>天</small>';
+    nextTripHtml =
+      '<div class="ov-nexttrip-dest">' + escapeHtml(nextTrip.destination) + (nextTrip.tag ? '（' + escapeHtml(nextTrip.tag) + '）' : '') + '</div>' +
+      '<div class="ov-nexttrip-cd">' + cd + '</div>' +
+      '<div class="ov-nexttrip-date">' + escapeHtml(travelPeriod(nextTrip)) + '</div>';
+  }
+
+  // Budget progress (overview card, current year)
+  const year = state.budgetYear;
+  const blist = state.budget.filter(b => b.year === year);
+  let total = 0, actual = 0, hasBudget = false;
+  blist.forEach(b => {
+    if (b.budget !== null && b.budget !== undefined && b.budget !== '') {
+      const n = budgetN(b.budget); if (n !== null) { total += n; hasBudget = true; }
+    }
+    if (b.actual !== null && b.actual !== undefined && b.actual !== '') {
+      const n = budgetN(b.actual); if (n !== null) actual += n;
+    }
+  });
+  const remaining = total - actual;
+  const pct = total > 0 ? Math.round(actual / total * 100) : 0;
+  const over = remaining < 0;
+  const budgetHtml = blist.length === 0 ? '<div class="ov-module-preview">还没有预算记录</div>' :
+    '<div class="ov-bd-row"><span class="ov-bd-label">总预算</span><span class="ov-bd-num">' + fmtMoney(total) + '</span></div>' +
+    '<div class="ov-bd-row"><span class="ov-bd-label">已支出</span><span class="ov-bd-num">' + fmtMoney(actual) + '<small>(' + pct + '%)</small></span></div>' +
+    '<div class="ov-bd-row"><span class="ov-bd-label">' + (over ? '超支' : '剩余可支出') + '</span><span class="ov-bd-num' + (over ? ' over' : '') + '">' + fmtMoney(Math.abs(remaining)) + '</span></div>' +
+    (hasBudget ? '<div class="ov-bd-bar"><div class="ov-bd-fill' + (over ? ' over' : '') + '" style="width:' + Math.min(100,pct) + '%"></div></div>' : '');
 
   const container = $('#overviewModules');
   container.innerHTML = `
@@ -2991,6 +3045,14 @@ function renderOverviewModules() {
           </div>`;
         }).join('')}
       </div>` : '<div class="ov-module-preview">还没有打卡习惯</div>'}
+    </div>
+    <div class="ov-module" onclick="switchToPage('travels')" style="cursor:pointer">
+      <div class="ov-module-header"><span class="ov-module-title">✈️ 旅行-下一次出发</span></div>
+      ${nextTripHtml}
+    </div>
+    <div class="ov-module" onclick="switchToPage('budget')" style="cursor:pointer">
+      <div class="ov-module-header"><span class="ov-module-title">💰 ${year}年预算进度</span></div>
+      ${budgetHtml}
     </div>
     <div class="ov-module" style="text-align:center;padding:20px">
       <div style="font-size:28px;font-weight:300;letter-spacing:-1px" id="ovClock">--:--</div>
