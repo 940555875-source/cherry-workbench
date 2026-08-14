@@ -908,7 +908,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.27</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.28</div>
     </div>
   </aside>
 
@@ -1362,7 +1362,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.27 — 修复travels/budget同步遗漏+总览新增旅行&预算卡片
+// amber的工作台 v14.28 — 修复腾讯地图marker CSS 乱码（改用矢量 MultiCircle + MultiLabel）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -3369,45 +3369,74 @@ function renderRealMap() {
         return;
       }
 
-      // Trajectory: connect all points by time order
+      // Trajectory: connect all points by time order (solid line for clarity)
       pts.sort(function(a,b){ return (a.sort_key||'').localeCompare(b.sort_key||''); });
       var path = pts.map(function(p){ return new TMap.LatLng(p.lat, p.lng); });
       if (path.length >= 2) {
         new TMap.MultiPolyline({
           map: map,
           styles: {
-            trail: new TMap.PolylineStyle({ color: '#E65100', width: 4, lineCap: 'round', dashArray: [8, 6] })
+            trail: new TMap.PolylineStyle({
+              color: '#E65100', width: 4, lineCap: 'round',
+              strokeDashArray: [10, 8]  // dashed (10px solid, 8px gap)
+            })
           },
           geometries: [{ paths: path, styleId: 'trail' }]
         });
       }
 
-      // Heat points with visit counts (try HeatmapOverlay, fallback to MultiMarker)
+      // Heat points: vector circles + label text (NO HTML content — fixes iOS Safari garbled output)
       try {
-        if (TMap.visualization && TMap.visualization.HeatmapOverlay) {
-          var heatData = pts.map(function(p){ return { lat: p.lat, lng: p.lng, count: p.count }; });
-          new TMap.visualization.HeatmapOverlay({
+        var maxC = Math.max.apply(null, pts.map(function(p){ return p.count; }));
+        var colors = ['#FFE0B2','#FFCC80','#FFB74D','#FFA726','#F57C00','#E65100'];
+        var circleStyles = {};
+        var circleGeoms = [];
+        var labelGeoms = [];
+        pts.forEach(function(p) {
+          var cIdx = Math.min(5, Math.floor((p.count / maxC) * 6));
+          var sid = 'c_' + cIdx;
+          if (!circleStyles[sid]) {
+            circleStyles[sid] = new TMap.CircleStyle({
+              fillColor: colors[cIdx], fillOpacity: 0.75,
+              strokeColor: '#FFFFFF', strokeWidth: 2
+            });
+          }
+          // Radius in meters: 80km base + up to 200km by visit count
+          var radius = 80000 + Math.round((p.count / maxC) * 200000);
+          circleGeoms.push({
+            styleId: sid, radius: radius,
+            center: new TMap.LatLng(p.lat, p.lng)
+          });
+          labelGeoms.push({
+            content: String(p.count),
+            position: new TMap.LatLng(p.lat, p.lng),
+            styleId: 'count'
+          });
+        });
+        // Circle layer
+        new TMap.MultiCircle({ map: map, styles: circleStyles, geometries: circleGeoms });
+        // Label layer (separate, plain SVG text — no HTML)
+        try {
+          new TMap.MultiLabel({
             map: map,
-            lngLat: heatData,
-            config: { radius: 40, gradient: { 0.2: '#FFE0B2', 0.4: '#FFB74D', 0.6: '#FFA726', 0.8: '#F57C00', 1.0: '#E65100' } }
+            styles: {
+              count: new TMap.LabelStyle({
+                color: '#FFFFFF', size: 14, offset: { x: 0, y: 0 }, alignment: 'center', verticalAlignment: 'middle'
+              })
+            },
+            geometries: labelGeoms
           });
-        } else {
-          var markers = pts.map(function(p) {
-            return {
-              position: new TMap.LatLng(p.lat, p.lng),
-              content: '<div style="background:#E65100;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.3)">' + p.count + '</div>'
-            };
-          });
-          new TMap.MultiMarker({ map: map, geometries: markers });
+        } catch(labelErr) {
+          // Label layer unavailable on this device — circles alone are still informative
         }
       } catch(e3) {
-        var markers2 = pts.map(function(p) {
-          return {
-            position: new TMap.LatLng(p.lat, p.lng),
-            content: '<div style="background:#E65100;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">' + p.count + '</div>'
-          };
-        });
-        new TMap.MultiMarker({ map: map, geometries: markers2 });
+        // Final fallback: plain text markers (no HTML)
+        try {
+          var plainMarkers = pts.map(function(p) {
+            return { position: new TMap.LatLng(p.lat, p.lng), content: String(p.count) };
+          });
+          new TMap.MultiMarker({ map: map, geometries: plainMarkers });
+        } catch(e4) {}
       }
 
       // Fit bounds

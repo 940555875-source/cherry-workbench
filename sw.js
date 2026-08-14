@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.27
+// amber的工作台 Service Worker v14.28
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.27: 修复travels/budget未纳入云端同步（PC端看不到移动端数据）+总览tab新增「旅行-下一次出发」与「当年预算进度」卡片
+// v14.28: 修复腾讯地图marker在iOS Safari显示CSS乱码（改用矢量MultiCircle+MultiLabel替代HTML MultiMarker）
 
-const VERSION = 'amber-workbench-v14.27';
+const VERSION = 'amber-workbench-v14.28';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
