@@ -889,7 +889,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.24</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.25</div>
     </div>
   </aside>
 
@@ -1213,10 +1213,17 @@ body{
       </div>
       <div class="form-group form-group-full">
         <label>目的地</label>
-        <div style="display:flex;gap:6px">
-          <input type="text" id="tvDest" placeholder="如：马来西亚、贵州" maxlength="100" style="flex:1">
-          <button type="button" id="btnTravelLocate" style="background:var(--blue-500);color:#fff;border:none;border-radius:var(--radius-xs);padding:0 12px;font-size:13px;cursor:pointer;white-space:nowrap">📍 LBS 定位</button>
+        <input type="text" id="tvDest" placeholder="如：马来西亚、贵州" maxlength="100">
+      </div>
+      <div class="form-group form-group-full">
+        <label>位置（可选）</label>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button type="button" id="btnTravelLocate" style="background:var(--blue-500);color:#fff;border:none;border-radius:var(--radius-xs);padding:7px 12px;font-size:12.5px;cursor:pointer;white-space:nowrap">📍 LBS 定位</button>
+          <span style="font-size:12px;color:var(--gray-400)">或手动：</span>
+          <input type="number" id="tvLat" placeholder="纬度" step="0.000001" style="flex:1;min-width:90px;padding:7px 10px;border:1px solid var(--gray-300);border-radius:var(--radius-xs);font-size:13px">
+          <input type="number" id="tvLng" placeholder="经度" step="0.000001" style="flex:1;min-width:90px;padding:7px 10px;border:1px solid var(--gray-300);border-radius:var(--radius-xs);font-size:13px">
         </div>
+        <div id="tvLocStatus" style="font-size:11px;color:var(--gray-500);margin-top:4px;min-height:14px"></div>
       </div>
       <div class="form-group">
         <label>预估费用（元，可选）</label>
@@ -1327,7 +1334,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.24 — 新增年度预算板块（25/26年预算表+汇总+分类+月度明细）
+// amber的工作台 v14.25 — LBS定位增强（分错误码提示+手动经纬度降级）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -3366,6 +3373,10 @@ function openTravelModal(travelObj) {
   $('#travelModalTitle').textContent = travelObj ? '✏️ 编辑行程' : '➕ 添加行程';
   initTravelSelects();
 
+  // Reset LBS UI
+  var locStatus = $('#tvLocStatus'); if (locStatus) { locStatus.textContent = ''; locStatus.style.color = 'var(--gray-500)'; }
+  var locBtn = $('#btnTravelLocate'); if (locBtn) { locBtn.disabled = false; locBtn.textContent = '📍 LBS 定位'; }
+
   if (travelObj) {
     $('#tvYear').value = travelObj.year || new Date().getFullYear();
     $('#tvMonth').value = travelObj.month || 1;
@@ -3374,7 +3385,18 @@ function openTravelModal(travelObj) {
     $('#tvTag').value = travelObj.tag || '';
     $('#tvCost').value = travelObj.cost || '';
     $('#tvDocLink').value = travelObj.doc_link || '';
-    if (travelObj.location) _travelLocData = travelObj.location;
+    if (travelObj.location) {
+      _travelLocData = travelObj.location;
+      $('#tvLat').value = travelObj.location.lat || '';
+      $('#tvLng').value = travelObj.location.lng || '';
+      if (locStatus) {
+        locStatus.style.color = '#2E7D32';
+        locStatus.textContent = travelObj.location.manual ? '✓ 已手动设置' : '✓ 上次定位';
+      }
+    } else {
+      $('#tvLat').value = '';
+      $('#tvLng').value = '';
+    }
     var preview = $('#tvImgPreview');
     if (preview && travelObj.image) { preview.src = travelObj.image; preview.classList.add('visible'); }
     else if (preview) preview.classList.remove('visible');
@@ -3385,6 +3407,7 @@ function openTravelModal(travelObj) {
     $('#tvMonth').value = n.getMonth() + 1;
     $('#tvDay').value = '';
     $('#tvDest').value = ''; $('#tvTag').value = ''; $('#tvCost').value = ''; $('#tvDocLink').value = '';
+    $('#tvLat').value = ''; $('#tvLng').value = '';
     var p2 = $('#tvImgPreview'); if (p2) p2.classList.remove('visible');
     $('#tvImage').value = '';
   }
@@ -3413,22 +3436,84 @@ $('#tvImage').addEventListener('change', function(e) {
   reader.readAsDataURL(file);
 });
 
-// LBS positioning
+// LBS positioning with better error handling + manual fallback
 $('#btnTravelLocate').addEventListener('click', function() {
-  if (!navigator.geolocation) { showDiagToast('浏览器不支持定位', 'error'); return; }
   var btn = $('#btnTravelLocate');
+  var status = $('#tvLocStatus');
+
+  if (!navigator.geolocation) {
+    status.style.color = '#E65100';
+    status.textContent = '⚠️ 浏览器不支持定位，请手动输入经纬度';
+    return;
+  }
+
+  // Check permission state if supported (modern browsers)
+  if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'geolocation' }).then(function(p) {
+      if (p.state === 'denied') {
+        status.style.color = '#E65100';
+        status.textContent = '⚠️ 定位权限已被拒绝。请到「设置 > Safari > 高级 > 网站设置 > 定位服务」允许此网站，然后刷新页面。';
+        btn.textContent = '❌ 已拒绝';
+        btn.disabled = true;
+      }
+    }).catch(function(){});
+  }
+
   btn.disabled = true; btn.textContent = '📡 定位中…';
+  status.style.color = 'var(--gray-500)';
+  status.textContent = '正在获取位置…';
+
   navigator.geolocation.getCurrentPosition(function(pos) {
     _travelLocData = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
-    btn.textContent = '✓ 已定位 (' + pos.coords.latitude.toFixed(2) + ', ' + pos.coords.longitude.toFixed(2) + ')';
+    $('#tvLat').value = pos.coords.latitude.toFixed(6);
+    $('#tvLng').value = pos.coords.longitude.toFixed(6);
+    btn.textContent = '✓ 已定位';
     btn.disabled = false;
+    status.style.color = '#2E7D32';
+    status.textContent = '✓ 已获取（精度约 ' + Math.round(pos.coords.accuracy) + ' 米）';
   }, function(err) {
-    btn.textContent = '❌ 定位失败';
     btn.disabled = false;
-    showDiagToast('定位失败：' + err.message, 'error');
-    setTimeout(function(){ btn.textContent = '📍 LBS 定位'; }, 1500);
-  }, { enableHighAccuracy: true, timeout: 10000 });
+    btn.textContent = '📍 LBS 定位';
+    status.style.color = '#E65100';
+    var msg = '';
+    switch (err.code) {
+      case 1: // PERMISSION_DENIED
+        msg = '⚠️ 权限被拒绝。请到「设置 > Safari > 高级 > 网站设置 > 定位服务」允许此网站，然后重新加载页面。也可手动输入经纬度。';
+        break;
+      case 2: // POSITION_UNAVAILABLE
+        msg = '⚠️ 位置不可用（iOS PWA 常见）。请检查：①系统「设置 > 隐私 > 定位服务 > Safari 网站」已开启 ②PWA 重启一次。也可手动输入经纬度。';
+        break;
+      case 3: // TIMEOUT
+        msg = '⚠️ 定位超时（信号弱或室内）。请到室外重试，或手动输入经纬度。';
+        break;
+      default:
+        msg = '⚠️ 定位失败：' + (err.message || '未知错误') + '。请手动输入经纬度。';
+    }
+    status.textContent = msg;
+  }, {
+    enableHighAccuracy: false, // try lower accuracy first, faster + less likely to fail in iOS PWA
+    timeout: 15000,
+    maximumAge: 60000
+  });
 });
+
+// Manual lat/lng input — sync into _travelLocData
+function syncManualLoc() {
+  var lat = parseFloat($('#tvLat').value);
+  var lng = parseFloat($('#tvLng').value);
+  if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+    _travelLocData = { lat: lat, lng: lng, acc: null, manual: true };
+    var status = $('#tvLocStatus');
+    status.style.color = '#2E7D32';
+    status.textContent = '✓ 已手动设置坐标';
+  } else if ($('#tvLat').value || $('#tvLng').value) {
+    var status = $('#tvLocStatus');
+    status.style.color = '#E65100';
+    status.textContent = '⚠️ 坐标格式无效（纬度 -90~90，度 -180~180）';
+  }
+}
+$('#tvLat').addEventListener('change', syncManualLoc);
+$('#tvLng').addEventListener('change', syncManualLoc);
 
 function saveTravelModal() {
   var year = parseInt($('#tvYear').value);
@@ -3440,13 +3525,23 @@ function saveTravelModal() {
   var docLink = $('#tvDocLink').value.trim() || null;
   if (!destination) { showDiagToast('请填写目的地', 'error'); return; }
 
+  // Fallback to manual input if LBS didn't fire
+  var locData = _travelLocData;
+  if (!locData) {
+    var lat = parseFloat($('#tvLat').value);
+    var lng = parseFloat($('#tvLng').value);
+    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      locData = { lat: lat, lng: lng, acc: null, manual: true };
+    }
+  }
+
   var payload = {
     year: year, month: month, day: day,
     destination: destination,
     tag: tag || null,
     cost: cost, doc_link: docLink,
     image: _travelImageData,
-    location: _travelLocData,
+    location: locData,
     sort_key: year + '-' + String(month).padStart(2,'0'),
     done: false
   };
@@ -3454,7 +3549,7 @@ function saveTravelModal() {
     var existing = state.travels.find(function(x){ return x.id === _editingTravelId; });
     payload.done = existing ? existing.done : false;
     if (!_travelImageData) payload.image = existing ? existing.image : null;
-    if (!_travelLocData) payload.location = existing ? existing.location : null;
+    if (!locData) payload.location = existing ? existing.location : null;
     updateRecord('travels', _editingTravelId, payload);
   } else {
     createRecord('travels', { id: 't_' + Date.now(), ...payload });
