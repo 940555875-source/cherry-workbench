@@ -466,8 +466,46 @@ body{
 .event-item.ended{opacity:.5;border-left-color:var(--gray-300)}
 .event-item.ended .event-title{text-decoration:line-through}
 
-/* ===== Travel Planning Timeline ===== */
+/* ===== Travel Planning ===== */
 .travel-card{border-top:3px solid var(--orange-300)}
+/* Next trip countdown */
+.next-trip{
+  background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:var(--radius-sm);
+  padding:16px;margin-bottom:16px;text-align:center;
+}
+.next-trip-label{font-size:12px;color:var(--gray-500);margin-bottom:4px;font-weight:600}
+.next-trip-dest{font-size:20px;font-weight:800;color:#E65100;margin-bottom:6px}
+.next-trip-countdown{font-size:28px;font-weight:900;color:#EF6C00;line-height:1.2}
+.next-trip-countdown small{font-size:13px;color:var(--gray-600);font-weight:600}
+.next-trip-date{font-size:12px;color:var(--gray-500);margin-top:4px}
+/* Heatmap map */
+.heatmap-section{margin-bottom:16px}
+.heatmap-title{
+  font-size:13px;font-weight:700;color:var(--gray-700);
+  margin-bottom:8px;display:flex;align-items:center;gap:6px;
+}
+.heatmap-wrap{
+  background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);
+  padding:12px;position:relative;overflow:hidden;
+}
+.heatmap-canvas{width:100%;height:200px;display:block;position:relative}
+.heatmap-dot{
+  position:absolute;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:9px;font-weight:800;color:#fff;
+  cursor:pointer;transition:transform .15s;user-select:none;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+}
+.heatmap-dot:hover{transform:scale(1.25);z-index:10}
+.heatmap-empty{
+  display:flex;align-items:center;justify-content:center;height:120px;
+  font-size:13px;color:var(--gray-400);
+}
+.heatmap-legend{display:flex;gap:8px;justify-content:center;margin-top:6px;font-size:11px;color:var(--gray-500)}
+.heatmap-legend span{display:inline-flex;align-items:center;gap:3px}
+.heatmap-legend i{
+  width:10px;height:10px;border-radius:50%;display:inline-block;
+}
+/* Timeline */
 .travel-year{
   font-size:18px;font-weight:700;color:var(--gray-800);
   padding:16px 0 8px;margin-top:4px;
@@ -494,6 +532,9 @@ body{
   font-size:11px;color:var(--orange-600);background:var(--orange-50);
   padding:1px 6px;border-radius:10px;margin-left:4px;
 }
+.travel-meta{
+  font-size:11px;color:var(--gray-400);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap
+}
 .travel-del{
   width:24px;height:24px;border-radius:50%;border:none;
   background:transparent;color:var(--gray-400);cursor:pointer;
@@ -502,6 +543,21 @@ body{
 }
 .travel-item:hover .travel-del{opacity:1}
 .travel-del:hover{background:#FFEBEE;color:#F44336}
+/* Travel modal enhancements */
+.travel-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.travel-form-grid .form-group-full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:13px;font-weight:600;color:var(--gray-700)}
+.form-group input,.form-group select{
+  padding:8px 10px;border:1px solid var(--gray-300);border-radius:var(--radius-xs);
+  font-size:14px;background:var(--white);outline:none;transition:border-color .2s;
+}
+.form-group input:focus,.form-group select:focus{border-color:var(--orange-400)}
+.travel-img-preview{
+  max-width:100%;max-height:120px;border-radius:var(--radius-xs);
+  margin-top:6px;display:none;object-fit:cover;
+}
+.travel-img-preview.visible{display:block}
 
 /* ===== Check-in ===== */
 .checkin-card{border-top:3px solid #4CAF50}
@@ -568,61 +624,6 @@ body{
 .checkin-undo:hover:not(:disabled){background:var(--gray-100);color:var(--gray-700);border-color:var(--gray-300)}
 .checkin-undo:disabled{opacity:.35;cursor:not-allowed}
 .checkin-habit.completed{border-left-color:#2E7D32;background:#F1F8E9}
-
-/* ===== Travel ===== */
-.travel-card{border-top:3px solid #5C9EC4}
-.travel-progress{
-  background:linear-gradient(135deg,#E3F2FD,#FCE4EC);border-radius:var(--radius-sm);
-  padding:14px 16px;margin-bottom:14px;
-}
-.tp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.tp-num{font-size:24px;font-weight:800;color:#5C9EC4;line-height:1}
-.tp-num small{font-size:13px;color:var(--gray-500);font-weight:600;margin-left:4px}
-.tp-region{font-size:13px;color:var(--gray-700)}
-.tp-bar{height:10px;background:var(--gray-200);border-radius:6px;overflow:hidden;margin-bottom:10px}
-.tp-fill{height:100%;background:linear-gradient(90deg,#7EB8DA,#EC7FA0);border-radius:6px;transition:width .4s}
-.tp-msg{font-size:12.5px;color:var(--gray-700);line-height:1.6}
-.travel-map-wrap{
-  background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-sm);
-  padding:8px;margin-bottom:8px;overflow:hidden;
-}
-.travel-map-wrap svg{width:100%;height:auto;display:block}
-.travel-svg path{transition:fill .2s,stroke .2s;cursor:pointer}
-.travel-svg path.t-visited{fill:#5C9EC4 !important;stroke:#3E7A9C !important}
-.travel-svg path.t-region.t-visited{fill:#EC7FA0 !important;stroke:#D4687C !important}
-.travel-svg path:hover:not(.t-visited){fill:#C5E1F5 !important}
-.travel-svg path.t-region:hover:not(.t-visited){fill:#FCE4EC !important}
-.travel-svg path.t-visited:hover{filter:brightness(.92)}
-.travel-hint{
-  font-size:12px;color:var(--gray-500);text-align:center;margin-bottom:14px;
-}
-.travel-country-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto}
-.travel-country-item{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 12px;background:var(--gray-50);border-radius:var(--radius-xs);
-  font-size:13.5px;transition:all .2s;
-}
-.travel-country-item:hover{background:var(--blue-50)}
-.travel-country-name{font-weight:600;display:flex;align-items:center;gap:8px}
-.travel-country-name .badge{
-  font-size:10px;padding:2px 6px;border-radius:8px;background:#FCE4EC;color:#D4687C;font-weight:700;
-}
-.travel-country-del{
-  background:transparent;border:none;color:var(--gray-400);font-size:18px;cursor:pointer;
-  width:26px;height:26px;border-radius:50%;transition:all .2s;line-height:1;
-}
-.travel-country-del:hover{background:#FFEBEE;color:#F44336}
-.travel-toast{
-  position:fixed;left:50%;bottom:80px;transform:translateX(-50%);
-  background:rgba(0,0,0,.78);color:#fff;padding:8px 18px;border-radius:20px;
-  font-size:13px;z-index:200;pointer-events:none;animation:travelToast 1.4s ease forwards;
-}
-@keyframes travelToast{
-  0%{opacity:0;transform:translate(-50%,10px)}
-  15%{opacity:1;transform:translate(-50%,0)}
-  85%{opacity:1;transform:translate(-50%,0)}
-  100%{opacity:0;transform:translate(-50%,-10px)}
-}
 
 /* ===== Overview Modules ===== */
 .overview-modules{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -820,7 +821,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.22</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.23</div>
     </div>
   </aside>
 
@@ -936,6 +937,22 @@ body{
           <button class="btn-add" id="btnAddTravel" style="background:var(--orange-400)">➕ 添加行程</button>
         </div>
         <div class="card-body">
+          <!-- Next trip countdown -->
+          <div id="nextTripCard" class="next-trip" style="display:none">
+            <div class="next-trip-label">📍 下一次出发</div>
+            <div class="next-trip-dest" id="nextTripDest"></div>
+            <div class="next-trip-countdown" id="nextTripCountdown"></div>
+            <div class="next-trip-date" id="nextTripDate"></div>
+          </div>
+          <!-- Heatmap map -->
+          <div class="heatmap-section" id="heatmapSection" style="display:none">
+            <div class="heatmap-title">🗺️ 到访热力图</div>
+            <div class="heatmap-wrap">
+              <div class="heatmap-canvas" id="heatmapCanvas"></div>
+            </div>
+            <div class="heatmap-legend" id="heatmapLegend"></div>
+          </div>
+          <!-- Timeline -->
           <div id="travelTimeline"></div>
           <div class="plan-empty" id="travelEmpty">还没有旅行计划，点击右上角添加 ✈️</div>
         </div>
@@ -1084,14 +1101,46 @@ body{
 
 <!-- === Travel Modal (add/edit) === -->
 <div class="modal-overlay hidden" id="travelOverlay">
-  <div class="modal" style="max-width:400px">
+  <div class="modal" style="max-width:440px">
     <h2 id="travelModalTitle">➕ 添加行程</h2>
-    <label>时间</label>
-    <input type="text" id="tvPeriod" placeholder="如：1月、9~10月" maxlength="30">
-    <label>目的地</label>
-    <input type="text" id="tvDest" placeholder="如：马来西亚、贵州" maxlength="100">
-    <label>标签（可选）</label>
-    <input type="text" id="tvTag" placeholder="如：羽毛球" maxlength="30">
+    <div class="travel-form-grid">
+      <div class="form-group">
+        <label>年份</label>
+        <select id="tvYear"></select>
+      </div>
+      <div class="form-group">
+        <label>月份</label>
+        <select id="tvMonth"></select>
+      </div>
+      <div class="form-group">
+        <label>日期（可选）</label>
+        <select id="tvDay"><option value="">--</option></select>
+      </div>
+      <div class="form-group">
+        <label>标签（可选）</label>
+        <input type="text" id="tvTag" placeholder="如：羽毛球" maxlength="30">
+      </div>
+      <div class="form-group form-group-full">
+        <label>目的地</label>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="tvDest" placeholder="如：马来西亚、贵州" maxlength="100" style="flex:1">
+          <button type="button" id="btnTravelLocate" style="background:var(--blue-500);color:#fff;border:none;border-radius:var(--radius-xs);padding:0 12px;font-size:13px;cursor:pointer;white-space:nowrap">📍 LBS 定位</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>预估费用（元，可选）</label>
+        <input type="number" id="tvCost" placeholder="如：5000" min="0" step="100">
+      </div>
+      <div class="form-group form-group-full">
+        <label>计划文档链接（可选）</label>
+        <input type="url" id="tvDocLink" placeholder="https://..." maxlength="500">
+      </div>
+      <div class="form-group form-group-full">
+        <label>图片（可选）</label>
+        <input type="file" id="tvImage" accept="image/*">
+        <img class="travel-img-preview" id="tvImgPreview" alt="preview">
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnTravelCancel">取消</button>
       <button class="btn btn-primary" id="btnTravelSave" style="background:var(--orange-500)">保存</button>
@@ -1130,7 +1179,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.22 — 新增 SW controllerchange 自动刷新，修复旧版缓存不更新问题模块
+// amber的工作台 v14.23 — 旅行规划大改版（倒计时+热力图+增强弹窗）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -2909,111 +2958,349 @@ function renderWidgetPanel() {
 }
 
 // ============================================================
-// TRAVEL PLANNING — timeline grouped by year
+// TRAVEL PLANNING — timeline + countdown + heatmap
 // ============================================================
 
-// Parse period text into a sortable year-month key for ordering.
-// Examples: "1月" → current year, "9~10月" → current year, "2025年1月" → 2025-01
-function travelSortKey(period) {
-  if (!period) return '9999-99';
-  const m = period.match(/(\d{4})?年?(\d+)[~\-～](\d+)?月?/);
-  if (m) {
-    const y = m[1] || new Date().getFullYear();
-    return y + '-' + String(m[2]).padStart(2,'0');
+// Geo coords for heatmap dots (% of canvas width/height)
+var TRAVEL_GEO = {
+  '马来西亚':{x:73,y:62}, '贵州':{x:74,y:55}, '宁波':{x:79,y:52},
+  '乌兹别克斯坦':{x:58,y:44}, '新加坡':{x:75,y:65}, '日本':{x:85,y:48},
+  '常州':{x:78,y:51}, '法国':{x:48,y:42}, '希腊':{x:55,y:50},
+  '杭州':{x:78,y:53}, '山西':{x:74,y:49}, '亚锦':{x:75,y:55},
+  '丹麦':{x:50,y:36}, '中师':{x:75,y:54}, '俄罗斯':{x:62,y:34},
+  '总决赛':{x:75,y:54}
+};
+
+// Seed data matching the screenshot
+var TRAVEL_SEED_DATA = [
+  // 2025 — all done
+  {id:'t_2025_01', year:2025, month:1,  day:15, destination:'马来西亚',      tag:'羽毛球', done:true},
+  {id:'t_2025_02', year:2025, month:2,  day:10, destination:'贵州',          tag:null,     done:true},
+  {id:'t_2025_04a',year:2025, month:4,  day:20, destination:'宁波',          tag:'羽毛球', done:true},
+  {id:'t_2025_05', year:2025, month:5,  day:8,  destination:'乌兹别克斯坦',  tag:null,     done:true},
+  {id:'t_2025_06', year:2025, month:6,  day:5,  destination:'新加坡',        tag:'羽毛球', done:true},
+  {id:'t_2025_07', year:2025, month:7,  day:12, destination:'日本+常州',     tag:'羽毛球', done:true},
+  {id:'t_2025_08', year:2025, month:8,  day:18, destination:'法国',          tag:'羽毛球', done:true},
+  {id:'t_2025_10', year:2025, month:10, day:6,  destination:'希腊',          tag:null,     done:true},
+  {id:'t_2025_12', year:2025, month:12, day:14, destination:'杭州',          tag:'羽毛球', done:true},
+  // 2026
+  {id:'t_2026_01a',year:2026, month:1,  day:18, destination:'山西',          tag:null,     done:true},
+  {id:'t_2026_02', year:2026, month:2,  day:22, destination:'山西',          tag:null,     done:true},
+  {id:'t_2026_04a',year:2026, month:4,  day:25, destination:'亚锦',          tag:'羽毛球', done:false},
+  {id:'t_2026_04b',year:2026, month:4,  day:28, destination:'丹麦',          tag:'羽毛球', done:true},
+  {id:'t_2026_09a',year:2026, month:9,  day:10, destination:'中师',          tag:'羽毛球', done:false},
+  {id:'t_2026_09b',year:2026, month:9,  day:25, destination:'日本',          tag:null,     done:false, month_end:10, day_end:5},
+  {id:'t_2026_10', year:2026, month:10, day:15, destination:'俄罗斯',        tag:null,     done:false},
+  {id:'t_2026_12', year:2026, month:12, day:20, destination:'总决赛',        tag:'羽毛球', done:false}
+];
+
+// Seed on first load (only if empty)
+function seedTravelData() {
+  if (state.travels.length === 0) {
+    TRAVEL_SEED_DATA.forEach(function(d) {
+      var payload = {
+        year:d.year, month:d.month, day:d.day||null,
+        month_end:d.month_end||null, day_end:d.day_end||null,
+        destination:d.destination, tag:d.tag||null,
+        doc_link:null, cost:null, image:null, location:null,
+        sort_key: d.year + '-' + String(d.month).padStart(2,'0'),
+        done: d.done
+      };
+      createRecord('travels', { id: d.id, ...payload });
+    });
+    state.travels = JSON.parse(localStorage.getItem(LS_KEYS.travels) || '[]').filter(function(r){ return !r.deleted_at; });
   }
-  // Fallback: try to extract any leading number as month
-  const m2 = period.match(/(\d+)/);
-  if (m2) return new Date().getFullYear() + '-' + String(m2[1]).padStart(2,'0');
-  return '9999-99';
 }
 
+// Display period from year/month/day
+function travelPeriod(t) {
+  var m = t.month, me = t.month_end;
+  var start = t.day ? (m + '月' + t.day + '日') : (m + '月');
+  if (me && me !== m) {
+    var end = t.day_end ? (me + '月' + t.day_end + '日') : (me + '月');
+    return t.year + '年' + start + '~' + end;
+  }
+  return t.year + '年' + start;
+}
+
+// Next upcoming trip (not done, closest future start date)
+function findNextTrip() {
+  var now = new Date(); now.setHours(0,0,0,0);
+  var next = null;
+  state.travels.forEach(function(t) {
+    if (t.done) return;
+    var d = new Date(t.year, (t.month||1)-1, t.day||1);
+    if (d < now) return;
+    if (!next) { next = t; return; }
+    var nd = new Date(next.year, (next.month||1)-1, next.day||1);
+    if (d < nd) next = t;
+  });
+  return next;
+}
+
+function daysUntil(t) {
+  var d = new Date(t.year, (t.month||1)-1, t.day||1);
+  var now = new Date(); now.setHours(0,0,0,0);
+  return Math.ceil((d - now) / 86400000);
+}
+
+// --- Heatmap render ---
+function renderHeatmap() {
+  var canvas = $('#heatmapCanvas');
+  var section = $('#heatmapSection');
+  var legend = $('#heatmapLegend');
+  if (!canvas || !section) return;
+
+  var counts = {};
+  state.travels.forEach(function(t) {
+    var dest = (t.destination || '').replace(/[+&].*$/, '');
+    counts[dest] = (counts[dest] || 0) + 1;
+  });
+  var entries = Object.keys(counts);
+  if (entries.length === 0) { section.style.display = 'none'; return; }
+
+  section.style.display = '';
+  canvas.innerHTML = '';
+  var maxCount = Math.max.apply(null, Object.values(counts));
+  var colors = ['#FFE0B2','#FFCC80','#FFB74D','#FFA726','#F57C00','#E65100'];
+  var used = []; // for overlap avoidance
+
+  entries.forEach(function(dest) {
+    var c = counts[dest];
+    var geo = TRAVEL_GEO[dest];
+    if (!geo) geo = { x: 50 + Math.random()*30, y: 35 + Math.random()*40 };
+
+    // If multiple destinations share similar coords, offset
+    var offsetX = geo.x, offsetY = geo.y;
+    var key = Math.round(geo.x) + '_' + Math.round(geo.y);
+    var dupCount = 0;
+    used.forEach(function(u){ if (u === key) dupCount++; });
+    if (dupCount > 0) { offsetX += dupCount * 4; offsetY += dupCount * 3; }
+    used.push(key);
+
+    var dot = document.createElement('div');
+    dot.className = 'heatmap-dot';
+    var size = 26 + (c / maxCount) * 26;
+    var colorIdx = Math.min(5, Math.floor((c / maxCount) * 6));
+    dot.style.cssText = 'left:'+offsetX+'%;top:'+offsetY+'%;width:'+size+'px;height:'+size+'px;background:'+colors[colorIdx]+';';
+    dot.textContent = c;
+    dot.title = dest + ' (' + c + '次)';
+    canvas.appendChild(dot);
+  });
+
+  legend.innerHTML = '<span><i style="background:#FFE0B2"></i>1次</span><span><i style="background:#FFB74D"></i>中等</span><span><i style="background:#E65100"></i>'+maxCount+'次</span>';
+}
+
+// --- Next trip card ---
+function renderNextTrip() {
+  var card = $('#nextTripCard');
+  if (!card) return;
+  var next = findNextTrip();
+  if (!next) { card.style.display = 'none'; return; }
+  card.style.display = '';
+  $('#nextTripDest').textContent = next.destination + (next.tag ? '（' + next.tag + '）' : '');
+  var d = daysUntil(next);
+  var cd = $('#nextTripCountdown');
+  if (d <= 0) cd.innerHTML = '🎉 <small>即将出发</small>';
+  else if (d === 1) cd.innerHTML = '1 <small>天后</small>';
+  else cd.innerHTML = d + ' <small>天</small>';
+  $('#nextTripDate').textContent = travelPeriod(next);
+}
+
+// --- Timeline ---
 function renderTravelPage() {
-  const container = $('#travelTimeline');
-  const empty = $('#travelEmpty');
+  seedTravelData();
+  renderNextTrip();
+  renderHeatmap();
+
+  var container = $('#travelTimeline');
+  var empty = $('#travelEmpty');
   container.innerHTML = '';
 
   if (state.travels.length === 0) {
-    container.classList.add('hidden');
-    empty.classList.remove('hidden');
+    container.classList.add('hidden'); empty.classList.remove('hidden');
     return;
   }
-  container.classList.remove('hidden');
-  empty.classList.add('hidden');
+  container.classList.remove('hidden'); empty.classList.add('hidden');
 
-  // Sort by sort key (year-month ascending)
-  const sorted = [...state.travels].sort((a,b) => (a.sort_key||'').localeCompare(b.sort_key||''));
-
-  // Group by year
-  const groups = {};
-  sorted.forEach(t => {
-    const y = (t.sort_key || '').slice(0,4) || '----';
+  var sorted = [...state.travels].sort(function(a,b){
+    return (a.sort_key||'').localeCompare(b.sort_key||'');
+  });
+  var groups = {};
+  sorted.forEach(function(t) {
+    var y = String(t.year || '----');
     if (!groups[y]) groups[y] = [];
     groups[y].push(t);
   });
 
-  Object.keys(groups).sort().forEach(year => {
-    // Year header
-    const yh = document.createElement('div');
+  Object.keys(groups).sort().forEach(function(year) {
+    var yh = document.createElement('div');
     yh.className = 'travel-year';
     yh.textContent = year + '年';
     container.appendChild(yh);
 
-    // Items list
-    const ul = document.createElement('ul');
+    var ul = document.createElement('ul');
     ul.className = 'travel-list';
-    groups[year].forEach(t => {
-      const li = document.createElement('li');
+    groups[year].forEach(function(t) {
+      var li = document.createElement('li');
       li.className = 'travel-item' + (t.done ? ' done' : '');
+      var meta = '';
+      if (t.cost) meta += '<span>💰¥'+t.cost+'</span>';
+      if (t.doc_link) meta += '<span>📄</span>';
+      if (t.location && t.location.lat) meta += '<span>📍</span>';
       li.innerHTML =
-        `<div class="travel-check${t.done ? ' done' : ''}" data-id="${t.id}">${t.done ? '✓' : ''}</div>` +
-        `<div class="travel-info">` +
-          `<div class="travel-title">${escapeHtml(t.period || '')} ${escapeHtml(t.destination || '')}${t.tag ? `<span class="travel-tag">（${escapeHtml(t.tag)}）</span>` : ''}</div>` +
-        `</div>` +
-        `<button class="travel-del" data-id="${t.id}">×</button>`;
+        '<div class="travel-check'+(t.done?' done':'')+'" data-id="'+t.id+'">'+(t.done?'✓':'')+'</div>' +
+        '<div class="travel-info">' +
+          '<div class="travel-title">'+escapeHtml(travelPeriod(t))+' '+escapeHtml(t.destination||'')+(t.tag?'<span class="travel-tag">（'+escapeHtml(t.tag)+'）</span>':'')+'</div>' +
+          (meta ? '<div class="travel-meta">'+meta+'</div>' : '') +
+        '</div>' +
+        '<button class="travel-del" data-id="'+t.id+'">×</button>';
       ul.appendChild(li);
     });
     container.appendChild(ul);
   });
 }
 
-// Travel list click delegation: toggle done / delete
-$('#travelTimeline').addEventListener('click', e => {
-  const check = e.target.closest('.travel-check');
+// Click delegation
+$('#travelTimeline').addEventListener('click', function(e) {
+  var check = e.target.closest('.travel-check');
   if (check) {
     e.stopPropagation();
-    const id = check.dataset.id;
-    const t = state.travels.find(x => x.id === id);
+    var id = check.dataset.id;
+    var t = state.travels.find(function(x){ return x.id === id; });
     if (t) { updateRecord('travels', id, { done: !t.done }); renderTravelPage(); }
     return;
   }
-  const del = e.target.closest('.travel-del');
+  var del = e.target.closest('.travel-del');
   if (del) { deleteRecord('travels', del.dataset.id); renderTravelPage(); return; }
+  var item = e.target.closest('.travel-item');
+  if (item) {
+    var tObj = state.travels.find(function(x){ return x.id === item.querySelector('.travel-check').dataset.id; });
+    if (tObj) openTravelModal(tObj);
+  }
 });
 
-let _editingTravelId = null;
+// --- Modal ---
+var _editingTravelId = null;
+var _travelImageData = null;
+var _travelLocData = null;
+
+function initTravelSelects() {
+  var ySel = $('#tvYear');
+  var mSel = $('#tvMonth');
+  var dSel = $('#tvDay');
+  if (!ySel || !mSel) return;
+  if (ySel.options.length > 0) return; // already populated
+  var now = new Date();
+  for (var y = now.getFullYear() - 1; y <= now.getFullYear() + 3; y++) {
+    var o = document.createElement('option'); o.value = y; o.textContent = y + '年'; ySel.appendChild(o);
+  }
+  for (var m = 1; m <= 12; m++) {
+    var o2 = document.createElement('option'); o2.value = m; o2.textContent = m + '月'; mSel.appendChild(o2);
+  }
+  if (dSel) {
+    for (var d = 1; d <= 31; d++) {
+      var o3 = document.createElement('option'); o3.value = d; o3.textContent = d + '日'; dSel.appendChild(o3);
+    }
+  }
+}
 
 function openTravelModal(travelObj) {
   _editingTravelId = travelObj ? travelObj.id : null;
+  _travelImageData = null;
+  _travelLocData = null;
   $('#travelModalTitle').textContent = travelObj ? '✏️ 编辑行程' : '➕ 添加行程';
-  $('#tvPeriod').value = travelObj ? (travelObj.period || '') : '';
-  $('#tvDest').value = travelObj ? (travelObj.destination || '') : '';
-  $('#tvTag').value = travelObj ? (travelObj.tag || '') : '';
+  initTravelSelects();
+
+  if (travelObj) {
+    $('#tvYear').value = travelObj.year || new Date().getFullYear();
+    $('#tvMonth').value = travelObj.month || 1;
+    $('#tvDay').value = travelObj.day || '';
+    $('#tvDest').value = travelObj.destination || '';
+    $('#tvTag').value = travelObj.tag || '';
+    $('#tvCost').value = travelObj.cost || '';
+    $('#tvDocLink').value = travelObj.doc_link || '';
+    if (travelObj.location) _travelLocData = travelObj.location;
+    var preview = $('#tvImgPreview');
+    if (preview && travelObj.image) { preview.src = travelObj.image; preview.classList.add('visible'); }
+    else if (preview) preview.classList.remove('visible');
+    $('#tvImage').value = '';
+  } else {
+    var n = new Date();
+    $('#tvYear').value = n.getFullYear();
+    $('#tvMonth').value = n.getMonth() + 1;
+    $('#tvDay').value = '';
+    $('#tvDest').value = ''; $('#tvTag').value = ''; $('#tvCost').value = ''; $('#tvDocLink').value = '';
+    var p2 = $('#tvImgPreview'); if (p2) p2.classList.remove('visible');
+    $('#tvImage').value = '';
+  }
   $('#travelOverlay').classList.remove('hidden');
-  setTimeout(() => $('#tvPeriod').focus(), 100);
+  setTimeout(function(){ $('#tvDest').focus(); }, 100);
 }
 
-function closeTravelModal() { $('#travelOverlay').classList.add('hidden'); _editingTravelId = null; }
+function closeTravelModal() {
+  $('#travelOverlay').classList.add('hidden');
+  _editingTravelId = null;
+  _travelImageData = null;
+  _travelLocData = null;
+}
+
+// Image preview
+$('#tvImage').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 500000) { showDiagToast('图片请小于500KB', 'error'); e.target.value=''; return; }
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    _travelImageData = ev.target.result;
+    var preview = $('#tvImgPreview');
+    if (preview) { preview.src = _travelImageData; preview.classList.add('visible'); }
+  };
+  reader.readAsDataURL(file);
+});
+
+// LBS positioning
+$('#btnTravelLocate').addEventListener('click', function() {
+  if (!navigator.geolocation) { showDiagToast('浏览器不支持定位', 'error'); return; }
+  var btn = $('#btnTravelLocate');
+  btn.disabled = true; btn.textContent = '📡 定位中…';
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    _travelLocData = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
+    btn.textContent = '✓ 已定位 (' + pos.coords.latitude.toFixed(2) + ', ' + pos.coords.longitude.toFixed(2) + ')';
+    btn.disabled = false;
+  }, function(err) {
+    btn.textContent = '❌ 定位失败';
+    btn.disabled = false;
+    showDiagToast('定位失败：' + err.message, 'error');
+    setTimeout(function(){ btn.textContent = '📍 LBS 定位'; }, 1500);
+  }, { enableHighAccuracy: true, timeout: 10000 });
+});
 
 function saveTravelModal() {
-  const period = $('#tvPeriod').value.trim();
-  const destination = $('#tvDest').value.trim();
-  const tag = $('#tvTag').value.trim();
-  if (!period || !destination) { showDiagToast('请填写时间和目的地', 'error'); return; }
+  var year = parseInt($('#tvYear').value);
+  var month = parseInt($('#tvMonth').value);
+  var day = $('#tvDay').value ? parseInt($('#tvDay').value) : null;
+  var destination = $('#tvDest').value.trim();
+  var tag = $('#tvTag').value.trim();
+  var cost = $('#tvCost').value ? parseInt($('#tvCost').value) : null;
+  var docLink = $('#tvDocLink').value.trim() || null;
+  if (!destination) { showDiagToast('请填写目的地', 'error'); return; }
 
-  const payload = { period, destination, tag: tag || null, sort_key: travelSortKey(period), done: false };
+  var payload = {
+    year: year, month: month, day: day,
+    destination: destination,
+    tag: tag || null,
+    cost: cost, doc_link: docLink,
+    image: _travelImageData,
+    location: _travelLocData,
+    sort_key: year + '-' + String(month).padStart(2,'0'),
+    done: false
+  };
   if (_editingTravelId) {
-    const existing = state.travels.find(x => x.id === _editingTravelId);
+    var existing = state.travels.find(function(x){ return x.id === _editingTravelId; });
     payload.done = existing ? existing.done : false;
+    if (!_travelImageData) payload.image = existing ? existing.image : null;
+    if (!_travelLocData) payload.location = existing ? existing.location : null;
     updateRecord('travels', _editingTravelId, payload);
   } else {
     createRecord('travels', { id: 't_' + Date.now(), ...payload });
@@ -3022,11 +3309,11 @@ function saveTravelModal() {
   renderTravelPage();
 }
 
-$('#btnAddTravel').addEventListener('click', () => openTravelModal());
+$('#btnAddTravel').addEventListener('click', function() { openTravelModal(); });
 $('#btnTravelSave').addEventListener('click', saveTravelModal);
 $('#btnTravelCancel').addEventListener('click', closeTravelModal);
-$('#travelOverlay').addEventListener('click', e => { if (e.target === $('#travelOverlay')) closeTravelModal(); });
-$('#tvDest').addEventListener('keydown', e => { if (e.key === 'Enter') saveTravelModal(); });
+$('#travelOverlay').addEventListener('click', function(e) { if (e.target === $('#travelOverlay')) closeTravelModal(); });
+$('#tvDest').addEventListener('keydown', function(e) { if (e.key === 'Enter') saveTravelModal(); });
 
 // ============================================================
 // SETTINGS
