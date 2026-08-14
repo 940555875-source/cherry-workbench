@@ -500,6 +500,11 @@ body{
   display:flex;align-items:center;justify-content:center;height:120px;
   font-size:13px;color:var(--gray-400);
 }
+.realmap-wrap{position:relative;width:100%;border-radius:var(--radius-xs);overflow:hidden}
+#realMap{width:100%;height:240px}
+.realmap-hint{
+  font-size:11px;color:var(--gray-400);text-align:center;margin-top:4px;
+}
 .heatmap-legend{display:flex;gap:8px;justify-content:center;margin-top:6px;font-size:11px;color:var(--gray-500)}
 .heatmap-legend span{display:inline-flex;align-items:center;gap:3px}
 .heatmap-legend i{
@@ -889,7 +894,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.25</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.26</div>
     </div>
   </aside>
 
@@ -1016,9 +1021,15 @@ body{
           <div class="heatmap-section" id="heatmapSection" style="display:none">
             <div class="heatmap-title">🗺️ 到访热力图</div>
             <div class="heatmap-wrap">
+              <!-- HTML dot heatmap (fallback) -->
               <div class="heatmap-canvas" id="heatmapCanvas"></div>
+              <!-- Tencent Map real map (when key configured) -->
+              <div class="realmap-wrap" id="realMapWrap" style="display:none">
+                <div id="realMap"></div>
+              </div>
             </div>
             <div class="heatmap-legend" id="heatmapLegend"></div>
+            <div class="realmap-hint" id="realMapHint" style="display:none">轨迹线连接已记录坐标的行程 · 圆点大小=到访次数</div>
           </div>
           <!-- Timeline -->
           <div id="travelTimeline"></div>
@@ -1312,6 +1323,9 @@ body{
     <label>Supabase Anon Key</label>
     <input type="password" id="supabaseKey" placeholder="eyJhbGciOi...">
     <p class="modal-hint">配置后可实现多设备云端同步。<br>详细教程见项目中的 SUPABASE_GUIDE.md</p>
+    <label style="margin-top:12px">腾讯地图 Key（可选，用于旅行热力图）</label>
+    <input type="text" id="tencentMapKey" placeholder="申请地址 lbs.qq.com → 控制台 → 创建 Key" style="margin-bottom:4px">
+    <p class="modal-hint">配置后旅行页热力图用腾讯地图渲染轨迹线+热力点（国内直连）。<br>需在腾讯位置服务控制台把 <b>940555875-source.github.io</b> 加入白名单。</p>
     <div class="modal-actions">
       <button class="btn btn-danger" id="btnClearData">清除本地数据</button>
       <button class="btn btn-secondary" id="btnSettingsClose">取消</button>
@@ -1334,7 +1348,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.25 — LBS定位增强（分错误码提示+手动经纬度降级）
+// amber的工作台 v14.26 — 旅行热力图支持腾讯地图（轨迹线+热力点），设置页可配 Key
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -3206,11 +3220,161 @@ function daysUntil(t) {
 }
 
 // --- Heatmap render ---
-function renderHeatmap() {
+// Real lat/lng for major destinations (for Tencent Map trajectory)
+var TRAVEL_REAL_GEO = {
+  '马来西亚':{lat:3.1390,lng:101.6869}, '贵州':{lat:26.6470,lng:106.6300},
+  '宁波':{lat:29.8683,lng:121.5440}, '乌兹别克斯坦':{lat:41.2995,lng:69.2401},
+  '新加坡':{lat:1.3521,lng:103.8198}, '日本':{lat:35.6762,lng:139.6503},
+  '常州':{lat:31.8107,lng:119.9741}, '法国':{lat:48.8566,lng:2.3522},
+  '希腊':{lat:37.9838,lng:23.7275}, '杭州':{lat:30.2741,lng:120.1551},
+  '山西':{lat:37.8706,lng:112.5489}, '亚锦':{lat:22.5431,lng:114.0579},
+  '丹麦':{lat:55.6761,lng:12.5683}, '中师':{lat:22.5431,lng:114.0579},
+  '俄罗斯':{lat:55.7558,lng:37.6173}, '总决赛':{lat:30.2741,lng:120.1551}
+};
+
+function getTravelMapKey() {
+  try { return (JSON.parse(localStorage.getItem(LS_KEYS.config)||'{}').mapKey || '').trim(); }
+  catch(e) { return ''; }
+}
+
+var _tmapLoading = false, _tmapFailed = false;
+
+// Load Tencent Map GL JS API (async, once)
+function loadTMap(key, cb) {
+  if (window.TMap) { cb(); return; }
+  if (_tmapLoading || _tmapFailed) return;
+  _tmapLoading = true;
+  var s = document.createElement('script');
+  s.src = 'https://map.qq.com/api/gljs?v=1.exp&key=' + encodeURIComponent(key) + '&libraries=visualization';
+  s.async = true;
+  s.onload = function() { _tmapLoading = false; cb(); };
+  s.onerror = function() {
+    _tmapLoading = false; _tmapFailed = true;
+    showDiagToast('腾讯地图加载失败，已回退到圆点热力图', 'error');
+    renderHeatmapFallback();
+  };
+  document.head.appendChild(s);
+}
+
+// Render real map: trajectory polyline + heat points
+function renderRealMap() {
+  var wrap = $('#realMapWrap'), canvas = $('#heatmapCanvas');
+  var hint = $('#realMapHint'), legend = $('#heatmapLegend');
+  var section = $('#heatmapSection');
+  if (!wrap || !canvas || !section) return;
+
+  var counts = {};
+  state.travels.forEach(function(t) {
+    var dest = (t.destination || '').replace(/[+&].*$/, '');
+    counts[dest] = (counts[dest] || 0) + 1;
+  });
+  if (Object.keys(counts).length === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  var key = getTravelMapKey();
+  if (!key) { renderHeatmapFallback(); return; }
+
+  wrap.style.display = 'block';
+  canvas.style.display = 'none';
+  hint.style.display = 'block';
+  legend.style.display = 'none';
+
+  loadTMap(key, function() {
+    try {
+      var el = document.getElementById('realMap');
+      var map = window.__travelMap;
+      if (!map) {
+        map = new TMap.Map(el, { center: new TMap.LatLng(32, 108), zoom: 3 });
+        window.__travelMap = map;
+      } else {
+        map.resize();
+        try { map.clearOverlayLayers(); } catch(e2) {}
+      }
+
+      // Collect points with coordinates (trip location first, then geo DB)
+      var pts = [];
+      state.travels.forEach(function(t) {
+        var dest = (t.destination || '').replace(/[+&].*$/, '');
+        var loc = null;
+        if (t.location && t.location.lat && t.location.lng) loc = { lat: t.location.lat, lng: t.location.lng };
+        else if (TRAVEL_REAL_GEO[dest]) loc = TRAVEL_REAL_GEO[dest];
+        else if (TRAVEL_REAL_GEO[t.destination]) loc = TRAVEL_REAL_GEO[t.destination];
+        if (!loc) return;
+        pts.push({ lat: loc.lat, lng: loc.lng, dest: dest, sort_key: t.sort_key || '', count: counts[dest] || 1 });
+      });
+      if (pts.length === 0) {
+        hint.textContent = '⚠️ 行程暂无坐标，可编辑行程用 LBS 定位或手动填经纬度';
+        return;
+      }
+
+      // Trajectory: connect all points by time order
+      pts.sort(function(a,b){ return (a.sort_key||'').localeCompare(b.sort_key||''); });
+      var path = pts.map(function(p){ return new TMap.LatLng(p.lat, p.lng); });
+      if (path.length >= 2) {
+        new TMap.MultiPolyline({
+          map: map,
+          styles: {
+            trail: new TMap.PolylineStyle({ color: '#E65100', width: 4, lineCap: 'round', dashArray: [8, 6] })
+          },
+          geometries: [{ paths: path, styleId: 'trail' }]
+        });
+      }
+
+      // Heat points with visit counts (try HeatmapOverlay, fallback to MultiMarker)
+      try {
+        if (TMap.visualization && TMap.visualization.HeatmapOverlay) {
+          var heatData = pts.map(function(p){ return { lat: p.lat, lng: p.lng, count: p.count }; });
+          new TMap.visualization.HeatmapOverlay({
+            map: map,
+            lngLat: heatData,
+            config: { radius: 40, gradient: { 0.2: '#FFE0B2', 0.4: '#FFB74D', 0.6: '#FFA726', 0.8: '#F57C00', 1.0: '#E65100' } }
+          });
+        } else {
+          var markers = pts.map(function(p) {
+            return {
+              position: new TMap.LatLng(p.lat, p.lng),
+              content: '<div style="background:#E65100;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.3)">' + p.count + '</div>'
+            };
+          });
+          new TMap.MultiMarker({ map: map, geometries: markers });
+        }
+      } catch(e3) {
+        var markers2 = pts.map(function(p) {
+          return {
+            position: new TMap.LatLng(p.lat, p.lng),
+            content: '<div style="background:#E65100;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">' + p.count + '</div>'
+          };
+        });
+        new TMap.MultiMarker({ map: map, geometries: markers2 });
+      }
+
+      // Fit bounds
+      try {
+        var bounds = new TMap.LatLngBounds();
+        path.forEach(function(p){ bounds.extend(p); });
+        map.fitBounds(bounds, { padding: 40 });
+      } catch(e4) {}
+
+      hint.textContent = '轨迹线按时间连接 · 热力点=到访次数';
+    } catch(err) {
+      // Fallback to dot heatmap on any TMap error
+      wrap.style.display = 'none';
+      canvas.style.display = '';
+      legend.style.display = '';
+      renderHeatmapFallback();
+    }
+  });
+}
+
+// HTML dot heatmap (fallback when no map key or map fails)
+function renderHeatmapFallback() {
   var canvas = $('#heatmapCanvas');
   var section = $('#heatmapSection');
   var legend = $('#heatmapLegend');
+  var wrap = $('#realMapWrap'), hint = $('#realMapHint');
   if (!canvas || !section) return;
+  if (wrap) wrap.style.display = 'none';
+  if (hint) hint.style.display = 'none';
 
   var counts = {};
   state.travels.forEach(function(t) {
@@ -3221,17 +3385,17 @@ function renderHeatmap() {
   if (entries.length === 0) { section.style.display = 'none'; return; }
 
   section.style.display = '';
+  canvas.style.display = '';
   canvas.innerHTML = '';
   var maxCount = Math.max.apply(null, Object.values(counts));
   var colors = ['#FFE0B2','#FFCC80','#FFB74D','#FFA726','#F57C00','#E65100'];
-  var used = []; // for overlap avoidance
+  var used = [];
 
   entries.forEach(function(dest) {
     var c = counts[dest];
     var geo = TRAVEL_GEO[dest];
     if (!geo) geo = { x: 50 + Math.random()*30, y: 35 + Math.random()*40 };
 
-    // If multiple destinations share similar coords, offset
     var offsetX = geo.x, offsetY = geo.y;
     var key = Math.round(geo.x) + '_' + Math.round(geo.y);
     var dupCount = 0;
@@ -3250,6 +3414,12 @@ function renderHeatmap() {
   });
 
   legend.innerHTML = '<span><i style="background:#FFE0B2"></i>1次</span><span><i style="background:#FFB74D"></i>中等</span><span><i style="background:#E65100"></i>'+maxCount+'次</span>';
+}
+
+function renderHeatmap() {
+  var key = getTravelMapKey();
+  if (key && !_tmapFailed) renderRealMap();
+  else renderHeatmapFallback();
 }
 
 // --- Next trip card ---
@@ -3846,6 +4016,7 @@ function openSettings() {
   const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
   $('#supabaseUrl').value = normalizeSupabaseUrl(cfg.url) || '';
   $('#supabaseKey').value = cfg.key || '';
+  $('#tencentMapKey').value = cfg.mapKey || '';
   $('#settingsOverlay').classList.remove('hidden');
 }
 
@@ -3855,8 +4026,12 @@ $('#btnSettingsClose').addEventListener('click', () => $('#settingsOverlay').cla
 $('#settingsOverlay').addEventListener('click', e => { if (e.target === $('#settingsOverlay')) $('#settingsOverlay').classList.add('hidden'); });
 
 $('#btnSettingsSave').addEventListener('click', () => {
-  const cfg = { url: normalizeSupabaseUrl($('#supabaseUrl').value), key: $('#supabaseKey').value.trim() };
+  const cfg = { url: normalizeSupabaseUrl($('#supabaseUrl').value), key: $('#supabaseKey').value.trim(), mapKey: $('#tencentMapKey').value.trim() };
   localStorage.setItem(LS_KEYS.config, JSON.stringify(cfg));
+  // Reset map state so new/changed key takes effect
+  _tmapLoading = false; _tmapFailed = false;
+  window.__travelMap = null;
+  if (state.currentPage === 'travels') renderTravelPage();
   if (cfg.url && cfg.key) {
     loadSupabaseScript().then(ok => {
       if (!ok) { setSyncStatus('offline', '未连接'); $('#settingsOverlay').classList.add('hidden'); return; }
