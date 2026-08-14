@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.21
+// amber的工作台 Service Worker v14.22
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.21: 新增旅行规划模块（时间轴按年份分组，支持增删改查+完成标记）
+// v14.22: 新增 controllerchange 自动刷新，确保新版本发布后用户端自动生效
 
-const VERSION = 'amber-workbench-v14.21';
+const VERSION = 'amber-workbench-v14.22';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

@@ -820,7 +820,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.21</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.22</div>
     </div>
   </aside>
 
@@ -1130,7 +1130,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.21 — 事件提醒排序优化 + 新增旅行规划时间轴模块
+// amber的工作台 v14.22 — 新增 SW controllerchange 自动刷新，修复旧版缓存不更新问题模块
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -3084,6 +3084,14 @@ function registerSW() {
     // Use a relative path so this resolves correctly on GitHub Pages
     // (deployed under /cherry-workbench/, not the domain root).
     navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+    // 当新 Service Worker 接管时（即发布了新版本），自动刷新页面以获取最新代码，
+    // 避免用户一直停留在旧缓存版本。（配合 sw.js 的 clients.claim() 生效）
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    });
   }
 }
 
