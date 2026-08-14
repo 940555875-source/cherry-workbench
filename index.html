@@ -908,7 +908,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.28</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.29</div>
     </div>
   </aside>
 
@@ -1362,7 +1362,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.28 — 修复腾讯地图marker CSS 乱码（改用矢量 MultiCircle + MultiLabel）
+// amber的工作台 v14.29 — 旅行地图改为带数量的小图钉（无轨迹线）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -3369,66 +3369,41 @@ function renderRealMap() {
         return;
       }
 
-      // Trajectory: connect all points by time order (solid line for clarity)
-      pts.sort(function(a,b){ return (a.sort_key||'').localeCompare(b.sort_key||''); });
-      var path = pts.map(function(p){ return new TMap.LatLng(p.lat, p.lng); });
-      if (path.length >= 2) {
-        new TMap.MultiPolyline({
-          map: map,
-          styles: {
-            trail: new TMap.PolylineStyle({
-              color: '#E65100', width: 4, lineCap: 'round',
-              strokeDashArray: [10, 8]  // dashed (10px solid, 8px gap)
-            })
-          },
-          geometries: [{ paths: path, styleId: 'trail' }]
-        });
-      }
-
-      // Heat points: vector circles + label text (NO HTML content — fixes iOS Safari garbled output)
+      // Pins with visit counts: SVG data-URI icons (image, not HTML — iOS-safe)
       try {
         var maxC = Math.max.apply(null, pts.map(function(p){ return p.count; }));
         var colors = ['#FFE0B2','#FFCC80','#FFB74D','#FFA726','#F57C00','#E65100'];
-        var circleStyles = {};
-        var circleGeoms = [];
-        var labelGeoms = [];
+
+        // Build an SVG pin (red tip + white number) as a data-URI image
+        function makePinSvg(num, color) {
+          var svg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="46" viewBox="0 0 40 46">' +
+            '<path d="M20 1C11.7 1 5 7.7 5 16c0 12.6 15 29 15 29s15-16.4 15-29C35 7.7 28.3 1 20 1z" fill="' + color + '" stroke="#FFFFFF" stroke-width="2"/>' +
+            '<circle cx="20" cy="15" r="9.5" fill="#FFFFFF" opacity="0.95"/>' +
+            '<text x="20" y="19.5" text-anchor="middle" font-size="13" font-weight="bold" fill="' + color + '">' + num + '</text>' +
+            '</svg>';
+          return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        }
+
+        var pinStyles = {};
+        var pinGeoms = [];
         pts.forEach(function(p) {
           var cIdx = Math.min(5, Math.floor((p.count / maxC) * 6));
-          var sid = 'c_' + cIdx;
-          if (!circleStyles[sid]) {
-            circleStyles[sid] = new TMap.CircleStyle({
-              fillColor: colors[cIdx], fillOpacity: 0.75,
-              strokeColor: '#FFFFFF', strokeWidth: 2
+          var sid = 'pin_' + cIdx + '_' + p.count;
+          if (!pinStyles[sid]) {
+            pinStyles[sid] = new TMap.MarkerStyle({
+              width: 40, height: 46,
+              anchor: { x: 20, y: 44 },  // tip of the pin
+              src: makePinSvg(p.count, colors[cIdx])
             });
           }
-          // Radius in meters: 80km base + up to 200km by visit count
-          var radius = 80000 + Math.round((p.count / maxC) * 200000);
-          circleGeoms.push({
-            styleId: sid, radius: radius,
-            center: new TMap.LatLng(p.lat, p.lng)
-          });
-          labelGeoms.push({
-            content: String(p.count),
-            position: new TMap.LatLng(p.lat, p.lng),
-            styleId: 'count'
+          pinGeoms.push({
+            id: 'pin_' + p.dest,
+            styleId: sid,
+            position: new TMap.LatLng(p.lat, p.lng)
           });
         });
-        // Circle layer
-        new TMap.MultiCircle({ map: map, styles: circleStyles, geometries: circleGeoms });
-        // Label layer (separate, plain SVG text — no HTML)
-        try {
-          new TMap.MultiLabel({
-            map: map,
-            styles: {
-              count: new TMap.LabelStyle({
-                color: '#FFFFFF', size: 14, offset: { x: 0, y: 0 }, alignment: 'center', verticalAlignment: 'middle'
-              })
-            },
-            geometries: labelGeoms
-          });
-        } catch(labelErr) {
-          // Label layer unavailable on this device — circles alone are still informative
-        }
+        new TMap.MultiMarker({ map: map, styles: pinStyles, geometries: pinGeoms });
       } catch(e3) {
         // Final fallback: plain text markers (no HTML)
         try {
@@ -3439,14 +3414,14 @@ function renderRealMap() {
         } catch(e4) {}
       }
 
-      // Fit bounds
+      // Fit bounds to all pins
       try {
         var bounds = new TMap.LatLngBounds();
-        path.forEach(function(p){ bounds.extend(p); });
-        map.fitBounds(bounds, { padding: 40 });
+        pts.forEach(function(p){ bounds.extend(new TMap.LatLng(p.lat, p.lng)); });
+        map.fitBounds(bounds, { padding: 60 });
       } catch(e4) {}
 
-      hint.textContent = '轨迹线按时间连接 · 热力点=到访次数';
+      hint.textContent = '图钉大小=到访次数 · 点击行程可编辑坐标';
     } catch(err) {
       // Fallback to dot heatmap on any TMap error
       wrap.style.display = 'none';

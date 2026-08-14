@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.28
+// amber的工作台 Service Worker v14.29
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.28: 修复腾讯地图marker在iOS Safari显示CSS乱码（改用矢量MultiCircle+MultiLabel替代HTML MultiMarker）
+// v14.29: 旅行地图改为「带数量的小图钉」（SVG data-URI 图标，无 HTML、无轨迹线）
 
-const VERSION = 'amber-workbench-v14.28';
+const VERSION = 'amber-workbench-v14.29';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
