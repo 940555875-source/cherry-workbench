@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.19
+// amber的工作台 Service Worker v14.21
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.19: 删除旅行功能（地图在iOS Safari无法稳定渲染），清理world-map相关资源
+// v14.21: 新增旅行规划模块（时间轴按年份分组，支持增删改查+完成标记）
 
-const VERSION = 'amber-workbench-v14.19';
+const VERSION = 'amber-workbench-v14.21';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

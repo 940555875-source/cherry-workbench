@@ -458,6 +458,50 @@ body{
 }
 .event-item:hover .event-del{opacity:1}
 .event-del:hover{background:#FFEBEE;color:#F44336}
+/* 已结束事件：置底分组 + 置灰 + 删除线 */
+.event-sep{
+  list-style:none;font-size:12px;font-weight:600;color:var(--gray-400);
+  padding:10px 2px 2px;margin-top:6px;border-top:1px dashed var(--gray-200);
+}
+.event-item.ended{opacity:.5;border-left-color:var(--gray-300)}
+.event-item.ended .event-title{text-decoration:line-through}
+
+/* ===== Travel Planning Timeline ===== */
+.travel-card{border-top:3px solid var(--orange-300)}
+.travel-year{
+  font-size:18px;font-weight:700;color:var(--gray-800);
+  padding:16px 0 8px;margin-top:4px;
+}
+.travel-year:first-child{margin-top:0}
+.travel-list{list-style:none;display:flex;flex-direction:column;gap:0}
+.travel-item{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-radius:var(--radius-xs);background:var(--gray-50);
+  transition:all .15s;cursor:pointer;
+}
+.travel-item:hover{background:var(--orange-50)}
+.travel-check{
+  width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-300);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:13px;color:#fff;background:transparent;
+  transition:all .15s;cursor:pointer;user-select:none;
+}
+.travel-check.done{background:var(--orange-400);border-color:var(--orange-400)}
+.travel-info{flex:1;min-width:0}
+.travel-title{font-size:14px;font-weight:500;color:var(--gray-800)}
+.travel-item.done .travel-title{text-decoration:line-through;color:var(--gray-400)}
+.travel-tag{
+  font-size:11px;color:var(--orange-600);background:var(--orange-50);
+  padding:1px 6px;border-radius:10px;margin-left:4px;
+}
+.travel-del{
+  width:24px;height:24px;border-radius:50%;border:none;
+  background:transparent;color:var(--gray-400);cursor:pointer;
+  font-size:15px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;opacity:0;flex-shrink:0;
+}
+.travel-item:hover .travel-del{opacity:1}
+.travel-del:hover{background:#FFEBEE;color:#F44336}
 
 /* ===== Check-in ===== */
 .checkin-card{border-top:3px solid #4CAF50}
@@ -771,11 +815,12 @@ body{
       <button class="nav-item active" data-page="overview"><span class="nav-emoji">🏠</span> 总览</button>
       <button class="nav-item" data-page="plans"><span class="nav-emoji">📋</span> 每日计划</button>
       <button class="nav-item" data-page="events"><span class="nav-emoji">🔔</span> 事件提醒</button>
+      <button class="nav-item" data-page="travels"><span class="nav-emoji">✈️</span> 旅行规划</button>
       <button class="nav-item" data-page="checkins"><span class="nav-emoji">✅</span> 打卡</button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.19</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.21</div>
     </div>
   </aside>
 
@@ -883,6 +928,20 @@ body{
       </div>
     </div>
 
+    <!-- PAGE: 旅行规划 -->
+    <div class="page" id="page-travels">
+      <div class="card travel-card">
+        <div class="card-header">
+          <span class="card-title">✈️ 旅行规划</span>
+          <button class="btn-add" id="btnAddTravel" style="background:var(--orange-400)">➕ 添加行程</button>
+        </div>
+        <div class="card-body">
+          <div id="travelTimeline"></div>
+          <div class="plan-empty" id="travelEmpty">还没有旅行计划，点击右上角添加 ✈️</div>
+        </div>
+      </div>
+    </div>
+
 
   <!-- === Mobile Bottom Nav === -->
   <nav class="mobile-nav" id="mobileNav">
@@ -890,6 +949,7 @@ body{
       <button class="mobile-nav-item active" data-page="overview"><span class="mni-icon">🏠</span>总览</button>
       <button class="mobile-nav-item" data-page="plans"><span class="mni-icon">📋</span>计划</button>
       <button class="mobile-nav-item" data-page="events"><span class="mni-icon">🔔</span>事件</button>
+      <button class="mobile-nav-item" data-page="travels"><span class="mni-icon">✈️</span>旅行</button>
       <button class="mobile-nav-item" data-page="checkins"><span class="mni-icon">✅</span>打卡</button>
     </div>
   </nav>
@@ -1022,6 +1082,23 @@ body{
   </div>
 </div>
 
+<!-- === Travel Modal (add/edit) === -->
+<div class="modal-overlay hidden" id="travelOverlay">
+  <div class="modal" style="max-width:400px">
+    <h2 id="travelModalTitle">➕ 添加行程</h2>
+    <label>时间</label>
+    <input type="text" id="tvPeriod" placeholder="如：1月、9~10月" maxlength="30">
+    <label>目的地</label>
+    <input type="text" id="tvDest" placeholder="如：马来西亚、贵州" maxlength="100">
+    <label>标签（可选）</label>
+    <input type="text" id="tvTag" placeholder="如：羽毛球" maxlength="30">
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnTravelCancel">取消</button>
+      <button class="btn btn-primary" id="btnTravelSave" style="background:var(--orange-500)">保存</button>
+    </div>
+  </div>
+</div>
+
 <!-- === Settings Modal === -->
 <div class="modal-overlay hidden" id="settingsOverlay">
   <div class="modal">
@@ -1053,7 +1130,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.19 — supabase-js 改为非阻塞+双CDN兜底加载，旅游地图不再被 CDN 阻塞
+// amber的工作台 v14.21 — 事件提醒排序优化 + 新增旅行规划时间轴模块
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1558,6 +1635,7 @@ function initNavigation() {
     if (page === 'overview') { renderCalendar(); renderOverviewModules(); renderOvStats(); updateClock(); }
     if (page === 'plans') renderPlanPage();
     if (page === 'events') renderEventPage();
+    if (page === 'travels') renderTravelPage();
     if (page === 'checkins') renderCheckinPage();
   };
 
@@ -1870,6 +1948,17 @@ function eventRangeLabel(ev) {
     return `${startLabel} → ${ed.getMonth()+1}/${ed.getDate()} 周${days[ed.getDay()]}`;
   }
   return `${startLabel} ${ev.time || ''}`;
+}
+
+// 事件「结束时刻」：用于区分「待开始 / 已结束」。
+// 跨天事件以结束日期+结束时间判定；无结束时间按当日 23:59:59 计（含整天）。
+function eventEndMs(ev) {
+  if (ev.end_date) {
+    const t = ev.end_time || '23:59';
+    return new Date(ev.end_date + 'T' + t + ':59').getTime();
+  }
+  const t = ev.time || '23:59';
+  return new Date(ev.date + 'T' + t + ':59').getTime();
 }
 
 // ============================================================
@@ -2189,18 +2278,32 @@ $('#planDetailBody').addEventListener('change', e => {
 // EVENTS (with tombstone CRUD)
 // ============================================================
 function renderEventPage() {
-  const sorted = [...state.events].sort((a,b) => {
-    if (a.date !== b.date) return a.date > b.date ? 1 : -1;
-    return (a.time||'') > (b.time||'') ? 1 : -1;
-  });
+  const now = Date.now();
+  const upcoming = [], ended = [];
+  state.events.forEach(ev => (eventEndMs(ev) < now ? ended : upcoming).push(ev));
+  // 待开始：日期 + 时间 从早到晚
+  upcoming.sort((a,b) => a.date !== b.date ? (a.date > b.date ? 1 : -1) : ((a.time||'') > (b.time||'') ? 1 : -1));
+  // 已结束：置底，按结束时刻倒序（最近结束的靠近分隔线）
+  ended.sort((a,b) => eventEndMs(b) - eventEndMs(a));
+  const sorted = upcoming.concat(ended);
+
   const list = $('#eventList'), empty = $('#eventEmpty');
   list.innerHTML = '';
   if (sorted.length === 0) { list.classList.add('hidden'); empty.classList.remove('hidden'); }
   else {
     list.classList.remove('hidden'); empty.classList.add('hidden');
+    let sepAdded = false;
     sorted.forEach(ev => {
+      const isEnded = eventEndMs(ev) < now;
+      if (isEnded && !sepAdded) {
+        const sep = document.createElement('li');
+        sep.className = 'event-sep';
+        sep.textContent = '已结束';
+        list.appendChild(sep);
+        sepAdded = true;
+      }
       const li = document.createElement('li');
-      li.className = 'event-item';
+      li.className = 'event-item' + (isEnded ? ' ended' : '');
       li.style.cursor = 'pointer';
       li.innerHTML = `<div class="event-info"><div class="event-title">${escapeHtml(ev.title)}</div><div class="event-meta">📅 ${escapeHtml(eventRangeLabel(ev))}</div>${ev.desc_text ? `<div class="event-desc-text">${escapeHtml(ev.desc_text)}</div>` : ''}</div><button class="event-del" data-id="${ev.id}">×</button>`;
       list.appendChild(li);
@@ -2688,6 +2791,7 @@ function switchToPage(page) {
   if (page === 'overview') { renderCalendar(); renderOvStats(); renderOverviewModules(); updateClock(); }
   if (page === 'plans') { state.planSelectedDate = fmtDate(new Date()); renderPlanPage(); }
   if (page === 'events') renderEventPage();
+  if (page === 'travels') renderTravelPage();
   if (page === 'checkins') renderCheckinPage();
 }
 // Exposed globally for inline onclick handlers (stat cards + overview modules)
@@ -2803,6 +2907,126 @@ function renderWidgetPanel() {
   if (upcoming.length === 0) $('#wEvents').innerHTML = '<li style="color:var(--gray-400);background:transparent">暂无事件</li>';
   else upcoming.forEach(e => { const li = document.createElement('li'); li.textContent = `${e.date.slice(5)} ${e.title}`; $('#wEvents').appendChild(li); });
 }
+
+// ============================================================
+// TRAVEL PLANNING — timeline grouped by year
+// ============================================================
+
+// Parse period text into a sortable year-month key for ordering.
+// Examples: "1月" → current year, "9~10月" → current year, "2025年1月" → 2025-01
+function travelSortKey(period) {
+  if (!period) return '9999-99';
+  const m = period.match(/(\d{4})?年?(\d+)[~\-～](\d+)?月?/);
+  if (m) {
+    const y = m[1] || new Date().getFullYear();
+    return y + '-' + String(m[2]).padStart(2,'0');
+  }
+  // Fallback: try to extract any leading number as month
+  const m2 = period.match(/(\d+)/);
+  if (m2) return new Date().getFullYear() + '-' + String(m2[1]).padStart(2,'0');
+  return '9999-99';
+}
+
+function renderTravelPage() {
+  const container = $('#travelTimeline');
+  const empty = $('#travelEmpty');
+  container.innerHTML = '';
+
+  if (state.travels.length === 0) {
+    container.classList.add('hidden');
+    empty.classList.remove('hidden');
+    return;
+  }
+  container.classList.remove('hidden');
+  empty.classList.add('hidden');
+
+  // Sort by sort key (year-month ascending)
+  const sorted = [...state.travels].sort((a,b) => (a.sort_key||'').localeCompare(b.sort_key||''));
+
+  // Group by year
+  const groups = {};
+  sorted.forEach(t => {
+    const y = (t.sort_key || '').slice(0,4) || '----';
+    if (!groups[y]) groups[y] = [];
+    groups[y].push(t);
+  });
+
+  Object.keys(groups).sort().forEach(year => {
+    // Year header
+    const yh = document.createElement('div');
+    yh.className = 'travel-year';
+    yh.textContent = year + '年';
+    container.appendChild(yh);
+
+    // Items list
+    const ul = document.createElement('ul');
+    ul.className = 'travel-list';
+    groups[year].forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'travel-item' + (t.done ? ' done' : '');
+      li.innerHTML =
+        `<div class="travel-check${t.done ? ' done' : ''}" data-id="${t.id}">${t.done ? '✓' : ''}</div>` +
+        `<div class="travel-info">` +
+          `<div class="travel-title">${escapeHtml(t.period || '')} ${escapeHtml(t.destination || '')}${t.tag ? `<span class="travel-tag">（${escapeHtml(t.tag)}）</span>` : ''}</div>` +
+        `</div>` +
+        `<button class="travel-del" data-id="${t.id}">×</button>`;
+      ul.appendChild(li);
+    });
+    container.appendChild(ul);
+  });
+}
+
+// Travel list click delegation: toggle done / delete
+$('#travelTimeline').addEventListener('click', e => {
+  const check = e.target.closest('.travel-check');
+  if (check) {
+    e.stopPropagation();
+    const id = check.dataset.id;
+    const t = state.travels.find(x => x.id === id);
+    if (t) { updateRecord('travels', id, { done: !t.done }); renderTravelPage(); }
+    return;
+  }
+  const del = e.target.closest('.travel-del');
+  if (del) { deleteRecord('travels', del.dataset.id); renderTravelPage(); return; }
+});
+
+let _editingTravelId = null;
+
+function openTravelModal(travelObj) {
+  _editingTravelId = travelObj ? travelObj.id : null;
+  $('#travelModalTitle').textContent = travelObj ? '✏️ 编辑行程' : '➕ 添加行程';
+  $('#tvPeriod').value = travelObj ? (travelObj.period || '') : '';
+  $('#tvDest').value = travelObj ? (travelObj.destination || '') : '';
+  $('#tvTag').value = travelObj ? (travelObj.tag || '') : '';
+  $('#travelOverlay').classList.remove('hidden');
+  setTimeout(() => $('#tvPeriod').focus(), 100);
+}
+
+function closeTravelModal() { $('#travelOverlay').classList.add('hidden'); _editingTravelId = null; }
+
+function saveTravelModal() {
+  const period = $('#tvPeriod').value.trim();
+  const destination = $('#tvDest').value.trim();
+  const tag = $('#tvTag').value.trim();
+  if (!period || !destination) { showDiagToast('请填写时间和目的地', 'error'); return; }
+
+  const payload = { period, destination, tag: tag || null, sort_key: travelSortKey(period), done: false };
+  if (_editingTravelId) {
+    const existing = state.travels.find(x => x.id === _editingTravelId);
+    payload.done = existing ? existing.done : false;
+    updateRecord('travels', _editingTravelId, payload);
+  } else {
+    createRecord('travels', { id: 't_' + Date.now(), ...payload });
+  }
+  closeTravelModal();
+  renderTravelPage();
+}
+
+$('#btnAddTravel').addEventListener('click', () => openTravelModal());
+$('#btnTravelSave').addEventListener('click', saveTravelModal);
+$('#btnTravelCancel').addEventListener('click', closeTravelModal);
+$('#travelOverlay').addEventListener('click', e => { if (e.target === $('#travelOverlay')) closeTravelModal(); });
+$('#tvDest').addEventListener('keydown', e => { if (e.key === 'Enter') saveTravelModal(); });
 
 // ============================================================
 // SETTINGS
