@@ -1021,7 +1021,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.34</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.35</div>
     </div>
   </aside>
 
@@ -1490,7 +1490,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.34 — cloudPull表/列缺失降级+seed幂等补全缺失数据
+// amber的工作台 v14.35 — schema cache 过期不剥字段（提示刷新缓存）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1666,8 +1666,15 @@ async function cloudPush(tableName, records) {
     const { error } = await sb.from(tableName).upsert(attemptRecords);
     if (!error) return true;
     lastErr = error;
-    // PG 报「Could not find the 'xxx' column」时，剥掉该字段重试
-    const m = error.message && error.message.match(/Could not find the '(\w+)' column/i);
+    const msg = error.message || '';
+    // 遇到 schema cache 过期（刚建表/列，PostgREST 未识别）：
+    // 不要剥字段（会把所有字段剥光上传空记录），直接提示用户刷新 schema cache
+    if (/schema cache/i.test(msg) && /could not find/i.test(msg)) {
+      console.warn('Push: schema cache stale — run `NOTIFY pgrst, \'reload schema\';`', tableName, msg);
+      break;
+    }
+    // PG 报「Could not find the 'xxx' column」且非 cache 问题时，剥掉该字段重试
+    const m = msg.match(/Could not find the '(\w+)' column/i);
     if (m) {
       console.warn('Push retry without unknown column', m[1]);
       const col = m[1];
