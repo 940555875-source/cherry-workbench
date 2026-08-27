@@ -1667,6 +1667,11 @@ async function cloudPush(tableName, records) {
     if (!error) return true;
     lastErr = error;
     const msg = error.message || '';
+    // 表不存在：剥成只剩 id 元数据列也上传失败，直接放弃剥字段（用户应建表）
+    if (/Could not find the table.*schema cache|relation.*does not exist/i.test(msg)) {
+      console.warn('Push: table missing — run the SQL to create tables', tableName, msg);
+      break;
+    }
     // 遇到 schema cache 过期（刚建表/列，PostgREST 未识别）：
     // 不要剥字段（会把所有字段剥光上传空记录），直接提示用户刷新 schema cache
     if (/schema cache/i.test(msg) && /could not find/i.test(msg)) {
