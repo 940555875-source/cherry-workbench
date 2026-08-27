@@ -898,6 +898,12 @@ body{
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .ov-module-item.done{text-decoration:line-through;opacity:.5}
+/* 年度回顾 */
+.ov-year-review{grid-column:1 / -1}
+.ov-yr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.ov-yr-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;background:var(--gray-50);border-radius:10px}
+.ov-yr-num{font-size:18px;font-weight:700;letter-spacing:-.5px}
+.ov-yr-label{font-size:11px;color:var(--gray-500)}
 .ov-checkin-item{padding:8px;background:var(--gray-50);border-radius:8px}
 .ov-checkin-item.done{background:#F1F8E9}
 .ov-checkin-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
@@ -1034,6 +1040,7 @@ body{
   .mobile-nav{display:block}
   .main{padding:14px 14px 90px;gap:14px}
   .overview-modules{grid-template-columns:1fr}
+  .ov-yr-grid{grid-template-columns:repeat(2,1fr)}
   .event-input-row{flex-direction:column}
   .widget-toggle{display:flex;align-items:center;justify-content:center}
   .cal-day{font-size:11px;padding:3px 2px;min-height:64px}
@@ -1094,7 +1101,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.40</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.41</div>
     </div>
   </aside>
 
@@ -1178,7 +1185,8 @@ body{
       <div class="card event-card">
         <div class="card-header">
           <span class="card-title">🔔 事件提醒</span>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-add" id="btnExportIcs" style="background:#43A047" title="把所有事件导出为 .ics 文件，导入系统日历/飞猪工作流">📅 导出日历</button>
             <button class="btn-add" id="btnAutoClassifyEvents" style="background:#FF9800" title="按标题关键字批量给未分类事件自动打分类">🎨 一键分类</button>
             <button class="btn-add" id="btnAddEvent" style="background:var(--blue-400)">➕ 添加事件</button>
           </div>
@@ -1588,7 +1596,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.40 — 暗色模式 + 数据备份 + 移除 links 孤儿表 + 清理死文件
+// amber的工作台 v14.41 — 事件导出系统日历(ICS) + 年度回顾 + 多端冲突检测
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1731,6 +1739,24 @@ const PUSH_FAIL_THRESHOLD = 2;
 let pushFailCount = {};     // tableName -> 连续失败次数
 let disabledTables = new Set();
 
+// v14.41: 多端冲突日志 —— 云端 updated_at 覆盖本地时的记录（另一设备修改了同一记录）
+let syncConflictLog = [];
+const SYNC_CONFLICT_LOG_KEY = 'sync.conflictLog.v1';
+function loadConflictLog() {
+  try { syncConflictLog = JSON.parse(localStorage.getItem(SYNC_CONFLICT_LOG_KEY) || '[]'); } catch { syncConflictLog = []; }
+}
+function recordConflict(key, rec) {
+  const entry = {
+    key, id: rec.id,
+    label: rec.title || rec.text || rec.name || rec.destination || rec.item || rec.id,
+    time: new Date().toISOString(),
+  };
+  syncConflictLog.push(entry);
+  if (syncConflictLog.length > 50) syncConflictLog = syncConflictLog.slice(-50);
+  localStorage.setItem(SYNC_CONFLICT_LOG_KEY, JSON.stringify(syncConflictLog));
+}
+window.showSyncConflicts = () => { console.table(syncConflictLog); return syncConflictLog; };
+
 function loadDisabledTables() {
   try {
     const raw = localStorage.getItem(DISABLED_TABLES_KEY);
@@ -1756,6 +1782,7 @@ window.resetDisabledTables = () => {
   setSyncStatus('online', '已就绪');
 };
 loadDisabledTables();
+loadConflictLog();
 
 // ============================================================
 // TOMBSTONE SYNC ENGINE
@@ -1934,6 +1961,8 @@ async function fullSync(key) {
         const cloudTime = new Date(cr.updated_at || 0).getTime();
         const localTime = new Date(local.updated_at || 0).getTime();
         if (cloudTime > localTime) {
+          // v14.41: 云端更新覆盖本地 → 记录冲突（另一设备修改了同一记录；2s 阈值排除时钟抖动）
+          if (cloudTime - localTime > 2000) recordConflict(key, local);
           mergedMap[cr.id] = { ...local, ...cr, id: cr.id }; // cloud wins but keep local shape
         }
       }
@@ -1976,8 +2005,10 @@ async function fullSync(key) {
 /** 并发同步所有表后合并徽章状态：全部 ok → online；有任何 partial 且无 error → partial；
  *  全部 error → error */
 async function fullSyncAll() {
+  const conflictBefore = syncConflictLog.length;
   const keys = Object.keys(TABLE_MAP);
   const results = await Promise.all(keys.map(k => fullSync(k)));
+  const newConflicts = syncConflictLog.length - conflictBefore;
   const hasError = results.includes('error');
   const hasPartial = results.includes('partial');
   if (hasError) {
@@ -1988,6 +2019,9 @@ async function fullSyncAll() {
       `已熔断表: ${disabledNow.join(', ')}。控制台执行 resetDisabledTables() 重试`);
   } else {
     setSyncStatus('online', '已同步');
+  }
+  if (newConflicts > 0) {
+    console.warn(`⚠️ 同步时 ${newConflicts} 条记录被云端较新版本覆盖（多端修改冲突），已采用云端版本。控制台执行 showSyncConflicts() 查看明细。`);
   }
 }
 
@@ -3067,6 +3101,75 @@ $('#btnEventViewPlans').addEventListener('click', () => { const d = $('#emDate')
 $('#emTitle').addEventListener('keydown', e => { if (e.key === 'Enter') saveEventModal(); });
 
 // ============================================================
+// ICS EXPORT — push events to system calendar (配合飞猪/系统日历工作流)
+//   生成 .ics 文件下载，导入 macOS 系统日历后手机可系统级弹提醒
+// ============================================================
+function icsEscape(s) {
+  return String(s == null ? '' : s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+}
+function icsDateStr(dateStr) { return (dateStr || '').replace(/-/g, ''); }           // 'YYYY-MM-DD' -> 'YYYYMMDD'
+function icsTimeStr(t) { return (t || '').replace(/:/g, '').padEnd(6, '0').slice(0, 6); } // 'HH:MM' -> 'HHMMSS'
+function icsAddMinutes(dateStr, timeStr, minutes) {
+  const d = new Date(dateStr + 'T' + (timeStr || '00:00'));
+  d.setMinutes(d.getMinutes() + minutes);
+  const p = n => String(n).padStart(2, '0');
+  return { date: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`, time: `${p(d.getHours())}:${p(d.getMinutes())}` };
+}
+
+function exportEventsICS() {
+  const events = state.events;
+  if (!events.length) { showDiagToast('暂无事件可导出', 'error'); return; }
+  const lines = [];
+  lines.push('BEGIN:VCALENDAR');
+  lines.push('VERSION:2.0');
+  lines.push('PRODID:-//amber-workbench//CN');
+  lines.push('CALSCALE:GREGORIAN');
+  lines.push('METHOD:PUBLISH');
+  lines.push('X-WR-CALNAME:amber的工作台');
+
+  events.forEach(ev => {
+    const allDay = !ev.time; // 无时间 → 全天事件
+    let dtstart, dtend;
+    if (allDay) {
+      dtstart = 'DTSTART;VALUE=DATE:' + icsDateStr(ev.date);
+      const end = ev.end_date && ev.end_date > ev.date ? ev.end_date : ev.date;
+      const next = new Date(end + 'T00:00:00'); next.setDate(next.getDate() + 1);
+      dtend = 'DTEND;VALUE=DATE:' + icsDateStr(fmtDate(next));
+    } else {
+      dtstart = 'DTSTART:' + icsDateStr(ev.date) + 'T' + icsTimeStr(ev.time);
+      let endDate = ev.date, endTime = ev.time;
+      if (ev.end_date && ev.end_date !== ev.date) { endDate = ev.end_date; endTime = ev.end_time || ev.time; }
+      else if (ev.end_time && ev.end_time !== ev.time) { endTime = ev.end_time; }
+      else { const r = icsAddMinutes(ev.date, ev.time, 60); endDate = r.date; endTime = r.time; }
+      dtend = 'DTEND:' + icsDateStr(endDate) + 'T' + icsTimeStr(endTime);
+    }
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + (ev.id || ('e_' + Date.now())) + '@amber-workbench');
+    lines.push(dtstart);
+    lines.push(dtend);
+    lines.push('SUMMARY:' + icsEscape(ev.title));
+    let desc = ev.desc_text || '';
+    if (ev.cat) desc = (desc ? desc + '\n' : '') + '分类: ' + ev.cat;
+    if (desc) lines.push('DESCRIPTION:' + icsEscape(desc));
+    lines.push('END:VEVENT');
+  });
+
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'amber-events-' + fmtDate(new Date()) + '.ics';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showDiagToast('已导出 ' + events.length + ' 条事件', 'online');
+}
+window.exportEventsICS = exportEventsICS;
+$('#btnExportIcs').addEventListener('click', exportEventsICS);
+
+// ============================================================
 // ICS IMPORT — pull events from local calendar app
 //   Source: .ics file exported by Apple Calendar / Outlook / Google Calendar
 // ============================================================
@@ -3533,6 +3636,55 @@ $('#ovStats').addEventListener('click', e => {
   if (btn) { e.stopPropagation(); checkinIncrement(btn.dataset.id); }
 });
 
+// 年度回顾：汇总今年的旅行/打卡/计划/事件/预算执行情况
+function renderYearReviewHTML() {
+  const year = new Date().getFullYear();
+  const y = String(year);
+
+  // 旅行：今年出行次数 + 总花费
+  const trips = state.travels.filter(t => t.year === year);
+  let tripCost = 0;
+  trips.forEach(t => { const n = budgetN(t.cost); if (n !== null) tripCost += n; });
+
+  // 打卡：今年打卡总数 + 当前连续天数（取所有习惯最大值）
+  let ckTotal = 0, bestStreak = 0;
+  state.checkins.forEach(h => {
+    (h.dates || []).forEach(d => { if (d.startsWith(y)) ckTotal++; });
+    bestStreak = Math.max(bestStreak, calcStreak(h.dates));
+  });
+
+  // 完成计划（今年）
+  const donePlans = state.plans.filter(p => p.done && String(planEffectiveDate(p) || '').startsWith(y)).length;
+
+  // 完成事件（今年已结束）
+  const now = Date.now();
+  const doneEvents = state.events.filter(e => eventEndMs(e) < now && (e.date.startsWith(y) || (e.end_date && e.end_date.startsWith(y)))).length;
+
+  // 预算执行率（今年）
+  const blist = state.budget.filter(b => b.year === year);
+  let total = 0, actual = 0;
+  blist.forEach(b => {
+    const bn = budgetN(b.budget); if (bn !== null) total += bn;
+    const an = budgetN(b.actual); if (an !== null) actual += an;
+  });
+  const bpct = total > 0 ? Math.round(actual / total * 100) : 0;
+
+  const items = [
+    { n: trips.length, label: '✈️ 出行', color: 'var(--blue-400)' },
+    { n: tripCost > 0 ? fmtMoney(tripCost) : '—', label: '💰 旅行花费', color: '#EC7FA0' },
+    { n: ckTotal, label: '✅ 累计打卡', color: '#4CAF50' },
+    { n: bestStreak, label: '🔥 连续打卡', color: '#FF9800' },
+    { n: donePlans, label: '📋 完成计划', color: 'var(--pink-400)' },
+    { n: doneEvents, label: '🔔 完成事件', color: 'var(--blue-500)' },
+  ];
+  const grid = items.map(it => `<div class="ov-yr-item"><span class="ov-yr-num" style="color:${it.color}">${it.n}</span><span class="ov-yr-label">${it.label}</span></div>`).join('');
+
+  return `<div class="ov-module ov-year-review" onclick="switchToPage('budget')">
+    <div class="ov-module-header"><span class="ov-module-title">📊 ${year} 年度回顾</span><span class="ov-module-badge green">预算 ${bpct}%</span></div>
+    <div class="ov-yr-grid">${grid}</div>
+  </div>`;
+}
+
 function renderOverviewModules() {
   // Ensure seed data exists before computing overview stats (first-time visit)
   seedTravelData();
@@ -3553,7 +3705,8 @@ function renderOverviewModules() {
     <div class="ov-module" style="text-align:center;padding:20px">
       <div style="font-size:28px;font-weight:300;letter-spacing:-1px" id="ovClock">--:--</div>
       <div style="font-size:12px;color:var(--gray-400);margin-top:4px" id="ovDate">----年--月--日 星期-</div>
-    </div>`;
+    </div>
+    ${renderYearReviewHTML()}`;
   updateClock();
   renderOvStats();
 }
