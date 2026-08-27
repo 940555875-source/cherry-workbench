@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.30
+// amber的工作台 Service Worker v14.31
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.30: 事件新增分类（竞体/运动/医美/其他），日历按分类着色+列表标签+总览色点+图例
+// v14.31: SW更新增强——加载/切前台主动update()检查，新SW激活后自动刷新（解决iOS PWA不更新）
 
-const VERSION = 'amber-workbench-v14.30';
+const VERSION = 'amber-workbench-v14.31';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

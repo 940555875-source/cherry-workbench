@@ -950,7 +950,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.30</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.31</div>
     </div>
   </aside>
 
@@ -1419,7 +1419,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.30 — 事件分类（竞体/运动/医美/其他）+ 日历分类着色
+// amber的工作台 v14.31 — SW更新增强（加载/切前台主动检查，新版本自动刷新）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -4201,15 +4201,35 @@ function registerSW() {
   if ('serviceWorker' in navigator) {
     // Use a relative path so this resolves correctly on GitHub Pages
     // (deployed under /cherry-workbench/, not the domain root).
-    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
-    // 当新 Service Worker 接管时（即发布了新版本），自动刷新页面以获取最新代码，
-    // 避免用户一直停留在旧缓存版本。（配合 sw.js 的 clients.claim() 生效）
     let reloaded = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
+    const onControllerChange = () => {
       if (reloaded) return;
       reloaded = true;
       window.location.reload();
-    });
+    };
+    // 当新 Service Worker 接管时（即发布了新版本），自动刷新页面以获取最新代码
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
+    navigator.serviceWorker.register('./sw.js', { scope: './' })
+      .then(reg => {
+        // iOS Safari/PWA 的 SW 更新检查很保守，这里主动触发检查：
+        // 1) 每次页面加载后 2) 每次切回前台时
+        const checkUpdate = () => reg.update().catch(() => {});
+        checkUpdate();
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') checkUpdate();
+        });
+        // 检测到新 SW 下载 → 等它激活（sw.js 有 skipWaiting+clients.claim）→ 自动刷新
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'activated') onControllerChange();
+            });
+          }
+        });
+      })
+      .catch(() => {});
   }
 }
 
