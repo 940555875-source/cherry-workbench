@@ -1021,7 +1021,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.32</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.33</div>
     </div>
   </aside>
 
@@ -1490,7 +1490,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.32 — 总览顶部4张丰富汇总卡（今日任务/打卡/预算/旅行）
+// amber的工作台 v14.33 — cloudPush容错（剥除未知字段重试，解决cat同步失败）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1641,12 +1641,32 @@ async function cloudPull(tableName) {
   return data || [];
 }
 
-/** Push (upsert) records to cloud. Returns true on success. */
+/** Push (upsert) records to cloud. Returns true on success.
+ *  Robust 容错 — 如果表 schema 缺失某字段（如 cat 未建列），会自动剥除未知字段重试，
+ *  避免「未知字段导致整批 upsert 失败」，保证基础同步不被一个新增列卡死。 */
 async function cloudPush(tableName, records) {
   if (!sb || !records.length) return false;
-  const { error } = await sb.from(tableName).upsert(records);
-  if (error) { console.warn('Push error', tableName, error.message); return false; }
-  return true;
+  let attemptRecords = records;
+  let lastErr = null;
+  for (let i = 0; i < 4; i++) {
+    const { error } = await sb.from(tableName).upsert(attemptRecords);
+    if (!error) return true;
+    lastErr = error;
+    // PG 报「Could not find the 'xxx' column」时，剥掉该字段重试
+    const m = error.message && error.message.match(/Could not find the '(\w+)' column/i);
+    if (m) {
+      console.warn('Push retry without unknown column', m[1]);
+      const col = m[1];
+      attemptRecords = attemptRecords.map(r => {
+        const { [col]: _, ...rest } = r;
+        return rest;
+      });
+      continue;
+    }
+    break;
+  }
+  console.warn('Push error', tableName, lastErr && lastErr.message);
+  return false;
 }
 
 /** Mark a record as deleted (tombstone) in cloud. Returns true on success. */

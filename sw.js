@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.32
+// amber的工作台 Service Worker v14.33
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.32: 总览顶部改为4张丰富汇总卡（今日任务/打卡项目/年度预算/旅游计划），打卡卡可直接+1
+// v14.33: cloudPush容错——表schema缺失字段时剥除未知列重试（解决v14.30 cat字段同步失败）
 
-const VERSION = 'amber-workbench-v14.32';
+const VERSION = 'amber-workbench-v14.33';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
