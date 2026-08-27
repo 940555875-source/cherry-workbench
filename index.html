@@ -366,6 +366,77 @@ body{
 .stat-card.green .stat-value{color:#2E7D32}
 .stat-card.blue .stat-value{color:var(--blue-500)}
 
+/* ===== Rich Overview Stats (2x2 cards) ===== */
+.ov-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.ov-stat-card{
+  background:rgba(255,255,255,.92);border-radius:14px;
+  padding:14px 14px 12px;box-shadow:var(--shadow);
+  border:1px solid rgba(0,0,0,.04);border-top:3px solid var(--blue-300);
+  display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:all .2s;
+}
+.ov-stat-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.ov-stat-card.c-orange{border-top-color:#FF9800}
+.ov-stat-card.c-green{border-top-color:#4CAF50}
+.ov-stat-card.c-blue{border-top-color:var(--blue-300)}
+.ov-stat-card.c-pink{border-top-color:var(--pink-300)}
+.ov-stat-head{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:13px;font-weight:700;color:var(--gray-800);
+}
+.ov-stat-head .ov-stat-badge{
+  font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;color:#fff;white-space:nowrap;
+}
+.ov-stat-head .badge-orange{background:#FF9800}
+.ov-stat-head .badge-green{background:#4CAF50}
+.ov-stat-head .badge-blue{background:var(--blue-400)}
+.ov-stat-head .badge-pink{background:var(--pink-300)}
+.ov-stat-body{font-size:12px;color:var(--gray-600);line-height:1.5;min-height:20px}
+.ov-stat-bar{height:7px;background:var(--gray-200);border-radius:5px;overflow:hidden}
+.ov-stat-fill{height:100%;border-radius:5px;transition:width .4s}
+.ov-stat-fill.f-orange{background:linear-gradient(90deg,#FFB74D,#F57C00)}
+.ov-stat-fill.f-green{background:linear-gradient(90deg,#81C784,#4CAF50)}
+.ov-stat-fill.f-blue{background:linear-gradient(90deg,#7EB8DA,#42A5F5)}
+.ov-stat-fill.f-pink{background:linear-gradient(90deg,#F48FB1,#EC7FA0)}
+.ov-stat-items{display:flex;flex-direction:column;gap:5px;margin-top:2px}
+.ov-stat-item{
+  display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray-700);
+  overflow:hidden;white-space:nowrap;
+}
+.ov-stat-item .it-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ov-stat-item .it-txt{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ov-stat-item.done .it-txt{text-decoration:line-through;color:var(--gray-400)}
+.ov-stat-item .it-time{flex-shrink:0;font-size:10.5px;color:var(--gray-400);margin-left:auto}
+.ov-stat-num{font-size:18px;font-weight:800;line-height:1.1}
+.ov-stat-num small{font-size:11px;color:var(--gray-400);font-weight:600;margin-left:3px}
+.ov-stat-num .num-orange{color:#E65100}
+.ov-stat-num .num-green{color:#2E7D32}
+.ov-stat-num .num-blue{color:var(--blue-500)}
+.ov-stat-num .num-pink{color:var(--pink-500)}
+.ov-stat-cd{font-size:22px;font-weight:900;color:#EF6C00;line-height:1.1}
+.ov-stat-cd small{font-size:11px;color:var(--gray-500);font-weight:600}
+.ov-stat-ck{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.ov-stat-ck-item{
+  display:flex;align-items:center;gap:7px;background:var(--gray-50);
+  border-radius:9px;padding:7px 9px;
+}
+.ov-stat-ck-item.done{background:#F1F8E9}
+.ov-stat-ck-info{flex:1;min-width:0}
+.ov-stat-ck-name{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ov-stat-ck-bar{height:5px;background:var(--gray-200);border-radius:4px;overflow:hidden;margin-top:4px}
+.ov-stat-ck-fill{height:100%;background:linear-gradient(90deg,#81C784,#4CAF50);border-radius:4px}
+.ov-stat-ck-count{font-size:11px;font-weight:700;color:#2E7D32;white-space:nowrap;flex-shrink:0}
+.ov-stat-ck-btn{
+  border:none;border-radius:8px;padding:5px 10px;font-size:11.5px;font-weight:700;cursor:pointer;
+  background:#4CAF50;color:#fff;flex-shrink:0;transition:all .2s;
+}
+.ov-stat-ck-btn:hover:not(:disabled){background:#43A047}
+.ov-stat-ck-btn:disabled{background:#E8F5E9;color:#2E7D32;cursor:default}
+@media (max-width:640px){
+  .ov-stats-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .ov-stat-card{padding:12px 10px 10px}
+  .ov-stat-ck-btn{padding:4px 8px;font-size:11px}
+}
+
 /* ===== Add Plan Button Bottom ===== */
 .plan-add-bottom{
   display:flex;gap:8px;padding:12px 0 0;margin-top:8px;
@@ -950,7 +1021,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.31</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.32</div>
     </div>
   </aside>
 
@@ -975,7 +1046,7 @@ body{
     <!-- PAGE: 总览 -->
     <div class="page active" id="page-overview">
       <!-- Overview Stats -->
-      <div class="stats-row" id="ovStats"></div>
+      <div class="ov-stats-grid" id="ovStats"></div>
       <div class="card calendar-card">
         <div class="card-header">
           <span class="card-title">📅 月历</span>
@@ -1419,7 +1490,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.31 — SW更新增强（加载/切前台主动检查，新版本自动刷新）
+// amber的工作台 v14.32 — 总览顶部4张丰富汇总卡（今日任务/打卡/预算/旅行）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -3015,51 +3086,35 @@ function checkinCompletedCount() {
 
 function renderOvStats() {
   const today = fmtDate(new Date());
-  const { overdue, todayTasks, doneTasks, futureTasks } = getPlanSections(today);
-  const totalEvents = state.events.filter(e => e.date >= today).length;
-  const totalCheckins = state.checkins.length;
 
-  $('#ovStats').innerHTML = `
-    <div class="stat-card orange" onclick="goPlansSection('overdue')" style="cursor:pointer">
-      <div class="stat-label">未完成</div><div class="stat-value">${overdue.length}</div>
-    </div>
-    <div class="stat-card pink" onclick="goPlansSection('today')" style="cursor:pointer">
-      <div class="stat-label">今日任务</div><div class="stat-value">${todayTasks.length}</div>
-    </div>
-    <div class="stat-card green" onclick="switchToPage('checkins')" style="cursor:pointer">
-      <div class="stat-label">打卡项目</div><div class="stat-value">${totalCheckins}</div>
-    </div>
-    <div class="stat-card blue" onclick="switchToPage('events')" style="cursor:pointer">
-      <div class="stat-label">近期事件</div><div class="stat-value">${totalEvents}</div>
-    </div>`;
-}
-
-function renderOverviewModules() {
-  // Ensure seed data exists before computing overview stats (first-time visit)
-  seedTravelData();
-  seedBudgetData();
-
-  const today = fmtDate(new Date());
+  // --- 今日任务 ---
   const todayPlans = state.plans.filter(p => planEffectiveDate(p) === today);
   const undonePlans = todayPlans.filter(p => !p.done), donePlans = todayPlans.filter(p => p.done);
-  const upcomingEvents = state.events.filter(e => e.date >= today).sort((a,b) => a.date > b.date ? 1 : -1).slice(0, 3);
+  const planPct = todayPlans.length ? Math.round(donePlans.length / todayPlans.length * 100) : 0;
+  const planItems = todayPlans.length > 0
+    ? undonePlans.slice(0, 4).map(p => `<div class="ov-stat-item"><span class="it-dot" style="background:var(--pink-300)"></span><span class="it-txt">${escapeHtml(p.text)}</span></div>`).join('')
+      + donePlans.slice(0, 1).map(p => `<div class="ov-stat-item done"><span class="it-dot" style="background:#4CAF50"></span><span class="it-txt">${escapeHtml(p.text)}</span></div>`).join('')
+    : '';
+
+  // --- 打卡项目（本月周期） ---
   const checkinHabits = [...state.checkins].sort((a, b) => habitCreatedAt(a) - habitCreatedAt(b));
   const checkinDone = checkinHabits.filter(h => habitProgress(h).done).length;
-  const planPct = todayPlans.length ? Math.round(donePlans.length / todayPlans.length * 100) : 0;
+  const ckItems = checkinHabits.length > 0
+    ? checkinHabits.map(h => {
+        const p = habitProgress(h);
+        return `<div class="ov-stat-ck-item${p.done ? ' done' : ''}">
+          <div class="ov-stat-ck-info">
+            <div class="ov-stat-ck-name">🔥 ${escapeHtml(h.name)}</div>
+            <div class="ov-stat-ck-bar"><div class="ov-stat-ck-fill" style="width:${p.pct}%"></div></div>
+          </div>
+          <span class="ov-stat-ck-count">${p.count}/${p.target}</span>
+          <button class="ov-stat-ck-btn" data-id="${h.id}"${p.done ? ' disabled' : ''}>${p.done ? '✓' : '+1'}</button>
+        </div>`;
+      }).join('')
+    : '<div class="ov-stat-body">还没有打卡习惯</div>';
 
-  // Next trip (overview card)
-  let nextTripHtml = '<div class="ov-module-preview">还没有旅行计划</div>';
-  const nextTrip = findNextTrip();
-  if (nextTrip) {
-    const d = daysUntil(nextTrip);
-    const cd = d <= 0 ? '🎉 <small>即将出发</small>' : d + ' <small>天</small>';
-    nextTripHtml =
-      '<div class="ov-nexttrip-dest">' + escapeHtml(nextTrip.destination) + (nextTrip.tag ? '（' + escapeHtml(nextTrip.tag) + '）' : '') + '</div>' +
-      '<div class="ov-nexttrip-cd">' + cd + '</div>' +
-      '<div class="ov-nexttrip-date">' + escapeHtml(travelPeriod(nextTrip)) + '</div>';
-  }
-
-  // Budget progress (overview card, current year)
+  // --- 年度预算 ---
+  seedBudgetData();
   const year = state.budgetYear;
   const blist = state.budget.filter(b => b.year === year);
   let total = 0, actual = 0, hasBudget = false;
@@ -3072,53 +3127,67 @@ function renderOverviewModules() {
     }
   });
   const remaining = total - actual;
-  const pct = total > 0 ? Math.round(actual / total * 100) : 0;
+  const bpct = total > 0 ? Math.round(actual / total * 100) : 0;
   const over = remaining < 0;
-  const budgetHtml = blist.length === 0 ? '<div class="ov-module-preview">还没有预算记录</div>' :
-    '<div class="ov-bd-row"><span class="ov-bd-label">总预算</span><span class="ov-bd-num">' + fmtMoney(total) + '</span></div>' +
-    '<div class="ov-bd-row"><span class="ov-bd-label">已支出</span><span class="ov-bd-num">' + fmtMoney(actual) + '<small>(' + pct + '%)</small></span></div>' +
-    '<div class="ov-bd-row"><span class="ov-bd-label">' + (over ? '超支' : '剩余可支出') + '</span><span class="ov-bd-num' + (over ? ' over' : '') + '">' + fmtMoney(Math.abs(remaining)) + '</span></div>' +
-    (hasBudget ? '<div class="ov-bd-bar"><div class="ov-bd-fill' + (over ? ' over' : '') + '" style="width:' + Math.min(100,pct) + '%"></div></div>' : '');
+  const budgetBody = blist.length === 0 ? '<div class="ov-stat-body">还没有预算记录</div>' :
+    `<div class="ov-stat-body">已支出 <span class="ov-stat-num"><span class="num-blue">${fmtMoney(actual)}</span></span><small>(${bpct}%)</small></div>
+     <div class="ov-stat-bar"><div class="ov-stat-fill f-blue${over ? ' f-orange' : ''}" style="width:${Math.min(100, bpct)}%"></div></div>
+     <div class="ov-stat-body">${over ? '超支' : '剩余可支出'} <span class="ov-stat-num"><span class="${over ? 'num-orange' : 'num-green'}">${fmtMoney(Math.abs(remaining))}</span></span></div>`;
+
+  // --- 旅游计划 ---
+  seedTravelData();
+  let tripBody = '<div class="ov-stat-body">还没有旅行计划</div>';
+  const nextTrip = findNextTrip();
+  if (nextTrip) {
+    const d = daysUntil(nextTrip);
+    const cd = d <= 0 ? '🎉<small>即将出发</small>' : d + '<small>天</small>';
+    tripBody =
+      `<div class="ov-stat-cd">${cd}</div>
+       <div class="ov-stat-body">${escapeHtml(nextTrip.destination)}${nextTrip.tag ? '（' + escapeHtml(nextTrip.tag) + '）' : ''}</div>
+       <div class="ov-stat-body" style="color:var(--gray-400);font-size:11px">${escapeHtml(travelPeriod(nextTrip))}</div>`;
+  }
+
+  $('#ovStats').innerHTML = `
+    <div class="ov-stat-card c-orange" onclick="goPlansSection('today')">
+      <div class="ov-stat-head"><span>📋 今日任务</span><span class="ov-stat-badge badge-pink">${donePlans.length}/${todayPlans.length}</span></div>
+      ${todayPlans.length > 0 ? `<div class="ov-stat-bar"><div class="ov-stat-fill f-pink" style="width:${planPct}%"></div></div><div class="ov-stat-items">${planItems}</div>` : '<div class="ov-stat-body">今天还没有计划</div>'}
+    </div>
+    <div class="ov-stat-card c-green" onclick="switchToPage('checkins')">
+      <div class="ov-stat-head"><span>✅ 打卡项目</span><span class="ov-stat-badge badge-green">完成 ${checkinDone}/${checkinHabits.length}</span></div>
+      <div class="ov-stat-ck">${ckItems}</div>
+    </div>
+    <div class="ov-stat-card c-blue" onclick="switchToPage('budget')">
+      <div class="ov-stat-head"><span>💰 ${year}年预算</span><span class="ov-stat-badge badge-blue">${blist.length > 0 ? bpct + '%' : '—'}</span></div>
+      ${budgetBody}
+    </div>
+    <div class="ov-stat-card c-pink" onclick="switchToPage('travels')">
+      <div class="ov-stat-head"><span>✈️ 旅游计划</span></div>
+      ${tripBody}
+    </div>`;
+}
+
+// 顶部汇总卡「打卡项目」：点击 +1 直接打卡
+$('#ovStats').addEventListener('click', e => {
+  const btn = e.target.closest('.ov-stat-ck-btn');
+  if (btn) { e.stopPropagation(); checkinIncrement(btn.dataset.id); }
+});
+
+function renderOverviewModules() {
+  // Ensure seed data exists before computing overview stats (first-time visit)
+  seedTravelData();
+  seedBudgetData();
+
+  const today = fmtDate(new Date());
+  const upcomingEvents = state.events.filter(e => e.date >= today).sort((a,b) => a.date > b.date ? 1 : -1).slice(0, 3);
 
   const container = $('#overviewModules');
   container.innerHTML = `
-    <div class="ov-module" onclick="switchToPage('plans')">
-      <div class="ov-module-header"><span class="ov-module-title">📋 今日计划</span><span class="ov-module-badge pink">${donePlans.length}/${todayPlans.length}</span></div>
-      ${todayPlans.length > 0 ? `
-        <div style="margin-bottom:8px"><div style="height:6px;background:var(--gray-200);border-radius:3px;overflow:hidden"><div style="height:100%;width:${planPct}%;background:var(--pink-300);border-radius:3px;transition:width .3s"></div></div><div style="font-size:11px;color:var(--gray-400);margin-top:3px">完成 ${planPct}%</div></div>
-        <div class="ov-module-items">${undonePlans.slice(0,3).map(p => `<div class="ov-module-item">${escapeHtml(p.text)}</div>`).join('')}${donePlans.slice(0,2).map(p => `<div class="ov-module-item done">${escapeHtml(p.text)}</div>`).join('')}</div>
-      ` : '<div class="ov-module-preview">今天还没有计划</div>'}
-    </div>
     <div class="ov-module" onclick="switchToPage('events')">
       <div class="ov-module-header"><span class="ov-module-title">🔔 近期事件</span><span class="ov-module-badge blue">${state.events.filter(e=>e.date>=today).length}</span></div>
       ${upcomingEvents.length > 0 ? `<div class="ov-module-items">${upcomingEvents.map(e => {
         const dotCls = (e.cat === '竞体' || e.cat === '运动' || e.cat === '医美' || e.cat === '其他') ? ' cat-' + e.cat : '';
         return `<div class="ov-module-item"><span class="ov-event-dot${dotCls}"></span>📅 ${e.date.slice(5)} · ${escapeHtml(e.title)}</div>`;
       }).join('')}</div>` : '<div class="ov-module-preview">暂无近期事件</div>'}
-    </div>
-    <div class="ov-module">
-      <div class="ov-module-header" onclick="switchToPage('checkins')" style="cursor:pointer">
-        <span class="ov-module-title">✅ 打卡</span>
-        <span class="ov-module-badge green">完成 ${checkinDone}/${checkinHabits.length} 项</span>
-      </div>
-      ${checkinHabits.length > 0 ? `<div class="ov-module-items">
-        ${checkinHabits.map(h => {
-          const p = habitProgress(h);
-          return `<div class="ov-checkin-item${p.done ? ' done' : ''}">
-            <div class="ov-checkin-row"><span class="ov-checkin-name">🔥 ${escapeHtml(h.name)}</span><span class="ov-checkin-count">${p.count}/${p.target}</span></div>
-            <div class="ov-checkin-bar"><div class="ov-checkin-fill" style="width:${p.pct}%"></div></div>
-            <button class="ov-checkin-btn" data-id="${h.id}"${p.done ? ' disabled' : ''}>${p.done ? '✓ 已完成' : '+1 打卡'}</button>
-          </div>`;
-        }).join('')}
-      </div>` : '<div class="ov-module-preview">还没有打卡习惯</div>'}
-    </div>
-    <div class="ov-module" onclick="switchToPage('travels')" style="cursor:pointer">
-      <div class="ov-module-header"><span class="ov-module-title">✈️ 旅行-下一次出发</span></div>
-      ${nextTripHtml}
-    </div>
-    <div class="ov-module" onclick="switchToPage('budget')" style="cursor:pointer">
-      <div class="ov-module-header"><span class="ov-module-title">💰 ${year}年预算进度</span></div>
-      ${budgetHtml}
     </div>
     <div class="ov-module" style="text-align:center;padding:20px">
       <div style="font-size:28px;font-weight:300;letter-spacing:-1px" id="ovClock">--:--</div>
