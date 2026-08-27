@@ -725,6 +725,14 @@ body{
 }
 .travel-item:hover .travel-del{opacity:1}
 .travel-del:hover{background:#FFEBEE;color:#F44336}
+.travel-edit{
+  width:24px;height:24px;border-radius:50%;border:none;
+  background:transparent;color:var(--gray-400);cursor:pointer;
+  font-size:13px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;opacity:0;flex-shrink:0;
+}
+.travel-item:hover .travel-edit{opacity:1}
+.travel-edit:hover{background:var(--blue-50);color:var(--blue-500)}
 /* Travel modal enhancements */
 .travel-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .travel-form-grid .form-group-full{grid-column:1/-1}
@@ -1101,7 +1109,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.41</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.42</div>
     </div>
   </aside>
 
@@ -1457,6 +1465,14 @@ body{
         <label>标签（可选）</label>
         <input type="text" id="tvTag" placeholder="如：羽毛球" maxlength="30">
       </div>
+      <div class="form-group">
+        <label>结束月份（可选）</label>
+        <select id="tvMonthEnd"><option value="">--</option></select>
+      </div>
+      <div class="form-group">
+        <label>结束日期（可选）</label>
+        <select id="tvDayEnd"><option value="">--</option></select>
+      </div>
       <div class="form-group form-group-full">
         <label>目的地</label>
         <input type="text" id="tvDest" placeholder="如：马来西亚、贵州" maxlength="100">
@@ -1596,7 +1612,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.41 — 事件导出系统日历(ICS) + 年度回顾 + 多端冲突检测
+// amber的工作台 v14.42 — 旅行计划编辑保存闭环：结束日期字段 + 明确编辑按钮
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -3908,9 +3924,14 @@ function seedTravelData() {
 function travelPeriod(t) {
   var m = t.month, me = t.month_end;
   var start = t.day ? (m + '月' + t.day + '日') : (m + '月');
+  // 跨月区间
   if (me && me !== m) {
     var end = t.day_end ? (me + '月' + t.day_end + '日') : (me + '月');
     return t.year + '年' + start + '~' + end;
+  }
+  // 同月跨天区间
+  if (t.day_end && t.day_end !== t.day) {
+    return t.year + '年' + start + '~' + t.day_end + '日';
   }
   return t.year + '年' + start;
 }
@@ -4206,7 +4227,8 @@ function renderTravelPage() {
           '<div class="travel-title">'+escapeHtml(travelPeriod(t))+' '+escapeHtml(t.destination||'')+(t.tag?'<span class="travel-tag">（'+escapeHtml(t.tag)+'）</span>':'')+'</div>' +
           (meta ? '<div class="travel-meta">'+meta+'</div>' : '') +
         '</div>' +
-        '<button class="travel-del" data-id="'+t.id+'">×</button>';
+        '<button class="travel-edit" data-id="'+t.id+'" title="编辑行程">✏️</button>' +
+        '<button class="travel-del" data-id="'+t.id+'" title="删除">×</button>';
       ul.appendChild(li);
     });
     container.appendChild(ul);
@@ -4225,6 +4247,13 @@ $('#travelTimeline').addEventListener('click', function(e) {
   }
   var del = e.target.closest('.travel-del');
   if (del) { deleteRecord('travels', del.dataset.id); renderTravelPage(); return; }
+  var edit = e.target.closest('.travel-edit');
+  if (edit) {
+    e.stopPropagation();
+    var editObj = state.travels.find(function(x){ return x.id === edit.dataset.id; });
+    if (editObj) openTravelModal(editObj);
+    return;
+  }
   var item = e.target.closest('.travel-item');
   if (item) {
     var tObj = state.travels.find(function(x){ return x.id === item.querySelector('.travel-check').dataset.id; });
@@ -4247,12 +4276,16 @@ function initTravelSelects() {
   for (var y = now.getFullYear() - 1; y <= now.getFullYear() + 3; y++) {
     var o = document.createElement('option'); o.value = y; o.textContent = y + '年'; ySel.appendChild(o);
   }
+  var mEndSel = $('#tvMonthEnd');
   for (var m = 1; m <= 12; m++) {
     var o2 = document.createElement('option'); o2.value = m; o2.textContent = m + '月'; mSel.appendChild(o2);
+    if (mEndSel) { var o2e = document.createElement('option'); o2e.value = m; o2e.textContent = m + '月'; mEndSel.appendChild(o2e); }
   }
   if (dSel) {
+    var dEndSel = $('#tvDayEnd');
     for (var d = 1; d <= 31; d++) {
       var o3 = document.createElement('option'); o3.value = d; o3.textContent = d + '日'; dSel.appendChild(o3);
+      if (dEndSel) { var o3e = document.createElement('option'); o3e.value = d; o3e.textContent = d + '日'; dEndSel.appendChild(o3e); }
     }
   }
 }
@@ -4272,6 +4305,8 @@ function openTravelModal(travelObj) {
     $('#tvYear').value = travelObj.year || new Date().getFullYear();
     $('#tvMonth').value = travelObj.month || 1;
     $('#tvDay').value = travelObj.day || '';
+    $('#tvMonthEnd').value = travelObj.month_end || '';
+    $('#tvDayEnd').value = travelObj.day_end || '';
     $('#tvDest').value = travelObj.destination || '';
     $('#tvTag').value = travelObj.tag || '';
     $('#tvCost').value = travelObj.cost || '';
@@ -4297,6 +4332,8 @@ function openTravelModal(travelObj) {
     $('#tvYear').value = n.getFullYear();
     $('#tvMonth').value = n.getMonth() + 1;
     $('#tvDay').value = '';
+    $('#tvMonthEnd').value = '';
+    $('#tvDayEnd').value = '';
     $('#tvDest').value = ''; $('#tvTag').value = ''; $('#tvCost').value = ''; $('#tvDocLink').value = '';
     $('#tvLat').value = ''; $('#tvLng').value = '';
     var p2 = $('#tvImgPreview'); if (p2) p2.classList.remove('visible');
@@ -4410,6 +4447,10 @@ function saveTravelModal() {
   var year = parseInt($('#tvYear').value);
   var month = parseInt($('#tvMonth').value);
   var day = $('#tvDay').value ? parseInt($('#tvDay').value) : null;
+  var monthEnd = $('#tvMonthEnd').value ? parseInt($('#tvMonthEnd').value) : null;
+  var dayEnd = $('#tvDayEnd').value ? parseInt($('#tvDayEnd').value) : null;
+  // 结束日期未填结束月份时，默认与开始月份相同（同月跨天）
+  if (dayEnd && !monthEnd) monthEnd = month;
   var destination = $('#tvDest').value.trim();
   var tag = $('#tvTag').value.trim();
   var cost = $('#tvCost').value ? parseInt($('#tvCost').value) : null;
@@ -4428,6 +4469,7 @@ function saveTravelModal() {
 
   var payload = {
     year: year, month: month, day: day,
+    month_end: monthEnd, day_end: dayEnd,
     destination: destination,
     tag: tag || null,
     cost: cost, doc_link: docLink,
@@ -4436,6 +4478,7 @@ function saveTravelModal() {
     sort_key: year + '-' + String(month).padStart(2,'0'),
     done: false
   };
+  var wasEditing = !!_editingTravelId;
   if (_editingTravelId) {
     var existing = state.travels.find(function(x){ return x.id === _editingTravelId; });
     payload.done = existing ? existing.done : false;
@@ -4447,6 +4490,7 @@ function saveTravelModal() {
   }
   closeTravelModal();
   renderTravelPage();
+  showDiagToast(wasEditing ? '已保存行程 ✓' : '已添加行程 ✓', 'online');
 }
 
 $('#btnAddTravel').addEventListener('click', function() { openTravelModal(); });
