@@ -107,6 +107,22 @@ CREATE TABLE public.budget (
 );
 
 -- ============================================================
+-- 6. 旅行相册表（v14.45 新增，照片关联旅行规划）
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.photos (
+  id TEXT PRIMARY KEY,
+  travel_id TEXT,
+  title TEXT NOT NULL DEFAULT '',
+  taken_at TEXT,
+  image TEXT,
+  note TEXT,
+  device_id TEXT NOT NULL DEFAULT '',
+  deleted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- RLS：个人使用（anon key），直接禁用，减少变量、避免权限问题
 -- ============================================================
 ALTER TABLE public.plans    DISABLE ROW LEVEL SECURITY;
@@ -114,6 +130,7 @@ ALTER TABLE public.events   DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.checkins DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.travels  DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.budget   DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.photos   DISABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- 索引
@@ -122,6 +139,8 @@ CREATE INDEX IF NOT EXISTS idx_plans_date          ON public.plans(date);
 CREATE INDEX IF NOT EXISTS idx_events_date         ON public.events(date);
 CREATE INDEX IF NOT EXISTS idx_travels_year        ON public.travels(year);
 CREATE INDEX IF NOT EXISTS idx_budget_year         ON public.budget(year);
+CREATE INDEX IF NOT EXISTS idx_photos_travel       ON public.photos(travel_id);
+CREATE INDEX IF NOT EXISTS idx_photos_taken_at     ON public.photos(taken_at);
 
 -- ============================================================
 -- ⭐ 强制刷新 PostgREST schema cache（根治死锁的最后一步）

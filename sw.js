@@ -8,8 +8,9 @@
 // v14.41: 事件导出系统日历(ICS) + 年度回顾 + 多端冲突检测
 // v14.42: 旅行计划编辑保存闭环（结束日期字段 + 明确编辑按钮）
 // v14.44: 设置页一键强制更新（注销 SW + 清缓存 + 强刷）
+// v14.45: 旅行规划时间轴重排 + 旅行相册（多图关联行程）
 
-const VERSION = 'amber-workbench-v14.44';
+const VERSION = 'amber-workbench-v14.45';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

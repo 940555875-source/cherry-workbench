@@ -690,18 +690,32 @@ body{
   width:10px;height:10px;border-radius:50%;display:inline-block;
 }
 /* Timeline */
-.travel-year{
-  font-size:18px;font-weight:700;color:var(--gray-800);
-  padding:16px 0 8px;margin-top:4px;
+.travel-timeline{position:relative}
+.travel-tl-item{position:relative;padding-left:30px;margin-bottom:14px}
+.travel-tl-item:last-child{margin-bottom:0}
+.travel-tl-item::before{content:'';position:absolute;left:9px;top:20px;bottom:-14px;width:2px;background:var(--gray-200)}
+.travel-tl-item:last-child::before{display:none}
+.travel-tl-dot{
+  position:absolute;left:2px;top:5px;width:16px;height:16px;border-radius:50%;
+  border:3px solid var(--orange-400);background:var(--surface);z-index:1;box-sizing:border-box;
 }
-.travel-year:first-child{margin-top:0}
-.travel-list{list-style:none;display:flex;flex-direction:column;gap:0}
-.travel-item{
-  display:flex;align-items:center;gap:10px;padding:10px 14px;
-  border-radius:var(--radius-xs);background:var(--gray-50);
-  transition:all .15s;cursor:pointer;
+.travel-tl-item.done .travel-tl-dot{background:var(--gray-400);border-color:var(--gray-400)}
+.travel-tl-date{font-size:11px;font-weight:700;color:var(--orange-600);margin-bottom:4px}
+.travel-tl-item.done .travel-tl-date{color:var(--gray-400)}
+/* Card */
+.travel-card-item{
+  display:flex;align-items:center;gap:12px;padding:10px 12px;
+  border-radius:var(--radius-sm);background:var(--gray-50);
+  transition:all .15s;cursor:pointer;position:relative;
 }
-.travel-item:hover{background:var(--orange-50)}
+.travel-card-item:hover{background:var(--orange-50)}
+.travel-thumb{
+  width:52px;height:52px;border-radius:var(--radius-xs);flex-shrink:0;overflow:hidden;
+  background:linear-gradient(135deg,var(--orange-300),var(--orange-500));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:800;color:#fff;
+}
+.travel-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .travel-check{
   width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-300);
   display:flex;align-items:center;justify-content:center;
@@ -710,22 +724,28 @@ body{
 }
 .travel-check.done{background:var(--orange-400);border-color:var(--orange-400)}
 .travel-info{flex:1;min-width:0}
-.travel-title{font-size:14px;font-weight:500;color:var(--gray-800)}
-.travel-item.done .travel-title{text-decoration:line-through;color:var(--gray-400)}
+.travel-title{font-size:14px;font-weight:600;color:var(--gray-800);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.travel-card-item.done .travel-title{text-decoration:line-through;color:var(--gray-400)}
 .travel-tag{
   font-size:11px;color:var(--orange-600);background:var(--orange-50);
-  padding:1px 6px;border-radius:10px;margin-left:4px;
+  padding:1px 6px;border-radius:10px;
 }
 .travel-meta{
-  font-size:11px;color:var(--gray-400);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap
+  font-size:11px;color:var(--gray-500);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center
 }
+.travel-doc{
+  display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;
+  color:var(--blue-500);background:var(--blue-50);padding:2px 8px;border-radius:12px;
+  text-decoration:none;cursor:pointer;transition:all .15s;
+}
+.travel-doc:hover{background:var(--blue-500);color:#fff}
 .travel-del{
   width:24px;height:24px;border-radius:50%;border:none;
   background:transparent;color:var(--gray-400);cursor:pointer;
   font-size:15px;display:flex;align-items:center;justify-content:center;
   transition:all .2s;opacity:0;flex-shrink:0;
 }
-.travel-item:hover .travel-del{opacity:1}
+.travel-card-item:hover .travel-del{opacity:1}
 .travel-del:hover{background:#FFEBEE;color:#F44336}
 .travel-edit{
   width:24px;height:24px;border-radius:50%;border:none;
@@ -733,7 +753,7 @@ body{
   font-size:13px;display:flex;align-items:center;justify-content:center;
   transition:all .2s;opacity:0;flex-shrink:0;
 }
-.travel-item:hover .travel-edit{opacity:1}
+.travel-card-item:hover .travel-edit{opacity:1}
 .travel-edit:hover{background:var(--blue-50);color:var(--blue-500)}
 /* Travel modal enhancements */
 .travel-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -750,6 +770,67 @@ body{
   margin-top:6px;display:none;object-fit:cover;
 }
 .travel-img-preview.visible{display:block}
+/* 旅行卡片上的照片数入口 */
+.travel-photo-link{
+  display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;
+  color:#AB47BC;background:#F3E5F5;padding:2px 8px;border-radius:12px;
+  text-decoration:none;cursor:pointer;transition:all .15s;
+}
+.travel-photo-link:hover{background:#AB47BC;color:#fff}
+
+/* ===== Travel Album ===== */
+.album-filter{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.album-filter select{
+  flex:1;min-width:120px;padding:7px 10px;border:1px solid var(--gray-300);
+  border-radius:var(--radius-xs);font-size:13px;background:var(--surface);color:var(--gray-700);
+  outline:none;transition:border-color .2s;
+}
+.album-filter select:focus{border-color:#AB47BC}
+.album-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;
+}
+.album-item{
+  position:relative;border-radius:var(--radius-sm);overflow:hidden;background:var(--gray-50);
+  cursor:pointer;transition:all .15s;border:1px solid var(--gray-200);
+}
+.album-item:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.album-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;background:var(--gray-100,#eee)}
+.album-item-info{padding:8px 10px}
+.album-item-title{font-size:13px;font-weight:600;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.album-item-meta{font-size:11px;color:var(--gray-400);margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.album-item-tag{
+  font-size:10px;color:#AB47BC;background:#F3E5F5;padding:1px 6px;border-radius:10px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
+.album-item-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0;transition:opacity .2s}
+.album-item:hover .album-item-actions{opacity:1}
+.album-act{
+  width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;
+  cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.album-act:hover{background:rgba(0,0,0,.8)}
+/* Lightbox */
+.album-lightbox{
+  position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.92);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;
+  padding:20px;
+}
+.album-lightbox img{max-width:100%;max-height:72vh;object-fit:contain;border-radius:var(--radius-sm)}
+.album-lightbox-info{color:#fff;text-align:center;font-size:13px;max-width:90%}
+.album-lightbox-info .lb-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.album-lightbox-info .lb-meta{color:#bbb;font-size:12px}
+.album-lightbox-nav{display:flex;gap:20px;align-items:center}
+.album-lb-btn{
+  background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:50%;
+  width:44px;height:44px;font-size:20px;cursor:pointer;transition:all .15s;
+}
+.album-lb-btn:hover{background:rgba(255,255,255,.3)}
+.album-lb-close{
+  position:absolute;top:16px;right:20px;background:rgba(255,255,255,.15);color:#fff;
+  border:none;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;
+}
+.album-pick-preview{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.album-pick-preview img{width:56px;height:56px;object-fit:cover;border-radius:var(--radius-xs)}
 
 /* ===== Annual Budget ===== */
 .budget-years{display:flex;gap:8px;margin-bottom:14px}
@@ -1106,12 +1187,13 @@ body{
       <button class="nav-item" data-page="plans"><span class="nav-emoji">📋</span> 每日计划</button>
       <button class="nav-item" data-page="events"><span class="nav-emoji">🔔</span> 事件提醒</button>
       <button class="nav-item" data-page="travels"><span class="nav-emoji">✈️</span> 旅行规划</button>
+      <button class="nav-item" data-page="album"><span class="nav-emoji">📷</span> 旅行相册</button>
       <button class="nav-item" data-page="budget"><span class="nav-emoji">💰</span> 年度预算</button>
       <button class="nav-item" data-page="checkins"><span class="nav-emoji">✅</span> 打卡</button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.44</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.45</div>
     </div>
   </aside>
 
@@ -1267,6 +1349,25 @@ body{
     </div>
 
 
+    <!-- PAGE: 旅行相册 -->
+    <div class="page" id="page-album">
+      <div class="card travel-card" style="border-top-color:#AB47BC">
+        <div class="card-header">
+          <span class="card-title">📷 旅行相册</span>
+          <button class="btn-add" id="btnAddPhoto" style="background:#AB47BC">➕ 上传照片</button>
+        </div>
+        <div class="card-body">
+          <div class="album-filter" id="albumFilter">
+            <select id="albumTravelFilter"><option value="">全部照片</option></select>
+            <select id="albumYearFilter"><option value="">全部年份</option></select>
+          </div>
+          <div class="album-grid" id="albumGrid"></div>
+          <div class="plan-empty" id="albumEmpty">还没有照片，点击右上角上传 📷</div>
+        </div>
+      </div>
+    </div>
+
+
     <!-- PAGE: 年度预算 -->
     <div class="page" id="page-budget">
       <div class="card travel-card" style="border-top-color:#66BB6A">
@@ -1296,6 +1397,7 @@ body{
       <button class="mobile-nav-item" data-page="plans"><span class="mni-icon">📋</span>计划</button>
       <button class="mobile-nav-item" data-page="events"><span class="mni-icon">🔔</span>事件</button>
       <button class="mobile-nav-item" data-page="travels"><span class="mni-icon">✈️</span>旅行</button>
+      <button class="mobile-nav-item" data-page="album"><span class="mni-icon">📷</span>相册</button>
       <button class="mobile-nav-item" data-page="budget"><span class="mni-icon">💰</span>预算</button>
       <button class="mobile-nav-item" data-page="checkins"><span class="mni-icon">✅</span>打卡</button>
     </div>
@@ -1510,6 +1612,54 @@ body{
   </div>
 </div>
 
+<!-- === Album Modal (add/edit) === -->
+<div class="modal-overlay hidden" id="albumOverlay">
+  <div class="modal" style="max-width:440px">
+    <h2 id="albumModalTitle">➕ 上传照片</h2>
+    <div class="travel-form-grid">
+      <div class="form-group form-group-full">
+        <label>照片（可多选）</label>
+        <input type="file" id="apImage" accept="image/*" multiple>
+        <div class="album-pick-preview" id="apPreview"></div>
+      </div>
+      <div class="form-group form-group-full">
+        <label>标题（可选）</label>
+        <input type="text" id="apTitle" placeholder="如：海边日落、球馆合影" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label>拍摄日期（可选）</label>
+        <input type="date" id="apTakenAt">
+      </div>
+      <div class="form-group">
+        <label>关联行程（可选）</label>
+        <select id="apTravelId"><option value="">不关联</option></select>
+      </div>
+      <div class="form-group form-group-full">
+        <label>备注（可选）</label>
+        <input type="text" id="apNote" placeholder="如：和谁一起、发生了什么" maxlength="200">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnAlbumCancel">取消</button>
+      <button class="btn btn-primary" id="btnAlbumSave" style="background:#AB47BC">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- === Album Lightbox === -->
+<div class="album-lightbox hidden" id="albumLightbox">
+  <button class="album-lb-close" id="albumLbClose">✕</button>
+  <img id="albumLbImg" alt="">
+  <div class="album-lightbox-info">
+    <div class="lb-title" id="albumLbTitle"></div>
+    <div class="lb-meta" id="albumLbMeta"></div>
+  </div>
+  <div class="album-lightbox-nav">
+    <button class="album-lb-btn" id="albumLbPrev">‹</button>
+    <button class="album-lb-btn" id="albumLbNext">›</button>
+  </div>
+</div>
+
 <!-- === Budget Modal (add/edit) === -->
 <div class="modal-overlay hidden" id="budgetOverlay">
   <div class="modal" style="max-width:440px">
@@ -1594,7 +1744,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.44</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.45</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1620,7 +1770,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.44 — 设置页一键强制更新（注销 SW + 清缓存 + 强刷）
+// amber的工作台 v14.45 — 设置页一键强制更新（注销 SW + 清缓存 + 强刷）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1645,11 +1795,11 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.44';
+const APP_VERSION = 'v14.45';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
-  travels: 'amber_travels_v1', budget: 'amber_budget_v1', config: 'amber_config',
+  travels: 'amber_travels_v1', budget: 'amber_budget_v1', photos: 'amber_photos_v1', config: 'amber_config',
   deviceId: 'amber_device_id',
 };
 
@@ -1665,6 +1815,7 @@ let state = {
   checkins: [],
   travels: [],
   budget: [],
+  photos: [],
   budgetYear: new Date().getFullYear(),
 };
 
@@ -1815,7 +1966,7 @@ loadConflictLog();
 // ============================================================
 
 // Map state keys to Supabase table names
-const TABLE_MAP = { plans: 'plans', events: 'events', checkins: 'checkins', travels: 'travels', budget: 'budget' };
+const TABLE_MAP = { plans: 'plans', events: 'events', checkins: 'checkins', travels: 'travels', budget: 'budget', photos: 'photos' };
 
 function withDeviceId(record) {
   return { ...record, device_id: DEVICE_ID };
@@ -1862,6 +2013,16 @@ async function cloudPush(tableName, records) {
     // 黑名单表静默跳过，不刷控制台
     return false;
   }
+  // photos 表存 base64 图片、单条较大，分块 upsert 避免请求体超限
+  const CHUNK = tableName === 'photos' ? 2 : 500;
+  for (let s = 0; s < records.length; s += CHUNK) {
+    const ok = await cloudPushChunk(tableName, records.slice(s, s + CHUNK));
+    if (!ok) return false;
+  }
+  return true;
+}
+
+async function cloudPushChunk(tableName, records) {
   let attemptRecords = records;
   let lastErr = null;
   for (let i = 0; i < 4; i++) {
@@ -2181,6 +2342,7 @@ function loadLocalData() {
   try { state.checkins = JSON.parse(localStorage.getItem(LS_KEYS.checkins) || '[]').filter(r => !r.deleted_at); } catch(e) { state.checkins = []; }
   try { state.travels = JSON.parse(localStorage.getItem(LS_KEYS.travels) || '[]').filter(r => !r.deleted_at); } catch(e) { state.travels = []; }
   try { state.budget = JSON.parse(localStorage.getItem(LS_KEYS.budget) || '[]').filter(r => !r.deleted_at); } catch(e) { state.budget = []; }
+  try { state.photos = JSON.parse(localStorage.getItem(LS_KEYS.photos) || '[]').filter(r => !r.deleted_at); } catch(e) { state.photos = []; }
   try { state.budgetYear = parseInt(localStorage.getItem('amber_budget_year') || String(new Date().getFullYear())); } catch(e) { state.budgetYear = new Date().getFullYear(); }
 }
 
@@ -2254,7 +2416,7 @@ async function testConnection() {
 
     // Do a full sync after successful test
     fullSync('plans'); fullSync('events'); fullSync('checkins');
-    fullSync('travels'); fullSync('budget');
+    fullSync('travels'); fullSync('budget'); fullSync('photos');
   } catch(e) {
     showDiagToast('网络错误 — 无法连接到 Supabase，请检查网络', 'error');
   }
@@ -2317,6 +2479,7 @@ function initNavigation() {
     if (page === 'plans') renderPlanPage();
     if (page === 'events') renderEventPage();
     if (page === 'travels') renderTravelPage();
+    if (page === 'album') renderAlbumPage();
     if (page === 'budget') renderBudgetPage();
     if (page === 'checkins') renderCheckinPage();
   };
@@ -3752,6 +3915,7 @@ function switchToPage(page) {
   if (page === 'plans') { state.planSelectedDate = fmtDate(new Date()); renderPlanPage(); }
   if (page === 'events') renderEventPage();
   if (page === 'travels') renderTravelPage();
+  if (page === 'album') renderAlbumPage();
   if (page === 'budget') renderBudgetPage();
   if (page === 'checkins') renderCheckinPage();
 }
@@ -3944,6 +4108,19 @@ function travelPeriod(t) {
     return t.year + '年' + start + '~' + t.day_end + '日';
   }
   return t.year + '年' + start;
+}
+
+function travelStartTs(t) {
+  return new Date(t.year, (t.month || 1) - 1, t.day || 1).getTime();
+}
+
+// 规范化外链：自动补 https:// 前缀，非 http(s) 返回 null
+function normalizeUrl(u) {
+  if (!u) return null;
+  u = String(u).trim();
+  if (!u) return null;
+  if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+  return u;
 }
 
 // Next upcoming trip (not done, closest future start date)
@@ -4206,47 +4383,69 @@ function renderTravelPage() {
   }
   container.classList.remove('hidden'); empty.classList.add('hidden');
 
-  var sorted = [...state.travels].sort(function(a,b){
-    return (a.sort_key||'').localeCompare(b.sort_key||'');
+  // 各行程关联照片数（用于卡片角标）
+  var photoCount = {};
+  state.photos.forEach(function(p){ if (p.travel_id) photoCount[p.travel_id] = (photoCount[p.travel_id] || 0) + 1; });
+
+  // 排序：未完成在前（未来最近的优先、已过期的次之），已完成沉底（最近完成的在前）
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var sorted = [...state.travels].sort(function(a, b) {
+    if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+    var ta = travelStartTs(a), tb = travelStartTs(b);
+    if (!a.done) {
+      var fa = ta >= today.getTime(), fb = tb >= today.getTime();
+      if (fa !== fb) return fa ? -1 : 1;
+      return ta - tb;
+    }
+    return tb - ta;
   });
-  var groups = {};
+
+  var html = '<div class="travel-timeline">';
   sorted.forEach(function(t) {
-    var y = String(t.year || '----');
-    if (!groups[y]) groups[y] = [];
-    groups[y].push(t);
-  });
-
-  Object.keys(groups).sort().forEach(function(year) {
-    var yh = document.createElement('div');
-    yh.className = 'travel-year';
-    yh.textContent = year + '年';
-    container.appendChild(yh);
-
-    var ul = document.createElement('ul');
-    ul.className = 'travel-list';
-    groups[year].forEach(function(t) {
-      var li = document.createElement('li');
-      li.className = 'travel-item' + (t.done ? ' done' : '');
-      var meta = '';
-      if (t.cost) meta += '<span>💰¥'+t.cost+'</span>';
-      if (t.doc_link) meta += '<span>📄</span>';
-      if (t.location && t.location.lat) meta += '<span>📍</span>';
-      li.innerHTML =
-        '<div class="travel-check'+(t.done?' done':'')+'" data-id="'+t.id+'">'+(t.done?'✓':'')+'</div>' +
-        '<div class="travel-info">' +
-          '<div class="travel-title">'+escapeHtml(travelPeriod(t))+' '+escapeHtml(t.destination||'')+(t.tag?'<span class="travel-tag">（'+escapeHtml(t.tag)+'）</span>':'')+'</div>' +
-          (meta ? '<div class="travel-meta">'+meta+'</div>' : '') +
+    var thumb = t.image
+      ? '<img src="' + t.image + '" alt="" loading="lazy">'
+      : '<span>' + escapeHtml((t.destination || '✈').trim().charAt(0)) + '</span>';
+    var meta = '';
+    if (t.cost) meta += '<span>💰¥' + t.cost + '</span>';
+    if (t.doc_link) {
+      var href = normalizeUrl(t.doc_link);
+      if (href) meta += '<a class="travel-doc" href="' + escapeHtml(href) + '" target="_blank" rel="noopener noreferrer">📄 计划文档 ↗</a>';
+    }
+    if (photoCount[t.id]) meta += '<span class="travel-photo-link" data-travel="' + t.id + '">🖼️ ' + photoCount[t.id] + '</span>';
+    if (t.location && t.location.lat) meta += '<span>📍</span>';
+    html +=
+      '<div class="travel-tl-item' + (t.done ? ' done' : '') + '">' +
+        '<div class="travel-tl-dot"></div>' +
+        '<div class="travel-tl-date">' + escapeHtml(travelPeriod(t)) + '</div>' +
+        '<div class="travel-card-item">' +
+          '<div class="travel-thumb">' + thumb + '</div>' +
+          '<div class="travel-info">' +
+            '<div class="travel-title">' + escapeHtml(t.destination || '') + (t.tag ? '<span class="travel-tag">' + escapeHtml(t.tag) + '</span>' : '') + '</div>' +
+            (meta ? '<div class="travel-meta">' + meta + '</div>' : '') +
+          '</div>' +
+          '<div class="travel-check' + (t.done ? ' done' : '') + '" data-id="' + t.id + '">' + (t.done ? '✓' : '') + '</div>' +
+          '<button class="travel-edit" data-id="' + t.id + '" title="编辑行程">✏️</button>' +
+          '<button class="travel-del" data-id="' + t.id + '" title="删除">×</button>' +
         '</div>' +
-        '<button class="travel-edit" data-id="'+t.id+'" title="编辑行程">✏️</button>' +
-        '<button class="travel-del" data-id="'+t.id+'" title="删除">×</button>';
-      ul.appendChild(li);
-    });
-    container.appendChild(ul);
+      '</div>';
   });
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 // Click delegation
 $('#travelTimeline').addEventListener('click', function(e) {
+  // 文档链接：让 <a> 默认新窗口跳转，不触发行程编辑
+  if (e.target.closest('.travel-doc')) { e.stopPropagation(); return; }
+  // 照片数入口：跳转到相册并过滤该行程
+  var ph = e.target.closest('.travel-photo-link');
+  if (ph) {
+    e.stopPropagation();
+    _albumFilterTravel = ph.dataset.travel;
+    _albumFilterYear = '';
+    switchToPage('album');
+    return;
+  }
   var check = e.target.closest('.travel-check');
   if (check) {
     e.stopPropagation();
@@ -4264,7 +4463,7 @@ $('#travelTimeline').addEventListener('click', function(e) {
     if (editObj) openTravelModal(editObj);
     return;
   }
-  var item = e.target.closest('.travel-item');
+  var item = e.target.closest('.travel-card-item');
   if (item) {
     var tObj = state.travels.find(function(x){ return x.id === item.querySelector('.travel-check').dataset.id; });
     if (tObj) openTravelModal(tObj);
@@ -4508,6 +4707,254 @@ $('#btnTravelSave').addEventListener('click', saveTravelModal);
 $('#btnTravelCancel').addEventListener('click', closeTravelModal);
 $('#travelOverlay').addEventListener('click', function(e) { if (e.target === $('#travelOverlay')) closeTravelModal(); });
 $('#tvDest').addEventListener('keydown', function(e) { if (e.key === 'Enter') saveTravelModal(); });
+
+// ============================================================
+// TRAVEL ALBUM — photos linked to trips (v14.45)
+// ============================================================
+var _editingPhotoId = null;
+var _albumImages = [];       // 批量上传时暂存的 base64 数组
+var _albumFilterTravel = '';
+var _albumFilterYear = '';
+var _lbList = [], _lbIndex = 0;
+
+// 图片压缩：等比缩到宽 maxW、JPEG quality
+function compressImage(file, maxW, quality) {
+  return new Promise(function(resolve, reject) {
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var scale = Math.min(1, maxW / w);
+      var cw = Math.max(1, Math.round(w * scale));
+      var ch = Math.max(1, Math.round(h * scale));
+      var canvas = document.createElement('canvas');
+      canvas.width = cw; canvas.height = ch;
+      canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); reject(new Error('图片读取失败')); };
+    img.src = url;
+  });
+}
+
+function travelName(id) {
+  var t = state.travels.find(function(x){ return x.id === id; });
+  return t ? (t.destination || '') : '';
+}
+
+// 照片排序：拍摄日期降序（无日期按创建时间降序沉底）
+function sortPhotos(list) {
+  return list.slice().sort(function(a, b) {
+    var ta = a.taken_at || '', tb = b.taken_at || '';
+    if (ta !== tb) { if (!ta) return 1; if (!tb) return -1; return ta < tb ? 1 : -1; }
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
+}
+
+function albumFilteredPhotos() {
+  return state.photos.filter(function(p) {
+    if (_albumFilterTravel === '__none__' && p.travel_id) return false;
+    if (_albumFilterTravel && _albumFilterTravel !== '__none__' && p.travel_id !== _albumFilterTravel) return false;
+    if (_albumFilterYear && (p.taken_at || '').slice(0, 4) !== _albumFilterYear) return false;
+    return true;
+  });
+}
+
+function renderAlbumPage() {
+  var grid = $('#albumGrid');
+  var empty = $('#albumEmpty');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  // 行程筛选下拉
+  var tf = $('#albumTravelFilter');
+  if (tf) {
+    var trips = state.travels.slice().sort(function(a, b){ return travelStartTs(a) - travelStartTs(b); });
+    var opts = '<option value="">全部照片</option>';
+    trips.forEach(function(t) {
+      opts += '<option value="' + t.id + '">' + escapeHtml(t.destination || t.id) + (t.done ? ' · 已完成' : '') + '</option>';
+    });
+    opts += '<option value="__none__">未关联行程</option>';
+    tf.innerHTML = opts;
+    tf.value = _albumFilterTravel;
+  }
+
+  // 年份筛选下拉
+  var yf = $('#albumYearFilter');
+  if (yf) {
+    var years = {};
+    state.photos.forEach(function(p) { var y = (p.taken_at || '').slice(0, 4); if (y) years[y] = 1; });
+    var yopts = '<option value="">全部年份</option>';
+    Object.keys(years).sort().reverse().forEach(function(y) { yopts += '<option value="' + y + '">' + y + '年</option>'; });
+    yf.innerHTML = yopts;
+    yf.value = _albumFilterYear;
+  }
+
+  var list = albumFilteredPhotos();
+  if (!list.length) {
+    grid.classList.add('hidden'); empty.classList.remove('hidden');
+    return;
+  }
+  grid.classList.remove('hidden'); empty.classList.add('hidden');
+
+  sortPhotos(list).forEach(function(p) {
+    var tripName = travelName(p.travel_id);
+    var item = document.createElement('div');
+    item.className = 'album-item';
+    item.innerHTML =
+      '<img src="' + p.image + '" alt="" loading="lazy">' +
+      '<div class="album-item-actions">' +
+        '<button class="album-act" data-act="edit" data-id="' + p.id + '" title="编辑">✏️</button>' +
+        '<button class="album-act" data-act="del" data-id="' + p.id + '" title="删除">×</button>' +
+      '</div>' +
+      '<div class="album-item-info">' +
+        '<div class="album-item-title">' + escapeHtml(p.title || '未命名') + '</div>' +
+        '<div class="album-item-meta">' +
+          (p.taken_at ? '<span>📅 ' + escapeHtml(p.taken_at) + '</span>' : '') +
+          (tripName ? '<span class="album-item-tag">✈️ ' + escapeHtml(tripName) + '</span>' : '') +
+        '</div>' +
+      '</div>';
+    grid.appendChild(item);
+  });
+}
+
+// 相册网格点击委托
+$('#albumGrid').addEventListener('click', function(e) {
+  var act = e.target.closest('.album-act');
+  if (act) {
+    e.stopPropagation();
+    var id = act.dataset.id;
+    if (act.dataset.act === 'del') { deleteRecord('photos', id); renderAlbumPage(); }
+    else { var p = state.photos.find(function(x){ return x.id === id; }); if (p) openAlbumModal(p); }
+    return;
+  }
+  var item = e.target.closest('.album-item');
+  if (item) {
+    var editBtn = item.querySelector('.album-act[data-act="edit"]');
+    if (editBtn) openAlbumLightbox(editBtn.dataset.id);
+  }
+});
+
+$('#albumTravelFilter').addEventListener('change', function(){ _albumFilterTravel = this.value; renderAlbumPage(); });
+$('#albumYearFilter').addEventListener('change', function(){ _albumFilterYear = this.value; renderAlbumPage(); });
+
+function initAlbumTravelSelect() {
+  var sel = $('#apTravelId');
+  if (!sel) return;
+  var trips = state.travels.slice().sort(function(a, b){ return travelStartTs(a) - travelStartTs(b); });
+  var opts = '<option value="">不关联</option>';
+  trips.forEach(function(t) {
+    opts += '<option value="' + t.id + '">' + escapeHtml(t.destination || t.id) + (t.done ? ' · 已完成' : '') + '</option>';
+  });
+  sel.innerHTML = opts;
+}
+
+function openAlbumModal(photoObj) {
+  _editingPhotoId = photoObj ? photoObj.id : null;
+  _albumImages = [];
+  $('#albumModalTitle').textContent = photoObj ? '✏️ 编辑照片' : '➕ 上传照片';
+  initAlbumTravelSelect();
+  var preview = $('#apPreview'); if (preview) preview.innerHTML = '';
+  var fileInput = $('#apImage'); if (fileInput) { fileInput.value = ''; fileInput.style.display = photoObj ? 'none' : ''; }
+
+  if (photoObj) {
+    $('#apTitle').value = photoObj.title || '';
+    $('#apTakenAt').value = photoObj.taken_at || '';
+    $('#apTravelId').value = photoObj.travel_id || '';
+    $('#apNote').value = photoObj.note || '';
+    if (photoObj.image && preview) { var im = document.createElement('img'); im.src = photoObj.image; preview.appendChild(im); }
+  } else {
+    $('#apTitle').value = ''; $('#apTakenAt').value = ''; $('#apTravelId').value = ''; $('#apNote').value = '';
+  }
+  $('#albumOverlay').classList.remove('hidden');
+}
+
+function closeAlbumModal() {
+  $('#albumOverlay').classList.add('hidden');
+  _editingPhotoId = null;
+  _albumImages = [];
+}
+
+// 多选图片：逐张压缩暂存 + 预览
+$('#apImage').addEventListener('change', function(e) {
+  var files = Array.prototype.slice.call(e.target.files || []);
+  if (!files.length) return;
+  var preview = $('#apPreview');
+  if (preview) preview.innerHTML = '<span style="font-size:12px;color:var(--gray-500)">压缩处理中…</span>';
+  _albumImages = [];
+  var tasks = files.map(function(f) {
+    return compressImage(f, 1200, 0.78).then(function(dataUrl) { _albumImages.push(dataUrl); });
+  });
+  Promise.all(tasks).then(function() {
+    if (preview) {
+      preview.innerHTML = '';
+      _albumImages.forEach(function(d) { var im = document.createElement('img'); im.src = d; preview.appendChild(im); });
+    }
+    showDiagToast('已处理 ' + _albumImages.length + ' 张照片 ✓', 'online');
+  }).catch(function(err) {
+    showDiagToast(err.message || '图片处理失败', 'error');
+    e.target.value = '';
+  });
+});
+
+function saveAlbumModal() {
+  var title = $('#apTitle').value.trim();
+  var takenAt = $('#apTakenAt').value || null;
+  var travelId = $('#apTravelId').value || null;
+  var note = $('#apNote').value.trim() || null;
+
+  if (_editingPhotoId) {
+    updateRecord('photos', _editingPhotoId, { title: title, taken_at: takenAt, travel_id: travelId, note: note });
+    closeAlbumModal(); renderAlbumPage();
+    showDiagToast('已保存照片 ✓', 'online');
+  } else {
+    if (!_albumImages.length) { showDiagToast('请先选择照片', 'error'); return; }
+    var ts = Date.now();
+    _albumImages.forEach(function(dataUrl, i) {
+      createRecord('photos', { id: 'p_' + ts + '_' + i, travel_id: travelId, title: title, taken_at: takenAt, image: dataUrl, note: note });
+    });
+    closeAlbumModal(); renderAlbumPage();
+    showDiagToast('已添加 ' + _albumImages.length + ' 张照片 ✓', 'online');
+  }
+}
+
+// ---- Lightbox ----
+function openAlbumLightbox(photoId) {
+  _lbList = sortPhotos(albumFilteredPhotos());
+  _lbIndex = _lbList.findIndex(function(p){ return p.id === photoId; });
+  if (_lbIndex < 0) _lbIndex = 0;
+  renderLightbox();
+  $('#albumLightbox').classList.remove('hidden');
+}
+
+function renderLightbox() {
+  var p = _lbList[_lbIndex];
+  if (!p) return;
+  $('#albumLbImg').src = p.image;
+  $('#albumLbTitle').textContent = p.title || '未命名';
+  var meta = [];
+  if (p.taken_at) meta.push('📅 ' + p.taken_at);
+  var tn = travelName(p.travel_id); if (tn) meta.push('✈️ ' + tn);
+  if (p.note) meta.push(p.note);
+  $('#albumLbMeta').textContent = meta.join(' · ');
+}
+
+$('#albumLbClose').addEventListener('click', function(){ $('#albumLightbox').classList.add('hidden'); });
+$('#albumLbPrev').addEventListener('click', function(){ if (_lbList.length > 1) { _lbIndex = (_lbIndex - 1 + _lbList.length) % _lbList.length; renderLightbox(); } });
+$('#albumLbNext').addEventListener('click', function(){ if (_lbList.length > 1) { _lbIndex = (_lbIndex + 1) % _lbList.length; renderLightbox(); } });
+$('#albumLightbox').addEventListener('click', function(e){ if (e.target === this) this.classList.add('hidden'); });
+document.addEventListener('keydown', function(e) {
+  if ($('#albumLightbox').classList.contains('hidden')) return;
+  if (e.key === 'ArrowLeft') $('#albumLbPrev').click();
+  if (e.key === 'ArrowRight') $('#albumLbNext').click();
+  if (e.key === 'Escape') $('#albumLightbox').classList.add('hidden');
+});
+
+$('#btnAddPhoto').addEventListener('click', function(){ openAlbumModal(); });
+$('#btnAlbumSave').addEventListener('click', saveAlbumModal);
+$('#btnAlbumCancel').addEventListener('click', closeAlbumModal);
+$('#albumOverlay').addEventListener('click', function(e){ if (e.target === $('#albumOverlay')) closeAlbumModal(); });
 
 // ============================================================
 // ANNUAL BUDGET — summary + categories + monthly detail
@@ -4836,7 +5283,7 @@ $('#btnSettingsClose').addEventListener('click', () => $('#settingsOverlay').cla
 $('#settingsOverlay').addEventListener('click', e => { if (e.target === $('#settingsOverlay')) $('#settingsOverlay').classList.add('hidden'); });
 
 // ============================================================
-// 一键强制更新 (v14.44) — 注销 SW + 清空所有 Cache Storage + 带时间戳强刷
+// 一键强制更新 (v14.45) — 注销 SW + 清空所有 Cache Storage + 带时间戳强刷
 // 用于解决 iOS PWA / 浏览器缓存顽固、页面停在旧版本的问题
 // ============================================================
 function syncVersionDisplay() {
