@@ -11,6 +11,16 @@
 <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
 <link rel="manifest" href="./manifest.json">
 <title>amber的工作台</title>
+<script>
+// v14.40: 尽早应用主题，避免首屏浅色闪烁
+(function(){
+  try {
+    var t = JSON.parse(localStorage.getItem('amber_config') || '{}').theme || 'auto';
+    var dark = t === 'dark' || (t === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
+  } catch(e) {}
+})();
+</script>
 <style>
 /* ===== Reset & Base ===== */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -22,11 +32,38 @@
   --white:#FFFFFF;--gray-50:#FAFAFA;--gray-100:#F5F5F5;--gray-200:#EEEEEE;
   --gray-300:#E0E0E0;--gray-400:#BDBDBD;--gray-500:#9E9E9E;
   --gray-700:#616161;--gray-900:#212121;
+  --panel:rgba(255,255,255,.85);
+  --panel-strong:rgba(255,255,255,.95);
+  --surface:#FFFFFF;
   --radius:14px;--radius-sm:10px;--radius-xs:8px;
   --shadow:0 2px 12px rgba(0,0,0,.06);
   --shadow-lg:0 8px 30px rgba(0,0,0,.08);
   --sidebar-w:200px;
 }
+
+/* ===== Dark Theme (v14.40) ===== */
+[data-theme="dark"]{
+  --blue-50:#18242F;--blue-100:#1E3345;--blue-200:#2A465C;--blue-300:#3A5A75;
+  --blue-400:#5C9EC4;--blue-500:#7EB8DA;
+  --pink-50:#261E23;--pink-100:#37282F;--pink-200:#48333C;--pink-300:#5A404B;
+  --pink-400:#EC7FA0;--pink-500:#D4687C;
+  --surface:#1E1E22;--gray-50:#26262B;--gray-100:#2E2E34;--gray-200:#3A3A41;
+  --gray-300:#4A4A52;--gray-400:#77777F;--gray-500:#9E9E9E;
+  --gray-700:#C7C7CE;--gray-900:#ECECEF;
+  --panel:rgba(30,30,34,.85);
+  --panel-strong:rgba(30,30,34,.95);
+  --shadow:0 2px 12px rgba(0,0,0,.45);
+  --shadow-lg:0 8px 30px rgba(0,0,0,.55);
+}
+/* 深色下同步药丸 / 逾期 / 超支等浅色语义背景需压暗，避免刺眼 */
+[data-theme="dark"] .sync-pill.online{background:#1C3320;color:#7ED491}
+[data-theme="dark"] .sync-pill.syncing{background:#1A2A3A;color:#8FBFE8}
+[data-theme="dark"] .sync-pill.error{background:#3A2A16;color:#F2A15C}
+[data-theme="dark"] .sync-pill.partial{background:#3A3416;color:#E8C25A}
+[data-theme="dark"] .plan-section.overdue .plan-item{background:#3A2E18}
+[data-theme="dark"] .bs-card.bs-over{background:#3A2A16;border-color:#5A4422}
+[data-theme="dark"] .ov-stat-card{background:var(--panel)}
+[data-theme="dark"] .event-item.ended{opacity:.55}
 body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
   background:linear-gradient(135deg,var(--blue-50) 0%,var(--pink-50) 100%);
@@ -38,7 +75,7 @@ body{
 /* ===== Desktop Top Bar ===== */
 .desktop-topbar{
   display:none;
-  height:36px;background:rgba(255,255,255,.85);
+  height:36px;background:var(--panel);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid rgba(0,0,0,.05);
   align-items:center;justify-content:space-between;
@@ -68,7 +105,7 @@ body{
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .sync-test-btn{
   margin-left:4px;padding:2px 10px;border-radius:10px;border:1px solid var(--gray-300);
-  background:var(--white);font-size:11px;color:var(--gray-700);cursor:pointer;
+  background:var(--surface);font-size:11px;color:var(--gray-700);cursor:pointer;
   font-family:inherit;transition:all .2s;display:none;
 }
 .sync-pill.offline .sync-test-btn,.sync-pill.error .sync-test-btn{display:inline-block}
@@ -83,7 +120,7 @@ body{
 
 /* ===== Sidebar ===== */
 .sidebar{
-  width:var(--sidebar-w);background:rgba(255,255,255,.9);
+  width:var(--sidebar-w);background:var(--panel);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-right:1px solid rgba(0,0,0,.06);
   display:flex;flex-direction:column;flex-shrink:0;
@@ -132,7 +169,7 @@ body{
 /* ===== Mobile Top Bar ===== */
 .topbar{
   display:none;align-items:center;justify-content:space-between;
-  padding:10px 16px;background:rgba(255,255,255,.85);
+  padding:10px 16px;background:var(--panel);
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-bottom:1px solid rgba(0,0,0,.06);
   position:sticky;top:0;z-index:100;gap:8px;
@@ -153,7 +190,7 @@ body{
 /* ===== Mobile Nav ===== */
 .mobile-nav{
   display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
-  background:rgba(255,255,255,.95);backdrop-filter:blur(20px);
+  background:var(--panel-strong);backdrop-filter:blur(20px);
   -webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.06);
   padding:6px 10px env(safe-area-inset-bottom,10px);
 }
@@ -169,7 +206,7 @@ body{
 
 /* ===== Cards ===== */
 .card{
-  background:rgba(255,255,255,.85);
+  background:var(--panel);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border-radius:var(--radius);padding:20px;
   box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
@@ -191,7 +228,7 @@ body{
 .cal-nav{display:flex;align-items:center;gap:12px}
 .cal-nav button{
   padding:6px 14px;border-radius:8px;border:1.5px solid var(--gray-200);
-  background:var(--white);font-size:13px;cursor:pointer;font-family:inherit;
+  background:var(--surface);font-size:13px;cursor:pointer;font-family:inherit;
   color:var(--gray-700);transition:all .2s;
 }
 .cal-nav button:hover{border-color:var(--blue-300);color:var(--blue-500)}
@@ -213,7 +250,7 @@ body{
   display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
   font-size:13px;font-weight:500;color:var(--gray-700);
   border:1.5px solid transparent;min-height:80px;
-  background:#fff;overflow:hidden;
+  background:var(--surface);overflow:hidden;
 }
 .cal-day:hover{background:var(--blue-50);border-color:var(--blue-200)}
 .cal-day.today{background:var(--blue-100);border-color:var(--blue-300)}
@@ -267,7 +304,7 @@ body{
 .cal-ev.cat-其他.mmid{background:#9E9E9E;color:#F5F5F5}
 /* Event action popup (编辑 / 复制 / 移动) */
 .ev-popup{
-  position:fixed;z-index:260;background:var(--white);border-radius:12px;
+  position:fixed;z-index:260;background:var(--surface);border-radius:12px;
   box-shadow:var(--shadow-lg);padding:6px;min-width:184px;border:1px solid var(--gray-100);
 }
 .ev-popup.hidden{display:none}
@@ -295,7 +332,7 @@ body{
 }
 .plan-date-header button{
   width:30px;height:30px;border-radius:50%;border:1.5px solid var(--gray-200);
-  background:var(--white);font-size:16px;cursor:pointer;display:flex;
+  background:var(--surface);font-size:16px;cursor:pointer;display:flex;
   align-items:center;justify-content:center;color:var(--gray-700);transition:all .2s;
 }
 .plan-date-header button:hover{border-color:var(--blue-300);color:var(--blue-500)}
@@ -306,7 +343,7 @@ body{
   padding:10px 14px;font-size:14px;outline:none;font-family:inherit;
   background:var(--gray-50);transition:border-color .2s;
 }
-.plan-input:focus{border-color:var(--pink-300);background:var(--white)}
+.plan-input:focus{border-color:var(--pink-300);background:var(--surface)}
 .btn-add{
   padding:10px 18px;border:none;border-radius:var(--radius-xs);
   background:var(--pink-300);color:var(--white);
@@ -322,7 +359,7 @@ body{
 .plan-check{
   width:22px;height:22px;border-radius:5px;border:2px solid var(--gray-300);
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .2s;flex-shrink:0;background:var(--white);
+  transition:all .2s;flex-shrink:0;background:var(--surface);
 }
 .plan-check:hover{border-color:var(--pink-300);background:var(--pink-50)}
 .plan-item.done .plan-check{background:var(--pink-300);border-color:var(--pink-300)}
@@ -350,7 +387,7 @@ body{
 /* ===== Stats Cards (square, text top + number bottom) ===== */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 .stat-card{
-  background:rgba(255,255,255,.9);border-radius:12px;
+  background:var(--panel);border-radius:12px;
   padding:14px 10px;text-align:center;
   box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
   transition:all .2s;cursor:default;display:flex;flex-direction:column;
@@ -371,7 +408,7 @@ body{
 /* ===== Rich Overview Stats (2x2 cards) ===== */
 .ov-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .ov-stat-card{
-  background:rgba(255,255,255,.92);border-radius:14px;
+  background:var(--panel);border-radius:14px;
   padding:14px 14px 12px;box-shadow:var(--shadow);
   border:1px solid rgba(0,0,0,.04);border-top:3px solid var(--blue-300);
   display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:all .2s;
@@ -449,7 +486,7 @@ body{
   padding:10px 14px;font-size:14px;outline:none;font-family:inherit;
   background:var(--gray-50);transition:border-color .2s;
 }
-.plan-add-bottom input:focus{border-color:var(--pink-300);background:var(--white)}
+.plan-add-bottom input:focus{border-color:var(--pink-300);background:var(--surface)}
 .plan-add-bottom .btn-add{
   padding:10px 18px;border:none;border-radius:var(--radius-xs);
   background:var(--pink-300);color:var(--white);
@@ -491,7 +528,7 @@ body{
   padding:10px 14px;font-size:14px;outline:none;font-family:inherit;background:var(--gray-50);
   transition:border-color .2s;
 }
-.modal select:focus{border-color:var(--blue-300);background:var(--white)}
+.modal select:focus{border-color:var(--blue-300);background:var(--surface)}
 @media (max-width: 768px) {
   .plan-add-bottom { margin-bottom: 60px; }
 }
@@ -505,7 +542,7 @@ body{
 .ics-label{font-size:13px;color:var(--gray-700);font-weight:600}
 .btn-ics{
   padding:6px 14px;border-radius:8px;border:1.5px solid var(--blue-300);
-  background:var(--white);color:var(--blue-500);font-size:13px;
+  background:var(--surface);color:var(--blue-500);font-size:13px;
   cursor:pointer;font-family:inherit;font-weight:600;transition:all .2s;
 }
 .btn-ics:hover{background:var(--blue-100)}
@@ -531,7 +568,7 @@ body{
   padding:9px 12px;font-size:13px;outline:none;font-family:inherit;
   background:var(--gray-50);transition:border-color .2s;
 }
-.event-input-row input:focus{border-color:var(--blue-300);background:var(--white)}
+.event-input-row input:focus{border-color:var(--blue-300);background:var(--surface)}
 .ev-date{flex:1;min-width:100px}
 .ev-time{flex:1;min-width:80px}
 .ev-title{flex:2;min-width:120px}
@@ -578,7 +615,7 @@ body{
 }
 .em-cat-chip{
   flex:1;min-width:54px;padding:6px 10px;border-radius:14px;border:1.5px solid var(--gray-200);
-  background:var(--white);font-size:12px;font-weight:600;color:var(--gray-700);cursor:pointer;
+  background:var(--surface);font-size:12px;font-weight:600;color:var(--gray-700);cursor:pointer;
   font-family:inherit;transition:all .15s;
 }
 .em-cat-chip[data-cat=""]{color:var(--gray-500)}
@@ -695,7 +732,7 @@ body{
 .form-group label{font-size:13px;font-weight:600;color:var(--gray-700)}
 .form-group input,.form-group select{
   padding:8px 10px;border:1px solid var(--gray-300);border-radius:var(--radius-xs);
-  font-size:14px;background:var(--white);outline:none;transition:border-color .2s;
+  font-size:14px;background:var(--surface);outline:none;transition:border-color .2s;
 }
 .form-group input:focus,.form-group select:focus{border-color:var(--orange-400)}
 .travel-img-preview{
@@ -707,7 +744,7 @@ body{
 /* ===== Annual Budget ===== */
 .budget-years{display:flex;gap:8px;margin-bottom:14px}
 .budget-year-btn{
-  border:1.5px solid var(--gray-300);background:var(--white);color:var(--gray-600);
+  border:1.5px solid var(--gray-300);background:var(--surface);color:var(--gray-600);
   border-radius:16px;padding:5px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;
 }
 .budget-year-btn.active{background:#66BB6A;border-color:#66BB6A;color:#fff}
@@ -727,7 +764,7 @@ body{
 .bs-fill.over{background:linear-gradient(90deg,#FFB74D,#E65100)}
 .budget-cats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
 .bc-item{
-  background:var(--white);border:1px solid var(--gray-200);border-radius:var(--radius-xs);
+  background:var(--surface);border:1px solid var(--gray-200);border-radius:var(--radius-xs);
   padding:10px 12px;display:flex;flex-direction:column;gap:4px;
 }
 .bc-head{display:flex;align-items:center;justify-content:space-between}
@@ -783,7 +820,7 @@ body{
 .cy-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--gray-600)}
 .cy-target-input{
   width:64px;border:1.5px solid #C8E6C9;border-radius:var(--radius-xs);
-  padding:4px 8px;font-size:13px;text-align:center;font-family:inherit;background:var(--white);
+  padding:4px 8px;font-size:13px;text-align:center;font-family:inherit;background:var(--surface);
   outline:none;color:#2E7D32;font-weight:700;transition:border-color .2s;
 }
 .cy-target-input:focus{border-color:#4CAF50}
@@ -840,7 +877,7 @@ body{
 /* ===== Overview Modules ===== */
 .overview-modules{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .ov-module{
-  background:rgba(255,255,255,.85);border-radius:var(--radius);padding:16px;
+  background:var(--panel);border-radius:var(--radius);padding:16px;
   box-shadow:var(--shadow);border:1px solid rgba(0,0,0,.04);
   cursor:pointer;transition:all .2s;
 }
@@ -922,7 +959,7 @@ body{
 }
 .modal-overlay.hidden{display:none}
 .modal{
-  background:var(--white);border-radius:var(--radius);
+  background:var(--surface);border-radius:var(--radius);
   padding:28px;width:90%;max-width:440px;
   box-shadow:var(--shadow-lg);
 }
@@ -934,7 +971,7 @@ body{
   padding:10px 14px;font-size:14px;outline:none;font-family:inherit;background:var(--gray-50);
   transition:border-color .2s;
 }
-.modal input:focus{border-color:var(--blue-300);background:var(--white)}
+.modal input:focus{border-color:var(--blue-300);background:var(--surface)}
 .modal-hint{font-size:12px;color:var(--gray-400);margin-top:4px}
 .modal-actions{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
 .btn{border:none;border-radius:var(--radius-xs);padding:10px 20px;font-size:14px;cursor:pointer;font-weight:600;transition:all .2s}
@@ -959,7 +996,7 @@ body{
 .widget-panel{
   display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
   z-index:190;width:min(340px,92vw);
-  background:rgba(255,255,255,.95);backdrop-filter:blur(20px);
+  background:var(--panel-strong);backdrop-filter:blur(20px);
   -webkit-backdrop-filter:blur(20px);border-radius:20px;padding:20px;
   box-shadow:0 20px 60px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.06);
 }
@@ -1057,7 +1094,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.39</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.40</div>
     </div>
   </aside>
 
@@ -1516,6 +1553,19 @@ body{
     <label style="margin-top:12px">腾讯地图 Key（可选，用于旅行热力图）</label>
     <input type="text" id="tencentMapKey" placeholder="申请地址 lbs.qq.com → 控制台 → 创建 Key" style="margin-bottom:4px">
     <p class="modal-hint">配置后旅行页热力图用腾讯地图渲染轨迹线+热力点（国内直连）。<br>需在腾讯位置服务控制台把 <b>940555875-source.github.io</b> 加入白名单。</p>
+    <label style="margin-top:12px">外观主题</label>
+    <select id="themeSelect" style="width:100%;padding:10px 14px;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);font-size:14px;background:var(--gray-50);color:var(--gray-900);font-family:inherit;outline:none">
+      <option value="auto">跟随系统</option>
+      <option value="light">浅色</option>
+      <option value="dark">深色</option>
+    </select>
+    <label style="margin-top:12px">数据备份</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="btn btn-secondary" id="btnExportData" style="flex:1">📥 导出备份</button>
+      <button type="button" class="btn btn-secondary" id="btnImportData" style="flex:1">📤 导入恢复</button>
+    </div>
+    <p class="modal-hint">导出为 JSON 文件保存；换设备/清缓存后可用「导入恢复」找回全部数据（含旅行、预算）。</p>
+    <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <div class="modal-actions">
       <button class="btn btn-danger" id="btnClearData">清除本地数据</button>
       <button class="btn btn-secondary" id="btnSettingsClose">取消</button>
@@ -1538,7 +1588,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.39 — 事件分类快捷色块 + 一键按标题批量分类
+// amber的工作台 v14.40 — 暗色模式 + 数据备份 + 移除 links 孤儿表 + 清理死文件
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1565,7 +1615,7 @@ const $$ = s => document.querySelectorAll(s);
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
-  links: 'amber_links_v3', travels: 'amber_travels_v1', budget: 'amber_budget_v1', config: 'amber_config',
+  travels: 'amber_travels_v1', budget: 'amber_budget_v1', config: 'amber_config',
   deviceId: 'amber_device_id',
 };
 
@@ -1579,7 +1629,6 @@ let state = {
   plans: [],
   events: [],
   checkins: [],
-  links: [],
   travels: [],
   budget: [],
   budgetYear: new Date().getFullYear(),
@@ -1713,7 +1762,7 @@ loadDisabledTables();
 // ============================================================
 
 // Map state keys to Supabase table names
-const TABLE_MAP = { plans: 'plans', events: 'events', checkins: 'checkins', links: 'links', travels: 'travels', budget: 'budget' };
+const TABLE_MAP = { plans: 'plans', events: 'events', checkins: 'checkins', travels: 'travels', budget: 'budget' };
 
 function withDeviceId(record) {
   return { ...record, device_id: DEVICE_ID };
@@ -2034,6 +2083,7 @@ async function init() {
   const safe = (label, fn) => { try { fn(); } catch(e) { reportBootError(label, e); } };
 
   safe('initSyncPills', () => initSyncPills());
+  safe('initTheme', () => initTheme());
   safe('loadLocalData', () => loadLocalData());
   safe('initCalendar', () => initCalendar());
   safe('initNavigation', () => initNavigation());
@@ -2069,7 +2119,6 @@ function loadLocalData() {
   try { state.plans = JSON.parse(localStorage.getItem(LS_KEYS.plans) || '[]').filter(r => !r.deleted_at); } catch(e) { state.plans = []; }
   try { state.events = JSON.parse(localStorage.getItem(LS_KEYS.events) || '[]').filter(r => !r.deleted_at); } catch(e) { state.events = []; }
   try { state.checkins = JSON.parse(localStorage.getItem(LS_KEYS.checkins) || '[]').filter(r => !r.deleted_at); } catch(e) { state.checkins = []; }
-  try { state.links = JSON.parse(localStorage.getItem(LS_KEYS.links) || '[]').filter(r => !r.deleted_at); } catch(e) { state.links = []; }
   try { state.travels = JSON.parse(localStorage.getItem(LS_KEYS.travels) || '[]').filter(r => !r.deleted_at); } catch(e) { state.travels = []; }
   try { state.budget = JSON.parse(localStorage.getItem(LS_KEYS.budget) || '[]').filter(r => !r.deleted_at); } catch(e) { state.budget = []; }
   try { state.budgetYear = parseInt(localStorage.getItem('amber_budget_year') || String(new Date().getFullYear())); } catch(e) { state.budgetYear = new Date().getFullYear(); }
@@ -2097,7 +2146,7 @@ async function periodicSync() {
 
 function cleanupOldTombstones() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
-  ['plans', 'events', 'checkins', 'links'].forEach(key => {
+  ['plans', 'events', 'checkins'].forEach(key => {
     try {
       const all = JSON.parse(localStorage.getItem(LS_KEYS[key]) || '[]');
       const cleaned = all.filter(r => !r.deleted_at || r.deleted_at > thirtyDaysAgo);
@@ -2144,7 +2193,7 @@ async function testConnection() {
     showDiagToast('连接成功 ✓ — 云端同步已就绪', 'online');
 
     // Do a full sync after successful test
-    fullSync('plans'); fullSync('events'); fullSync('checkins'); fullSync('links');
+    fullSync('plans'); fullSync('events'); fullSync('checkins');
     fullSync('travels'); fullSync('budget');
   } catch(e) {
     showDiagToast('网络错误 — 无法连接到 Supabase，请检查网络', 'error');
@@ -4539,11 +4588,38 @@ $('#bdItem').addEventListener('keydown', function(e) { if (e.key === 'Enter') sa
 // ============================================================
 // SETTINGS
 // ============================================================
+// ============================================================
+// THEME (v14.40: 暗色模式 — 跟随系统 / 浅色 / 深色)
+// ============================================================
+let systemDarkMQ = null;
+function applyTheme(theme) {
+  const root = document.documentElement;
+  if (theme === 'dark') {
+    root.setAttribute('data-theme', 'dark');
+  } else if (theme === 'light') {
+    root.removeAttribute('data-theme');
+  } else { // auto — 跟随系统
+    if (systemDarkMQ && systemDarkMQ.matches) root.setAttribute('data-theme', 'dark');
+    else root.removeAttribute('data-theme');
+  }
+}
+function getThemeSetting() {
+  const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
+  return cfg.theme || 'auto';
+}
+function initTheme() {
+  systemDarkMQ = window.matchMedia('(prefers-color-scheme: dark)');
+  const onChange = () => { if (getThemeSetting() === 'auto') applyTheme('auto'); };
+  try { systemDarkMQ.addEventListener('change', onChange); } catch(e) { systemDarkMQ.addListener(onChange); }
+  applyTheme(getThemeSetting());
+}
+
 function openSettings() {
   const cfg = JSON.parse(localStorage.getItem(LS_KEYS.config) || '{}');
   $('#supabaseUrl').value = normalizeSupabaseUrl(cfg.url) || '';
   $('#supabaseKey').value = cfg.key || '';
   $('#tencentMapKey').value = cfg.mapKey || '';
+  $('#themeSelect').value = cfg.theme || 'auto';
   $('#settingsOverlay').classList.remove('hidden');
 }
 
@@ -4553,8 +4629,9 @@ $('#btnSettingsClose').addEventListener('click', () => $('#settingsOverlay').cla
 $('#settingsOverlay').addEventListener('click', e => { if (e.target === $('#settingsOverlay')) $('#settingsOverlay').classList.add('hidden'); });
 
 $('#btnSettingsSave').addEventListener('click', () => {
-  const cfg = { url: normalizeSupabaseUrl($('#supabaseUrl').value), key: $('#supabaseKey').value.trim(), mapKey: $('#tencentMapKey').value.trim() };
+  const cfg = { url: normalizeSupabaseUrl($('#supabaseUrl').value), key: $('#supabaseKey').value.trim(), mapKey: $('#tencentMapKey').value.trim(), theme: $('#themeSelect').value || 'auto' };
   localStorage.setItem(LS_KEYS.config, JSON.stringify(cfg));
+  applyTheme(cfg.theme); // v14.40: 立即应用主题
   // Reset map state so new/changed key takes effect
   _tmapLoading = false; _tmapFailed = false;
   window.__travelMap = null;
@@ -4577,10 +4654,54 @@ $('#btnSettingsSave').addEventListener('click', () => {
 $('#btnClearData').addEventListener('click', () => {
   if (confirm('确定清除所有本地数据？不可恢复！')) {
     Object.values(LS_KEYS).forEach(k => localStorage.removeItem(k));
-    state = { ...state, plans: [], events: [], checkins: [], links: [] };
+    state = { ...state, plans: [], events: [], checkins: [], travels: [], budget: [] };
     renderAll();
     $('#settingsOverlay').classList.add('hidden');
   }
+});
+
+// ============================================================
+// DATA BACKUP / RESTORE (v14.40)
+// ============================================================
+$('#btnExportData').addEventListener('click', () => {
+  const dump = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && (k.startsWith('amber_') || k.startsWith('sync.'))) dump[k] = localStorage.getItem(k);
+  }
+  const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  const stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  a.href = url; a.download = `amber-workbench-backup-${stamp}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showDiagToast('已导出备份 ✓', 'online');
+});
+
+$('#btnImportData').addEventListener('click', () => $('#importFileInput').click());
+$('#importFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const dump = JSON.parse(reader.result);
+      let count = 0;
+      Object.keys(dump).forEach(k => {
+        if (k.startsWith('amber_') || k.startsWith('sync.')) { localStorage.setItem(k, dump[k]); count++; }
+      });
+      loadLocalData();
+      applyTheme(getThemeSetting());
+      renderAll();
+      showDiagToast('已恢复 ' + count + ' 项数据 ✓', 'online');
+    } catch(err) {
+      showDiagToast('导入失败：文件格式不正确', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 });
 
 // ============================================================
