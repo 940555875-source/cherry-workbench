@@ -56,6 +56,7 @@ body{
 .sync-pill.offline{background:var(--gray-100);color:var(--gray-500)}
 .sync-pill.syncing{background:var(--blue-50);color:var(--blue-500)}
 .sync-pill.error{background:#FFF3E0;color:#E65100}
+.sync-pill.partial{background:#FFFDE7;color:#F57C00}  /* v14.38: 部分同步 — 黄/橙，避免红色 */
 .sync-pill-dot{
   width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all .3s;
 }
@@ -63,6 +64,7 @@ body{
 .sync-pill.offline .sync-pill-dot{background:var(--gray-400)}
 .sync-pill.syncing .sync-pill-dot{background:var(--blue-400);animation:pulse 1s infinite}
 .sync-pill.error .sync-pill-dot{background:#FF9800}
+.sync-pill.partial .sync-pill-dot{background:#FFB300;box-shadow:0 0 6px rgba(255,179,0,.4)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .sync-test-btn{
   margin-left:4px;padding:2px 10px;border-radius:10px;border:1px solid var(--gray-300);
@@ -1021,7 +1023,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.35</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.38</div>
     </div>
   </aside>
 
@@ -1490,7 +1492,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.35 — schema cache 过期不剥字段（提示刷新缓存）
+// amber的工作台 v14.38 — 失败表自动熔断（黑名单机制）+ 状态机分化为 online/partial/error/offline
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1611,6 +1613,11 @@ function initSyncPills() {
   pillEls.testBtnMobile = $('#syncTestBtnMobile');
 }
 
+// v14.38: 同步状态机 — 状态分类细化为 online / partial / error / offline
+// 'online'  : 所有非黑名单表同步成功
+// 'partial' : 部分表成功，部分表被熔断或失败（药丸显示「部分同步」黄/橙色）
+// 'error'   : 主要表失败，药丸显示「同步失败」红色
+// 'offline' : 未连接或 sb 为空
 function setSyncStatus(status, label, detail) {
   [pillEls.desktop, pillEls.mobile].forEach(el => {
     if (!el) return;
@@ -1621,6 +1628,39 @@ function setSyncStatus(status, label, detail) {
     if (el) el.textContent = label;
   });
 }
+
+// v14.38: 失败表自动熔断 — 连续失败 2 次直接进黑名单，避免无限重试 + 控制台刷屏 + 徽章变红
+// 黑名单持久化到 localStorage，用户可在控制台执行 window.resetDisabledTables() 清空
+const DISABLED_TABLES_KEY = 'sync.disabledTables.v1';
+const PUSH_FAIL_THRESHOLD = 2;
+let pushFailCount = {};     // tableName -> 连续失败次数
+let disabledTables = new Set();
+
+function loadDisabledTables() {
+  try {
+    const raw = localStorage.getItem(DISABLED_TABLES_KEY);
+    if (raw) disabledTables = new Set(JSON.parse(raw));
+  } catch {}
+}
+function saveDisabledTables() {
+  localStorage.setItem(DISABLED_TABLES_KEY, JSON.stringify([...disabledTables]));
+}
+function markTableDisabled(tableName, reason) {
+  if (disabledTables.has(tableName)) return;
+  disabledTables.add(tableName);
+  saveDisabledTables();
+  console.warn(`⚠️ Table \`${tableName}\` auto-disabled after ${PUSH_FAIL_THRESHOLD} failed pushes. Reason: ${reason}. Run window.resetDisabledTables() to retry.`);
+}
+function isTableDisabled(tableName) { return disabledTables.has(tableName); }
+window.resetDisabledTables = () => {
+  disabledTables.clear();
+  pushFailCount = {};
+  saveDisabledTables();
+  console.log('✅ All tables re-enabled. Triggering a full resync...');
+  Object.keys(TABLE_MAP).forEach(k => debouncedSync(k));
+  setSyncStatus('online', '已就绪');
+};
+loadDisabledTables();
 
 // ============================================================
 // TOMBSTONE SYNC ENGINE
@@ -1635,42 +1675,64 @@ function withDeviceId(record) {
 
 /** Pull all records from a Supabase table (including tombstones).
  *  容错：表或列不存在时降级为空数组，不阻塞整个 sync 流程；
- *  只有真正的网络/权限错误才返回 null 让 fullSync 上报同步失败。 */
+ *  只有真正的网络/权限错误才返回 null 让 fullSync 上报同步失败。
+ *  v14.38: 黑名单表直接返回 []，不入错误日志 */
 async function cloudPull(tableName) {
   if (!sb) return null;
+  if (isTableDisabled(tableName)) return [];
   const { data, error } = await sb.from(tableName).select('*').order('updated_at', { ascending: false });
   if (error) {
     const msg = error.message || '';
     if (/Could not find the table|relation .* does not exist|invalid schema/i.test(msg)) {
+      // 表不存在 — 计入失败次数，达到阈值则熔断
+      pushFailCount[tableName] = (pushFailCount[tableName] || 0) + 1;
+      if (pushFailCount[tableName] >= PUSH_FAIL_THRESHOLD) markTableDisabled(tableName, msg);
       console.warn('Pull: table missing, treating as empty', tableName, msg);
       return [];
     }
     if (/Could not find the '\w+' column/i.test(msg)) {
+      pushFailCount[tableName] = (pushFailCount[tableName] || 0) + 1;
+      if (pushFailCount[tableName] >= PUSH_FAIL_THRESHOLD) markTableDisabled(tableName, msg);
       console.warn('Pull: column missing, treating as empty', tableName, msg);
       return [];
     }
     console.warn('Pull error', tableName, msg);
     return null;
   }
+  // pull 成功 — 清零失败计数
+  pushFailCount[tableName] = 0;
   return data || [];
 }
 
 /** Push (upsert) records to cloud. Returns true on success.
  *  Robust 容错 — 如果表 schema 缺失某字段（如 cat 未建列），会自动剥除未知字段重试，
- *  避免「未知字段导致整批 upsert 失败」，保证基础同步不被一个新增列卡死。 */
+ *  避免「未知字段导致整批 upsert 失败」，保证基础同步不被一个新增列卡死。
+ *  v14.38: 连续失败 PUSH_FAIL_THRESHOLD 次自动熔断（黑名单），不再重试 */
 async function cloudPush(tableName, records) {
   if (!sb || !records.length) return false;
+  if (isTableDisabled(tableName)) {
+    // 黑名单表静默跳过，不刷控制台
+    return false;
+  }
   let attemptRecords = records;
   let lastErr = null;
   for (let i = 0; i < 4; i++) {
     const { error } = await sb.from(tableName).upsert(attemptRecords);
-    if (!error) return true;
+    if (!error) {
+      pushFailCount[tableName] = 0;  // 成功清零
+      return true;
+    }
     lastErr = error;
     const msg = error.message || '';
-    // 表不存在：剥成只剩 id 元数据列也上传失败，直接放弃剥字段（用户应建表）
+    // 表不存在：计入失败次数，达到阈值则熔断
     if (/Could not find the table.*schema cache|relation.*does not exist/i.test(msg)) {
-      console.warn('Push: table missing — run the SQL to create tables', tableName, msg);
-      break;
+      pushFailCount[tableName] = (pushFailCount[tableName] || 0) + 1;
+      if (pushFailCount[tableName] >= PUSH_FAIL_THRESHOLD) {
+        markTableDisabled(tableName, msg);
+        return false;
+      }
+      console.warn('Push: table missing (will not disable yet)', tableName, msg);
+      return false;  // 还没达到阈值，但本次不再循环重试 — 等下次同步再试
     }
     // 遇到 schema cache 过期：等几秒重试（PostgREST reload 是异步的）
     if (/schema cache/i.test(msg) && /could not find/i.test(msg)) {
@@ -1689,6 +1751,11 @@ async function cloudPush(tableName, records) {
       });
       continue;
     }
+    // 其它网络/权限错误 — 计入失败次数，达到阈值则熔断
+    pushFailCount[tableName] = (pushFailCount[tableName] || 0) + 1;
+    if (pushFailCount[tableName] >= PUSH_FAIL_THRESHOLD) {
+      markTableDisabled(tableName, msg);
+    }
     break;
   }
   console.warn('Push error', tableName, lastErr && lastErr.message);
@@ -1706,30 +1773,45 @@ async function cloudTombstone(tableName, id) {
 
 /**
  * Full merge: pull cloud → apply tombstones → merge non-tombstone → push local-only
- * Returns merged local data (active records only, no tombstones)
+ * Returns 'ok' | 'partial' | 'error'
+ *   'ok'     — 表正常同步（包括空数据的情况）
+ *   'partial'— 表已熔断（黑名单），跳过同步但不算错误
+ *   'error'  — 真错（网络/RLS）导致表未同步
+ *
+ * v14.38: 黑名单表视为 'partial'，徽章显示「部分同步」而非「同步失败」
  */
 async function fullSync(key) {
-  if (!syncEnabled || !sb) return;
+  if (!syncEnabled || !sb) return 'ok';
 
   const tableName = TABLE_MAP[key];
-  if (!tableName) return;
+  if (!tableName) return 'ok';
+
+  // 黑名单表直接视为 partial 跳过，不打日志、不调用 API
+  if (isTableDisabled(tableName)) {
+    return 'partial';
+  }
 
   try {
     // 1. Pull all records from cloud
     const cloudRecords = await cloudPull(tableName);
     if (cloudRecords === null) {
-      // Pull failed (network/table missing/RLS) — do NOT treat as "cloud empty"
+      // 真错才在这里
       setSyncStatus('error', '同步失败', `拉取 ${tableName} 失败，请点「测试连接」诊断`);
-      return false;
+      return 'error';
     }
     if (!cloudRecords.length) {
       // No cloud data — push all local to cloud
       const localData = state[key].map(withDeviceId);
       if (localData.length) {
         const ok = await cloudPush(tableName, localData);
-        if (!ok) { setSyncStatus('error', '同步失败', `上传 ${tableName} 失败`); return false; }
+        if (!ok) {
+          // 这一次失败可能把表推进了黑名单 — 检查一下
+          if (isTableDisabled(tableName)) return 'partial';
+          setSyncStatus('error', '同步失败', `上传 ${tableName} 失败`);
+          return 'error';
+        }
       }
-      return true;
+      return 'ok';
     }
 
     // 2. Build lookup maps
@@ -1780,15 +1862,37 @@ async function fullSync(key) {
     // 8. Push local-only records
     if (toPush.length) {
       const ok = await cloudPush(tableName, toPush);
-      if (!ok) { setSyncStatus('error', '同步失败', `上传 ${tableName} 失败`); return false; }
+      if (!ok) {
+        if (isTableDisabled(tableName)) return 'partial';
+        setSyncStatus('error', '同步失败', `上传 ${tableName} 失败`);
+        return 'error';
+      }
     }
 
     // 9. Success — status set by caller (to avoid concurrent overwrite)
-    return true;
+    return 'ok';
   } catch(e) {
     console.warn('FullSync error', key, e.message);
     setSyncStatus('error', '同步失败');
-    return false;
+    return 'error';
+  }
+}
+
+/** 并发同步所有表后合并徽章状态：全部 ok → online；有任何 partial 且无 error → partial；
+ *  全部 error → error */
+async function fullSyncAll() {
+  const keys = Object.keys(TABLE_MAP);
+  const results = await Promise.all(keys.map(k => fullSync(k)));
+  const hasError = results.includes('error');
+  const hasPartial = results.includes('partial');
+  if (hasError) {
+    setSyncStatus('error', '同步失败', `有表同步失败，详情见控制台`);
+  } else if (hasPartial) {
+    const disabledNow = [...disabledTables];
+    setSyncStatus('partial', `部分同步（${disabledNow.length} 表暂不可用）`,
+      `已熔断表: ${disabledNow.join(', ')}。控制台执行 resetDisabledTables() 重试`);
+  } else {
+    setSyncStatus('online', '已同步');
   }
 }
 
@@ -1815,7 +1919,10 @@ function createRecord(key, record) {
   saveLocal(key, state[key]);
 
   if (syncEnabled) {
-    cloudPush(TABLE_MAP[key], [withDeviceId(rec)]).then(ok => setSyncStatus(ok ? 'online' : 'error', ok ? '已同步' : '同步失败'));
+    // v14.38: 不再立即设 pill — 让 fullSyncAll 聚合（避免单表失败把已同步变红）
+    const tableName = TABLE_MAP[key];
+    if (isTableDisabled(tableName)) return;
+    cloudPush(tableName, [withDeviceId(rec)]).finally(() => scheduleFullSyncAll());
   }
 }
 
@@ -1826,7 +1933,9 @@ function updateRecord(key, id, updates) {
   saveLocal(key, state[key]);
 
   if (syncEnabled) {
-    cloudPush(TABLE_MAP[key], [withDeviceId(rec)]).then(ok => setSyncStatus(ok ? 'online' : 'error', ok ? '已同步' : '同步失败'));
+    const tableName = TABLE_MAP[key];
+    if (isTableDisabled(tableName)) return;
+    cloudPush(tableName, [withDeviceId(rec)]).finally(() => scheduleFullSyncAll());
   }
 }
 
@@ -1854,8 +1963,21 @@ function deleteRecord(key, id) {
   localStorage.setItem(LS_KEYS[key], JSON.stringify(allRecords));
 
   if (syncEnabled) {
-    cloudTombstone(TABLE_MAP[key], id).then(ok => setSyncStatus(ok ? 'online' : 'error', ok ? '已同步' : '同步失败'));
+    const tableName = TABLE_MAP[key];
+    if (isTableDisabled(tableName)) return;
+    cloudTombstone(tableName, id).finally(() => scheduleFullSyncAll());
   }
+}
+
+/* v14.38: 聚合同步调度器 — 把所有 CRUD 触发的同步去抖到同一时刻，再调用 fullSyncAll 统一判断状态 */
+let syncAllTimer = null;
+function scheduleFullSyncAll() {
+  if (syncAllTimer) clearTimeout(syncAllTimer);
+  setSyncStatus('syncing', '同步中...');
+  syncAllTimer = setTimeout(() => {
+    syncAllTimer = null;
+    fullSyncAll().catch(e => console.warn('scheduleFullSyncAll failed', e.message));
+  }, 800);
 }
 
 // ============================================================
@@ -1880,12 +2002,7 @@ async function init() {
       if (!ok) { setSyncStatus('offline', '未连接'); return; }
       const hasConfig = initSupabase();
       if (hasConfig) {
-        setSyncStatus('syncing', '同步中...');
-        Promise.all([
-          fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'),
-          fullSync('travels'), fullSync('budget'),
-        ]).then(results => {
-          if (results.every(Boolean)) setSyncStatus('online', '已同步');
+        fullSyncAll().then(() => {
           safe('renderAll after sync', () => renderAll());
         }).catch(e => {
           console.warn('Initial sync failed', e.message);
@@ -1923,15 +2040,11 @@ function renderAll() {
 
 async function periodicSync() {
   if (!syncEnabled) return;
-  setSyncStatus('syncing', '同步中...');
   try {
-    const syncResults = await Promise.all([
-      fullSync('plans'), fullSync('events'), fullSync('checkins'), fullSync('links'),
-      fullSync('travels'), fullSync('budget'),
-    ]);
-    if (syncResults.every(Boolean)) setSyncStatus('online', '已同步');
+    await fullSyncAll();
     renderAll();
   } catch(e) {
+    console.warn('periodicSync failed', e.message);
     setSyncStatus('error', '同步失败');
   }
 }
