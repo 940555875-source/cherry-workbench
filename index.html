@@ -1021,7 +1021,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.33</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.34</div>
     </div>
   </aside>
 
@@ -1490,7 +1490,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.33 — cloudPush容错（剥除未知字段重试，解决cat同步失败）
+// amber的工作台 v14.34 — cloudPull表/列缺失降级+seed幂等补全缺失数据
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1633,11 +1633,25 @@ function withDeviceId(record) {
   return { ...record, device_id: DEVICE_ID };
 }
 
-/** Pull all records from a Supabase table (including tombstones). Returns null on failure (distinct from empty). */
+/** Pull all records from a Supabase table (including tombstones).
+ *  容错：表或列不存在时降级为空数组，不阻塞整个 sync 流程；
+ *  只有真正的网络/权限错误才返回 null 让 fullSync 上报同步失败。 */
 async function cloudPull(tableName) {
   if (!sb) return null;
   const { data, error } = await sb.from(tableName).select('*').order('updated_at', { ascending: false });
-  if (error) { console.warn('Pull error', tableName, error.message); return null; }
+  if (error) {
+    const msg = error.message || '';
+    if (/Could not find the table|relation .* does not exist|invalid schema/i.test(msg)) {
+      console.warn('Pull: table missing, treating as empty', tableName, msg);
+      return [];
+    }
+    if (/Could not find the '\w+' column/i.test(msg)) {
+      console.warn('Pull: column missing, treating as empty', tableName, msg);
+      return [];
+    }
+    console.warn('Pull error', tableName, msg);
+    return null;
+  }
   return data || [];
 }
 
@@ -3386,20 +3400,26 @@ var TRAVEL_SEED_DATA = [
   {id:'t_2026_12', year:2026, month:12, day:20, destination:'总决赛',        tag:'羽毛球', done:false}
 ];
 
-// Seed on first load (only if empty)
+// Seed on first load — IDEMPOTENT: skip any seed id that exists locally,
+// so re-running after sync won't duplicate. This ensures missing seed entries
+// get backfilled even when state.travels already has some records (e.g. partial cloud pull).
 function seedTravelData() {
-  if (state.travels.length === 0) {
-    TRAVEL_SEED_DATA.forEach(function(d) {
-      var payload = {
-        year:d.year, month:d.month, day:d.day||null,
-        month_end:d.month_end||null, day_end:d.day_end||null,
-        destination:d.destination, tag:d.tag||null,
-        doc_link:null, cost:null, image:null, location:null,
-        sort_key: d.year + '-' + String(d.month).padStart(2,'0'),
-        done: d.done
-      };
-      createRecord('travels', { id: d.id, ...payload });
-    });
+  var existing = new Set(state.travels.map(function(t){ return t.id; }));
+  var added = 0;
+  TRAVEL_SEED_DATA.forEach(function(d) {
+    if (existing.has(d.id)) return;
+    var payload = {
+      year:d.year, month:d.month, day:d.day||null,
+      month_end:d.month_end||null, day_end:d.day_end||null,
+      destination:d.destination, tag:d.tag||null,
+      doc_link:null, cost:null, image:null, location:null,
+      sort_key: d.year + '-' + String(d.month).padStart(2,'0'),
+      done: d.done
+    };
+    createRecord('travels', { id: d.id, ...payload });
+    added++;
+  });
+  if (added > 0) {
     state.travels = JSON.parse(localStorage.getItem(LS_KEYS.travels) || '[]').filter(function(r){ return !r.deleted_at; });
   }
 }
@@ -4006,19 +4026,27 @@ var BUDGET_SEED = [
   {year:2026, month:12, range:'12.9-12.13', item:'总决赛', cat:'毛球', budget:4000, actual:null, note:null},
 ];
 
+// Seed is IDEMPOTENT: skip any seed id that exists locally, so re-running after sync won't
+// duplicate. This ensures missing seed entries get backfilled even when state.budget already
+// has some records (e.g. partial cloud pull).
 function seedBudgetData() {
-  if (state.budget.length === 0) {
-    BUDGET_SEED.forEach(function(b, i) {
-      var payload = {
-        year: b.year, month: b.month, range: b.range || null,
-        item: b.item, cat: b.cat || '其他',
-        budget: (b.budget === null || b.budget === undefined) ? null : b.budget,
-        actual: (b.actual === null || b.actual === undefined) ? null : b.actual,
-        note: b.note || null,
-        done: b.actual !== null && b.actual !== undefined
-      };
-      createRecord('budget', { id: 'b_' + b.year + '_' + i, ...payload });
-    });
+  var existing = new Set(state.budget.map(function(b){ return b.id; }));
+  var added = 0;
+  BUDGET_SEED.forEach(function(b, i) {
+    var seedId = 'b_' + b.year + '_' + i;
+    if (existing.has(seedId)) return;
+    var payload = {
+      year: b.year, month: b.month, range: b.range || null,
+      item: b.item, cat: b.cat || '其他',
+      budget: (b.budget === null || b.budget === undefined) ? null : b.budget,
+      actual: (b.actual === null || b.actual === undefined) ? null : b.actual,
+      note: b.note || null,
+      done: b.actual !== null && b.actual !== undefined
+    };
+    createRecord('budget', { id: seedId, ...payload });
+    added++;
+  });
+  if (added > 0) {
     state.budget = JSON.parse(localStorage.getItem(LS_KEYS.budget) || '[]').filter(function(r){ return !r.deleted_at; });
   }
 }
