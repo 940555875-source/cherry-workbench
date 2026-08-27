@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.29
+// amber的工作台 Service Worker v14.30
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.29: 旅行地图改为「带数量的小图钉」（SVG data-URI 图标，无 HTML、无轨迹线）
+// v14.30: 事件新增分类（竞体/运动/医美/其他），日历按分类着色+列表标签+总览色点+图例
 
-const VERSION = 'amber-workbench-v14.29';
+const VERSION = 'amber-workbench-v14.30';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

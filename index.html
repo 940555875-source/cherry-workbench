@@ -224,6 +224,13 @@ body{
   width:20px;height:20px;border-radius:50%;background:var(--blue-400);color:#fff;font-weight:700;
 }
 .cal-day-more{font-size:9px;color:var(--gray-400);font-weight:600}
+.cal-legend{
+  display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+  font-size:10px;color:var(--gray-500);margin-top:8px;
+}
+.cal-legend span{display:inline-flex;align-items:center;gap:4px}
+.lg-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.lg-blue{background:var(--blue-400)}
 .cal-day-events{display:flex;flex-direction:column;gap:2px;width:100%}
 .cal-ev{
   display:flex;align-items:center;gap:3px;width:100%;
@@ -239,6 +246,23 @@ body{
 .cal-ev.mstart{border-radius:5px 0 0 5px;background:var(--blue-500);padding-left:4px}
 .cal-ev.mmid{border-radius:0;background:var(--blue-400);justify-content:center;color:var(--blue-200);padding-left:2px;padding-right:2px}
 .cal-ev.mend{border-radius:0 5px 5px 0;background:var(--blue-500);justify-content:flex-end;padding-right:4px}
+/* Event category colors */
+.cal-ev.cat-竞体{background:#FF9800}
+.cal-ev.cat-竞体.mstart{background:#F57C00}
+.cal-ev.cat-竞体.mend{background:#F57C00}
+.cal-ev.cat-竞体.mmid{background:#FF9800;color:#FFF3E0}
+.cal-ev.cat-运动{background:#4CAF50}
+.cal-ev.cat-运动.mstart{background:#388E3C}
+.cal-ev.cat-运动.mend{background:#388E3C}
+.cal-ev.cat-运动.mmid{background:#4CAF50;color:#E8F5E9}
+.cal-ev.cat-医美{background:#EC7FA0}
+.cal-ev.cat-医美.mstart{background:#D4687C}
+.cal-ev.cat-医美.mend{background:#D4687C}
+.cal-ev.cat-医美.mmid{background:#EC7FA0;color:#FCE4EC}
+.cal-ev.cat-其他{background:#9E9E9E}
+.cal-ev.cat-其他.mstart{background:#757575}
+.cal-ev.cat-其他.mend{background:#757575}
+.cal-ev.cat-其他.mmid{background:#9E9E9E;color:#F5F5F5}
 /* Event action popup (编辑 / 复制 / 移动) */
 .ev-popup{
   position:fixed;z-index:260;background:var(--white);border-radius:12px;
@@ -465,6 +489,15 @@ body{
 }
 .event-item.ended{opacity:.5;border-left-color:var(--gray-300)}
 .event-item.ended .event-title{text-decoration:line-through}
+/* Event category tag (list view) */
+.event-cat-tag{
+  display:inline-block;font-size:10px;font-weight:700;color:#fff;
+  padding:1px 7px;border-radius:9px;margin-left:6px;vertical-align:1px;
+}
+.event-cat-tag.cat-竞体{background:#FF9800}
+.event-cat-tag.cat-运动{background:#4CAF50}
+.event-cat-tag.cat-医美{background:#EC7FA0}
+.event-cat-tag.cat-其他{background:#9E9E9E}
 
 /* ===== Travel Planning ===== */
 .travel-card{border-top:3px solid var(--orange-300)}
@@ -748,6 +781,15 @@ body{
 .ov-bd-bar{height:8px;background:var(--gray-200);border-radius:5px;overflow:hidden;margin-top:8px}
 .ov-bd-fill{height:100%;background:linear-gradient(90deg,#81C784,#66BB6A);border-radius:5px;transition:width .4s}
 .ov-bd-fill.over{background:linear-gradient(90deg,#FFB74D,#E65100)}
+/* Event category dot (overview module) */
+.ov-event-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--blue-400);margin-right:4px;vertical-align:1px;
+}
+.ov-event-dot.cat-竞体{background:#FF9800}
+.ov-event-dot.cat-运动{background:#4CAF50}
+.ov-event-dot.cat-医美{background:#EC7FA0}
+.ov-event-dot.cat-其他{background:#9E9E9E}
 
 /* ===== Note Card ===== */
 .note-card{border-top:3px solid var(--blue-300)}
@@ -908,7 +950,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.29</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.30</div>
     </div>
   </aside>
 
@@ -947,6 +989,13 @@ body{
         <div class="card-body">
           <div class="cal-grid weekdays" id="calWeekdays"></div>
           <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend">
+            <span><i class="lg-dot lg-blue"></i>未分类</span>
+            <span><i class="lg-dot" style="background:#FF9800"></i>竞体</span>
+            <span><i class="lg-dot" style="background:#4CAF50"></i>运动</span>
+            <span><i class="lg-dot" style="background:#EC7FA0"></i>医美</span>
+            <span><i class="lg-dot" style="background:#9E9E9E"></i>其他</span>
+          </div>
         </div>
       </div>
 
@@ -1109,6 +1158,14 @@ body{
     <input type="time" id="emTime" value="09:00">
     <label>事件标题</label>
     <input type="text" id="emTitle" placeholder="输入事件标题" maxlength="100">
+    <label>分类（可选）</label>
+    <select id="emCat">
+      <option value="">无</option>
+      <option value="竞体">竞体</option>
+      <option value="运动">运动</option>
+      <option value="医美">医美</option>
+      <option value="其他">其他</option>
+    </select>
     <label>跨天结束日期（可选）</label>
     <input type="date" id="emEndDate">
     <label>结束时间（可选）</label>
@@ -1362,7 +1419,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.29 — 旅行地图改为带数量的小图钉（无轨迹线）
+// amber的工作台 v14.30 — 事件分类（竞体/运动/医美/其他）+ 日历分类着色
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1982,13 +2039,15 @@ function renderCalendar() {
     const chips = [];
     // Events: show time + title; multi-day events render as continuous segments
     evs.forEach(({ ev, isStart, isEnd, isMulti }) => {
+      // Category-based color class (竞体/运动/医美/其他)
+      const catCls = (ev.cat === '竞体' || ev.cat === '运动' || ev.cat === '医美' || ev.cat === '其他') ? ' cat-' + ev.cat : '';
       let chipCls, body;
       if (isMulti) {
-        if (isStart) { chipCls = 'mstart'; body = `<span class="ev-t">${escapeHtml(ev.time || '')}</span><span class="ev-txt">${escapeHtml(ev.title)}</span>`; }
-        else if (isEnd) { chipCls = 'mend'; body = `<span class="ev-txt">${escapeHtml(ev.title)}</span>`; }
-        else { chipCls = 'mmid'; body = `<span class="ev-txt">· · ·</span>`; }
+        if (isStart) { chipCls = 'mstart' + catCls; body = `<span class="ev-t">${escapeHtml(ev.time || '')}</span><span class="ev-txt">${escapeHtml(ev.title)}</span>`; }
+        else if (isEnd) { chipCls = 'mend' + catCls; body = `<span class="ev-txt">${escapeHtml(ev.title)}</span>`; }
+        else { chipCls = 'mmid' + catCls; body = `<span class="ev-txt">· · ·</span>`; }
       } else {
-        chipCls = 'event';
+        chipCls = 'event' + catCls;
         body = `<span class="ev-t">${escapeHtml(ev.time || '')}</span><span class="ev-txt">${escapeHtml(ev.title)}</span>`;
       }
       chips.push(`<div class="cal-ev ${chipCls}" data-id="${ev.id}" onclick="openEventMenu('${ev.id}', event)">${body}</div>`);
@@ -2038,6 +2097,7 @@ function openEventModal(dateStr, eventObj) {
   $('#emDate').value = eventObj ? eventObj.date : dateStr;
   $('#emTime').value = eventObj ? (eventObj.time || '09:00') : '09:00';
   $('#emTitle').value = eventObj ? (eventObj.title || '') : '';
+  $('#emCat').value = eventObj ? (eventObj.cat || '') : '';
   $('#emEndDate').value = eventObj ? (eventObj.end_date || '') : '';
   $('#emEndTime').value = eventObj ? (eventObj.end_time || '') : '';
   $('#emDesc').value = eventObj ? (eventObj.desc_text || '') : '';
@@ -2055,6 +2115,7 @@ function saveEventModal() {
   const date = $('#emDate').value;
   const time = $('#emTime').value;
   const title = $('#emTitle').value.trim();
+  const cat = $('#emCat').value;
   const end_date = $('#emEndDate').value;
   const end_time = $('#emEndTime').value;
   const desc_text = $('#emDesc').value.trim();
@@ -2062,7 +2123,7 @@ function saveEventModal() {
   if (!title) { showDiagToast('请输入事件标题', 'error'); return; }
   if (end_date && end_date < date) { showDiagToast('结束日期不能早于开始日期', 'error'); return; }
 
-  const payload = { date, time: time || '09:00', title, end_date: end_date || null, end_time: end_time || null, desc_text };
+  const payload = { date, time: time || '09:00', title, cat: cat || null, end_date: end_date || null, end_time: end_time || null, desc_text };
   if (_editingEventId) {
     updateRecord('events', _editingEventId, payload);
   } else {
@@ -2545,7 +2606,9 @@ function renderEventPage() {
       const li = document.createElement('li');
       li.className = 'event-item' + (isEnded ? ' ended' : '');
       li.style.cursor = 'pointer';
-      li.innerHTML = `<div class="event-info"><div class="event-title">${escapeHtml(ev.title)}</div><div class="event-meta">📅 ${escapeHtml(eventRangeLabel(ev))}</div>${ev.desc_text ? `<div class="event-desc-text">${escapeHtml(ev.desc_text)}</div>` : ''}</div><button class="event-del" data-id="${ev.id}">×</button>`;
+      const catTag = (ev.cat === '竞体' || ev.cat === '运动' || ev.cat === '医美' || ev.cat === '其他')
+        ? `<span class="event-cat-tag cat-${ev.cat}">${escapeHtml(ev.cat)}</span>` : '';
+      li.innerHTML = `<div class="event-info"><div class="event-title">${escapeHtml(ev.title)}${catTag}</div><div class="event-meta">📅 ${escapeHtml(eventRangeLabel(ev))}</div>${ev.desc_text ? `<div class="event-desc-text">${escapeHtml(ev.desc_text)}</div>` : ''}</div><button class="event-del" data-id="${ev.id}">×</button>`;
       list.appendChild(li);
     });
   }
@@ -3028,7 +3091,10 @@ function renderOverviewModules() {
     </div>
     <div class="ov-module" onclick="switchToPage('events')">
       <div class="ov-module-header"><span class="ov-module-title">🔔 近期事件</span><span class="ov-module-badge blue">${state.events.filter(e=>e.date>=today).length}</span></div>
-      ${upcomingEvents.length > 0 ? `<div class="ov-module-items">${upcomingEvents.map(e => `<div class="ov-module-item">📅 ${e.date.slice(5)} · ${escapeHtml(e.title)}</div>`).join('')}</div>` : '<div class="ov-module-preview">暂无近期事件</div>'}
+      ${upcomingEvents.length > 0 ? `<div class="ov-module-items">${upcomingEvents.map(e => {
+        const dotCls = (e.cat === '竞体' || e.cat === '运动' || e.cat === '医美' || e.cat === '其他') ? ' cat-' + e.cat : '';
+        return `<div class="ov-module-item"><span class="ov-event-dot${dotCls}"></span>📅 ${e.date.slice(5)} · ${escapeHtml(e.title)}</div>`;
+      }).join('')}</div>` : '<div class="ov-module-preview">暂无近期事件</div>'}
     </div>
     <div class="ov-module">
       <div class="ov-module-header" onclick="switchToPage('checkins')" style="cursor:pointer">
