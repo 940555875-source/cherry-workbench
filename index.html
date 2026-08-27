@@ -29,6 +29,7 @@
   --blue-400:#7EB8DA;--blue-500:#5C9EC4;
   --pink-50:#FCE4EC;--pink-100:#F8BBD0;--pink-200:#F48FB1;--pink-300:#F06292;
   --pink-400:#EC7FA0;--pink-500:#D4687C;
+  --orange-50:#FFF3E0;--orange-300:#FFB74D;--orange-400:#FF9800;--orange-500:#F57C00;--orange-600:#E65100;
   --white:#FFFFFF;--gray-50:#FAFAFA;--gray-100:#F5F5F5;--gray-200:#EEEEEE;
   --gray-300:#E0E0E0;--gray-400:#BDBDBD;--gray-500:#9E9E9E;
   --gray-700:#616161;--gray-900:#212121;
@@ -47,6 +48,7 @@
   --blue-400:#5C9EC4;--blue-500:#7EB8DA;
   --pink-50:#261E23;--pink-100:#37282F;--pink-200:#48333C;--pink-300:#5A404B;
   --pink-400:#EC7FA0;--pink-500:#D4687C;
+  --orange-50:#3A2A1E;--orange-300:#A06B2D;--orange-400:#FFB74D;--orange-500:#FFA45C;--orange-600:#FFCB85;
   --surface:#1E1E22;--gray-50:#26262B;--gray-100:#2E2E34;--gray-200:#3A3A41;
   --gray-300:#4A4A52;--gray-400:#77777F;--gray-500:#9E9E9E;
   --gray-700:#C7C7CE;--gray-900:#ECECEF;
@@ -1109,7 +1111,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.43</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.44</div>
     </div>
   </aside>
 
@@ -1592,7 +1594,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.43</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.44</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1618,7 +1620,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.43 — 设置页一键强制更新（注销 SW + 清缓存 + 强刷）
+// amber的工作台 v14.44 — 设置页一键强制更新（注销 SW + 清缓存 + 强刷）
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -1643,7 +1645,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.43';
+const APP_VERSION = 'v14.44';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -4834,7 +4836,7 @@ $('#btnSettingsClose').addEventListener('click', () => $('#settingsOverlay').cla
 $('#settingsOverlay').addEventListener('click', e => { if (e.target === $('#settingsOverlay')) $('#settingsOverlay').classList.add('hidden'); });
 
 // ============================================================
-// 一键强制更新 (v14.43) — 注销 SW + 清空所有 Cache Storage + 带时间戳强刷
+// 一键强制更新 (v14.44) — 注销 SW + 清空所有 Cache Storage + 带时间戳强刷
 // 用于解决 iOS PWA / 浏览器缓存顽固、页面停在旧版本的问题
 // ============================================================
 function syncVersionDisplay() {
