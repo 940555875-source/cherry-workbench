@@ -572,6 +572,40 @@ body{
 .event-cat-tag.cat-医美{background:#EC7FA0}
 .event-cat-tag.cat-其他{background:#9E9E9E}
 
+/* v14.39: 事件分类色块按钮（弹窗里） */
+.em-cat-row{
+  display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;margin-bottom:2px;
+}
+.em-cat-chip{
+  flex:1;min-width:54px;padding:6px 10px;border-radius:14px;border:1.5px solid var(--gray-200);
+  background:var(--white);font-size:12px;font-weight:600;color:var(--gray-700);cursor:pointer;
+  font-family:inherit;transition:all .15s;
+}
+.em-cat-chip[data-cat=""]{color:var(--gray-500)}
+.em-cat-chip:hover{border-color:var(--blue-300)}
+.emoji-chip-active,
+.em-cat-chip.active{
+  color:#fff !important;border-color:transparent;transform:scale(1.05);
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.em-cat-chip[data-cat="竞体"].active{background:#FF9800}
+.em-cat-chip[data-cat="运动"].active{background:#4CAF50}
+.em-cat-chip[data-cat="医美"].active{background:#EC7FA0}
+.em-cat-chip[data-cat="其他"].active{background:#9E9E9E}
+.em-cat-chip[data-cat=""].active{background:#CFD8DC;color:#37474F !important}
+.em-cat-hint{
+  margin-top:6px;font-size:11px;color:var(--gray-500);
+  background:var(--blue-50);padding:6px 10px;border-radius:8px;
+}
+.em-cat-hint .em-cat-chip{
+  padding:2px 10px;font-size:11px;min-width:auto;flex:initial;
+  margin:0 4px;color:#fff;border-color:transparent;
+}
+.em-cat-hint .em-cat-hint-accept{
+  margin-left:8px;color:var(--blue-500);cursor:pointer;font-weight:600;
+  text-decoration:underline;
+}
+
 /* ===== Travel Planning ===== */
 .travel-card{border-top:3px solid var(--orange-300)}
 /* Next trip countdown */
@@ -1023,7 +1057,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.38</div>
+      <div style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.39</div>
     </div>
   </aside>
 
@@ -1107,7 +1141,10 @@ body{
       <div class="card event-card">
         <div class="card-header">
           <span class="card-title">🔔 事件提醒</span>
-          <button class="btn-add" id="btnAddEvent" style="background:var(--blue-400)">➕ 添加事件</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn-add" id="btnAutoClassifyEvents" style="background:#FF9800" title="按标题关键字批量给未分类事件自动打分类">🎨 一键分类</button>
+            <button class="btn-add" id="btnAddEvent" style="background:var(--blue-400)">➕ 添加事件</button>
+          </div>
         </div>
         <div class="card-body">
           <!-- ICS import row -->
@@ -1232,13 +1269,22 @@ body{
     <label>事件标题</label>
     <input type="text" id="emTitle" placeholder="输入事件标题" maxlength="100">
     <label>分类（可选）</label>
-    <select id="emCat">
+    <select id="emCat" style="display:none">
       <option value="">无</option>
       <option value="竞体">竞体</option>
       <option value="运动">运动</option>
       <option value="医美">医美</option>
       <option value="其他">其他</option>
     </select>
+    <!-- v14.39: 色块快捷分类 — 比 select 更直观，并显示建议 -->
+    <div class="em-cat-row">
+      <button type="button" class="em-cat-chip" data-cat="" data-color="#CFD8DC">无</button>
+      <button type="button" class="em-cat-chip" data-cat="竞体" data-color="#FF9800">竞体</button>
+      <button type="button" class="em-cat-chip" data-cat="运动" data-color="#4CAF50">运动</button>
+      <button type="button" class="em-cat-chip" data-cat="医美" data-color="#EC7FA0">医美</button>
+      <button type="button" class="em-cat-chip" data-cat="其他" data-color="#9E9E9E">其他</button>
+    </div>
+    <div class="em-cat-hint" id="emCatHint" hidden></div>
     <label>跨天结束日期（可选）</label>
     <input type="date" id="emEndDate">
     <label>结束时间（可选）</label>
@@ -1492,7 +1538,7 @@ body{
 'use strict';
 
 // ============================================================
-// amber的工作台 v14.38 — 失败表自动熔断（黑名单机制）+ 状态机分化为 online/partial/error/offline
+// amber的工作台 v14.39 — 事件分类快捷色块 + 一键按标题批量分类
 // ============================================================
 
 // --- Global error reporter: any uncaught error is rendered in the bottom banner ---
@@ -2334,8 +2380,105 @@ function openEventModal(dateStr, eventObj) {
   $('#eventModalTitle').textContent = eventObj ? '✏️ 编辑事件' : '➕ 添加事件';
   $('#eventOverlay').classList.remove('hidden');
   setTimeout(() => $('#emTitle').focus(), 60);
+  // v14.39: 同步色块高亮 + 刷新建议分类
+  syncEmCatChipState();
+  refreshEmCatHint();
 }
 window.openEventModal = openEventModal;
+
+// v14.39: 事件分类关键字识别（标题 → 推测 cat）
+const EVENT_CAT_KEYWORDS = {
+  竞体: [
+    '公开赛','世锦','全英','汤杯','苏杯','马公','印公','新公','日公','中公','羽联','奥运','亚锦','世巡','总决赛','港公','羽超',
+    '亚运','大马','羽毛球','亚公','苏迪曼','亚团','世青','少体','团体赛','韩国公开赛','澳大利亚','总决赛','日本大师','中国大师',
+    '羽球','林丹','谌龙','石宇奇','李诗沣','雅思','凡晨','凤凰','梁王'
+  ],
+  运动: ['跑步','跑半马','跑全马','马拉松','越野跑','瑜伽','攀岩','游泳','健身','骑行','滑雪','徒步','飞盘','网球','足球','篮球','冲浪','桨板','滑冰','轮滑','羽毛球场','网球馆'],
+  医美: ['水光','玻尿酸','刷酸','超皮秒','热玛吉','眼袋','消脂','水飞梭','超声刀','热拉提','光子','皮秒','光子嫩肤','嗨体','熊猫针','少女针','丽珠兰','美斯蒂克','塑颜','嗨注','抗衰','小气泡','海菲秀','修丽可','光子护肤','医美','水光针','童颜针','瘦脸','瘦腿','注射','线雕','抽脂','热玛','面部','护理'],
+};
+function guessEventCat(title) {
+  if (!title) return null;
+  const t = title.toLowerCase();
+  for (const [cat, kws] of Object.entries(EVENT_CAT_KEYWORDS)) {
+    if (kws.some(k => t.includes(k.toLowerCase()))) return cat;
+  }
+  return null;
+}
+
+// v14.39: 同步色块高亮（emCat 值 → 哪个 chip active）
+function syncEmCatChipState() {
+  const cur = $('#emCat').value || '';
+  document.querySelectorAll('.em-cat-chip').forEach(ch => {
+    ch.classList.toggle('active', (ch.dataset.cat || '') === cur);
+  });
+}
+
+// v14.39: 输入标题时实时提示建议分类
+function refreshEmCatHint() {
+  const title = $('#emTitle').value.trim();
+  const hint = $('#emCatHint');
+  const cur = $('#emCat').value;
+  const guess = guessEventCat(title);
+  if (!guess) { hint.hidden = true; hint.innerHTML = ''; return; }
+  if (cur === guess) { hint.hidden = true; hint.innerHTML = ''; return; }
+  const color = { '竞体':'#FF9800','运动':'#4CAF50','医美':'#EC7FA0','其他':'#9E9E9E' }[guess];
+  hint.innerHTML = `💡 建议分类：<button type="button" class="em-cat-chip active" style="background:${color};color:#fff">${guess}</button><a class="em-cat-hint-accept" id="emCatHintAccept">采纳</a>`;
+  hint.hidden = false;
+  // 绑定采纳按钮
+  const acceptBtn = $('#emCatHintAccept');
+  if (acceptBtn) {
+    acceptBtn.onclick = () => {
+      $('#emCat').value = guess;
+      syncEmCatChipState();
+      refreshEmCatHint();
+    };
+  }
+}
+
+// v14.39: 注册色块按钮点击事件（仅注册一次，事件委托到 em-cat-row）
+function setupEventCatChips() {
+  const row = document.querySelector('.em-cat-row');
+  if (!row) return;
+  row.addEventListener('click', e => {
+    const chip = e.target.closest('.em-cat-chip');
+    if (!chip) return;
+    const cat = chip.dataset.cat || '';
+    $('#emCat').value = cat;
+    syncEmCatChipState();
+    refreshEmCatHint();
+  });
+  // 标题输入实时刷新建议
+  $('#emTitle').addEventListener('input', refreshEmCatHint);
+}
+
+// v14.39: 一键按标题批量给未分类事件打 cat
+function autoClassifyAllEvents() {
+  const stats = { 竞体:0, 运动:0, 医美:0, 其他:0, skipped:0, noGuess:0 };
+  state.events.forEach(ev => {
+    if (ev.cat) { stats.skipped++; return; }   // 已分类，跳过
+    const guess = guessEventCat(ev.title);
+    if (!guess) { stats.noGuess++; return; }
+    ev.cat = guess;
+    ev.updated_at = new Date().toISOString();
+    stats[guess]++;
+  });
+  saveLocal('events', state.events);
+  // 触发每条 updateRecord 走云同步
+  state.events.forEach(ev => {
+    if (ev.cat && (ev._dirty ?? true)) {
+      // 简化：调用一次 debouncedSync 让云端拉一遍最新
+    }
+  });
+  // 直接整体重同步（一次拉 + 推本地修改）
+  if (syncEnabled) debouncedSync('events');
+  renderEventPage(); renderCalendar(); renderOverviewModules(); renderWidgetPanel();
+  const tagged = stats.竞体 + stats.运动 + stats.医美 + stats.其他;
+  const msg = tagged > 0
+    ? `已为 ${tagged} 条事件打分类：竞体 ${stats.竞体} / 运动 ${stats.运动} / 医美 ${stats.医美} / 其他 ${stats.其他}；跳过已分类 ${stats.skipped} 条，无法识别 ${stats.noGuess} 条。`
+    : `没有可分类的事件（已分类 ${stats.skipped} 条，无法识别 ${stats.noGuess} 条）。`;
+  showDiagToast(msg, tagged > 0 ? 'success' : 'info', 4500);
+}
+window.autoClassifyAllEvents = autoClassifyAllEvents;
 
 function closeEventModal() {
   $('#eventOverlay').classList.add('hidden');
@@ -2856,6 +2999,16 @@ $('#eventList').addEventListener('click', e => {
 });
 
 $('#btnAddEvent').addEventListener('click', () => openEventModal(fmtDate(new Date())));
+$('#btnAutoClassifyEvents').addEventListener('click', () => {
+  const uncategorized = state.events.filter(e => !e.cat).length;
+  if (uncategorized === 0) { showDiagToast('所有事件都已分类～', 'info', 2500); return; }
+  if (confirm(`将按标题关键字为 ${uncategorized} 条未分类事件自动打分类（关键词见规则），是否继续？`)) {
+    autoClassifyAllEvents();
+  }
+});
+
+// v14.39: 注册事件分类色块按钮 + 标题输入监听
+setupEventCatChips();
 
 // Event modal actions
 $('#btnEventSave').addEventListener('click', saveEventModal);
