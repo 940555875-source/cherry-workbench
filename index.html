@@ -1672,11 +1672,11 @@ async function cloudPush(tableName, records) {
       console.warn('Push: table missing — run the SQL to create tables', tableName, msg);
       break;
     }
-    // 遇到 schema cache 过期（刚建表/列，PostgREST 未识别）：
-    // 不要剥字段（会把所有字段剥光上传空记录），直接提示用户刷新 schema cache
+    // 遇到 schema cache 过期：等几秒重试（PostgREST reload 是异步的）
     if (/schema cache/i.test(msg) && /could not find/i.test(msg)) {
-      console.warn('Push: schema cache stale — run `NOTIFY pgrst, \'reload schema\';`', tableName, msg);
-      break;
+      console.warn('Push: schema cache stale, waiting 3s before retry', tableName, msg);
+      await new Promise(r => setTimeout(r, 3000));
+      continue;  // 重试同一批 records（不剥字段）
     }
     // PG 报「Could not find the 'xxx' column」且非 cache 问题时，剥掉该字段重试
     const m = msg.match(/Could not find the '(\w+)' column/i);

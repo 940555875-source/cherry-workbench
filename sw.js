@@ -1,9 +1,9 @@
-// amber的工作台 Service Worker v14.35
+// amber的工作台 Service Worker v14.37
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
-// v14.35: cloudPush遇到schema cache过期不再剥字段（避免上传空记录），提示刷新cache
+// v14.37: cloudPush遇到schema cache错误时自动等3秒重试（给PostgREST reload时间）
 
-const VERSION = 'amber-workbench-v14.35';
+const VERSION = 'amber-workbench-v14.37';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
