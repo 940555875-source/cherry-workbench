@@ -288,6 +288,10 @@ body{
 .cal-ev.mmid{border-radius:0;background:var(--blue-400);justify-content:center;color:var(--blue-200);padding-left:2px;padding-right:2px}
 .cal-ev.mend{border-radius:0 5px 5px 0;background:var(--blue-500);justify-content:flex-end;padding-right:4px}
 /* Event category colors */
+.cal-ev.cat-旅游{background:#42A5F5}
+.cal-ev.cat-旅游.mstart{background:#1E88E5}
+.cal-ev.cat-旅游.mend{background:#1E88E5}
+.cal-ev.cat-旅游.mmid{background:#42A5F5;color:#E3F2FD}
 .cal-ev.cat-竞体{background:#FF9800}
 .cal-ev.cat-竞体.mstart{background:#F57C00}
 .cal-ev.cat-竞体.mend{background:#F57C00}
@@ -606,6 +610,7 @@ body{
   display:inline-block;font-size:10px;font-weight:700;color:#fff;
   padding:1px 7px;border-radius:9px;margin-left:6px;vertical-align:1px;
 }
+.event-cat-tag.cat-旅游{background:#42A5F5}
 .event-cat-tag.cat-竞体{background:#FF9800}
 .event-cat-tag.cat-运动{background:#4CAF50}
 .event-cat-tag.cat-医美{background:#EC7FA0}
@@ -627,6 +632,7 @@ body{
   color:#fff !important;border-color:transparent;transform:scale(1.05);
   box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
+.em-cat-chip[data-cat="旅游"].active{background:#42A5F5}
 .em-cat-chip[data-cat="竞体"].active{background:#FF9800}
 .em-cat-chip[data-cat="运动"].active{background:#4CAF50}
 .em-cat-chip[data-cat="医美"].active{background:#EC7FA0}
@@ -1027,6 +1033,7 @@ body{
   display:inline-block;width:8px;height:8px;border-radius:50%;
   background:var(--blue-400);margin-right:4px;vertical-align:1px;
 }
+.ov-event-dot.cat-旅游{background:#42A5F5}
 .ov-event-dot.cat-竞体{background:#FF9800}
 .ov-event-dot.cat-运动{background:#4CAF50}
 .ov-event-dot.cat-医美{background:#EC7FA0}
@@ -1193,7 +1200,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.45</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.46</div>
     </div>
   </aside>
 
@@ -1233,7 +1240,7 @@ body{
           <div class="cal-grid weekdays" id="calWeekdays"></div>
           <div class="cal-grid" id="calGrid"></div>
           <div class="cal-legend">
-            <span><i class="lg-dot lg-blue"></i>未分类</span>
+            <span><i class="lg-dot" style="background:#42A5F5"></i>旅游</span>
             <span><i class="lg-dot" style="background:#FF9800"></i>竞体</span>
             <span><i class="lg-dot" style="background:#4CAF50"></i>运动</span>
             <span><i class="lg-dot" style="background:#EC7FA0"></i>医美</span>
@@ -1427,15 +1434,15 @@ body{
     <input type="text" id="emTitle" placeholder="输入事件标题" maxlength="100">
     <label>分类（可选）</label>
     <select id="emCat" style="display:none">
-      <option value="">无</option>
+      <option value="其他">其他</option>
+      <option value="旅游">旅游</option>
       <option value="竞体">竞体</option>
       <option value="运动">运动</option>
       <option value="医美">医美</option>
-      <option value="其他">其他</option>
     </select>
     <!-- v14.39: 色块快捷分类 — 比 select 更直观，并显示建议 -->
     <div class="em-cat-row">
-      <button type="button" class="em-cat-chip" data-cat="" data-color="#CFD8DC">无</button>
+      <button type="button" class="em-cat-chip" data-cat="旅游" data-color="#42A5F5">旅游</button>
       <button type="button" class="em-cat-chip" data-cat="竞体" data-color="#FF9800">竞体</button>
       <button type="button" class="em-cat-chip" data-cat="运动" data-color="#4CAF50">运动</button>
       <button type="button" class="em-cat-chip" data-cat="医美" data-color="#EC7FA0">医美</button>
@@ -1744,7 +1751,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.45</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.46</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1795,7 +1802,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.45';
+const APP_VERSION = 'v14.46';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -2588,7 +2595,7 @@ function renderCalendar() {
     // Events: show time + title; multi-day events render as continuous segments
     evs.forEach(({ ev, isStart, isEnd, isMulti }) => {
       // Category-based color class (竞体/运动/医美/其他)
-      const catCls = (ev.cat === '竞体' || ev.cat === '运动' || ev.cat === '医美' || ev.cat === '其他') ? ' cat-' + ev.cat : '';
+      const catCls = (ev.cat === '旅游' || ev.cat === '竞体' || ev.cat === '运动' || ev.cat === '医美' || ev.cat === '其他') ? ' cat-' + ev.cat : '';
       let chipCls, body;
       if (isMulti) {
         if (isStart) { chipCls = 'mstart' + catCls; body = `<span class="ev-t">${escapeHtml(ev.time || '')}</span><span class="ev-txt">${escapeHtml(ev.title)}</span>`; }
@@ -2645,7 +2652,7 @@ function openEventModal(dateStr, eventObj) {
   $('#emDate').value = eventObj ? eventObj.date : dateStr;
   $('#emTime').value = eventObj ? (eventObj.time || '09:00') : '09:00';
   $('#emTitle').value = eventObj ? (eventObj.title || '') : '';
-  $('#emCat').value = eventObj ? (eventObj.cat || '') : '';
+  $('#emCat').value = eventObj ? (eventObj.cat || '其他') : '其他';
   $('#emEndDate').value = eventObj ? (eventObj.end_date || '') : '';
   $('#emEndTime').value = eventObj ? (eventObj.end_time || '') : '';
   $('#emDesc').value = eventObj ? (eventObj.desc_text || '') : '';
@@ -2660,6 +2667,9 @@ window.openEventModal = openEventModal;
 
 // v14.39: 事件分类关键字识别（标题 → 推测 cat）
 const EVENT_CAT_KEYWORDS = {
+  旅游: [
+    '旅游','旅行','机票','酒店','民宿','签证','护照','攻略','航班','高铁','自由行','跟团','景点','游记','酒店预订','机票预订','值机','登机','行程规划','出国','出境'
+  ],
   竞体: [
     '公开赛','世锦','全英','汤杯','苏杯','马公','印公','新公','日公','中公','羽联','奥运','亚锦','世巡','总决赛','港公','羽超',
     '亚运','大马','羽毛球','亚公','苏迪曼','亚团','世青','少体','团体赛','韩国公开赛','澳大利亚','总决赛','日本大师','中国大师',
@@ -2693,7 +2703,7 @@ function refreshEmCatHint() {
   const guess = guessEventCat(title);
   if (!guess) { hint.hidden = true; hint.innerHTML = ''; return; }
   if (cur === guess) { hint.hidden = true; hint.innerHTML = ''; return; }
-  const color = { '竞体':'#FF9800','运动':'#4CAF50','医美':'#EC7FA0','其他':'#9E9E9E' }[guess];
+  const color = { '旅游':'#42A5F5','竞体':'#FF9800','运动':'#4CAF50','医美':'#EC7FA0','其他':'#9E9E9E' }[guess];
   hint.innerHTML = `💡 建议分类：<button type="button" class="em-cat-chip active" style="background:${color};color:#fff">${guess}</button><a class="em-cat-hint-accept" id="emCatHintAccept">采纳</a>`;
   hint.hidden = false;
   // 绑定采纳按钮
@@ -2725,7 +2735,7 @@ function setupEventCatChips() {
 
 // v14.39: 一键按标题批量给未分类事件打 cat
 function autoClassifyAllEvents() {
-  const stats = { 竞体:0, 运动:0, 医美:0, 其他:0, skipped:0, noGuess:0 };
+  const stats = { 旅游:0, 竞体:0, 运动:0, 医美:0, 其他:0, skipped:0, noGuess:0 };
   state.events.forEach(ev => {
     if (ev.cat) { stats.skipped++; return; }   // 已分类，跳过
     const guess = guessEventCat(ev.title);
@@ -2744,9 +2754,9 @@ function autoClassifyAllEvents() {
   // 直接整体重同步（一次拉 + 推本地修改）
   if (syncEnabled) debouncedSync('events');
   renderEventPage(); renderCalendar(); renderOverviewModules(); renderWidgetPanel();
-  const tagged = stats.竞体 + stats.运动 + stats.医美 + stats.其他;
+  const tagged = stats.旅游 + stats.竞体 + stats.运动 + stats.医美 + stats.其他;
   const msg = tagged > 0
-    ? `已为 ${tagged} 条事件打分类：竞体 ${stats.竞体} / 运动 ${stats.运动} / 医美 ${stats.医美} / 其他 ${stats.其他}；跳过已分类 ${stats.skipped} 条，无法识别 ${stats.noGuess} 条。`
+    ? `已为 ${tagged} 条事件打分类：旅游 ${stats.旅游} / 竞体 ${stats.竞体} / 运动 ${stats.运动} / 医美 ${stats.医美} / 其他 ${stats.其他}；跳过已分类 ${stats.skipped} 条，无法识别 ${stats.noGuess} 条。`
     : `没有可分类的事件（已分类 ${stats.skipped} 条，无法识别 ${stats.noGuess} 条）。`;
   showDiagToast(msg, tagged > 0 ? 'success' : 'info', 4500);
 }
@@ -2768,7 +2778,7 @@ function saveEventModal() {
   if (!title) { showDiagToast('请输入事件标题', 'error'); return; }
   if (end_date && end_date < date) { showDiagToast('结束日期不能早于开始日期', 'error'); return; }
 
-  const payload = { date, time: time || '09:00', title, cat: cat || null, end_date: end_date || null, end_time: end_time || null, desc_text };
+  const payload = { date, time: time || '09:00', title, cat: cat || '其他', end_date: end_date || null, end_time: end_time || null, desc_text };
   if (_editingEventId) {
     updateRecord('events', _editingEventId, payload);
   } else {
@@ -3251,7 +3261,7 @@ function renderEventPage() {
       const li = document.createElement('li');
       li.className = 'event-item' + (isEnded ? ' ended' : '');
       li.style.cursor = 'pointer';
-      const catTag = (ev.cat === '竞体' || ev.cat === '运动' || ev.cat === '医美' || ev.cat === '其他')
+      const catTag = (ev.cat === '旅游' || ev.cat === '竞体' || ev.cat === '运动' || ev.cat === '医美' || ev.cat === '其他')
         ? `<span class="event-cat-tag cat-${ev.cat}">${escapeHtml(ev.cat)}</span>` : '';
       li.innerHTML = `<div class="event-info"><div class="event-title">${escapeHtml(ev.title)}${catTag}</div><div class="event-meta">📅 ${escapeHtml(eventRangeLabel(ev))}</div>${ev.desc_text ? `<div class="event-desc-text">${escapeHtml(ev.desc_text)}</div>` : ''}</div><button class="event-del" data-id="${ev.id}">×</button>`;
       list.appendChild(li);
@@ -3887,7 +3897,7 @@ function renderOverviewModules() {
     <div class="ov-module" onclick="switchToPage('events')">
       <div class="ov-module-header"><span class="ov-module-title">🔔 近期事件</span><span class="ov-module-badge blue">${state.events.filter(e=>e.date>=today).length}</span></div>
       ${upcomingEvents.length > 0 ? `<div class="ov-module-items">${upcomingEvents.map(e => {
-        const dotCls = (e.cat === '竞体' || e.cat === '运动' || e.cat === '医美' || e.cat === '其他') ? ' cat-' + e.cat : '';
+        const dotCls = (e.cat === '旅游' || e.cat === '竞体' || e.cat === '运动' || e.cat === '医美' || e.cat === '其他') ? ' cat-' + e.cat : '';
         return `<div class="ov-module-item"><span class="ov-event-dot${dotCls}"></span>📅 ${e.date.slice(5)} · ${escapeHtml(e.title)}</div>`;
       }).join('')}</div>` : '<div class="ov-module-preview">暂无近期事件</div>'}
     </div>
