@@ -99,6 +99,7 @@ CREATE TABLE public.budget (
   budget NUMERIC,
   actual NUMERIC,
   note TEXT,
+  subs JSONB NOT NULL DEFAULT '[]',
   done BOOLEAN NOT NULL DEFAULT FALSE,
   device_id TEXT NOT NULL DEFAULT '',
   deleted_at TIMESTAMPTZ,

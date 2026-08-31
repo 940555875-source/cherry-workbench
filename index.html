@@ -873,7 +873,10 @@ body{
 .bc-item{
   background:var(--surface);border:1px solid var(--gray-200);border-radius:var(--radius-xs);
   padding:10px 12px;display:flex;flex-direction:column;gap:4px;
+  cursor:pointer;transition:all .15s;
 }
+.bc-item:hover{border-color:var(--gray-400)}
+.bc-item.active{border-color:var(--orange-400);box-shadow:0 0 0 2px var(--orange-100)}
 .bc-head{display:flex;align-items:center;justify-content:space-between}
 .bc-name{font-size:13px;font-weight:700;color:var(--gray-700)}
 .bc-num{font-size:12px;font-weight:700;color:var(--gray-500)}
@@ -897,12 +900,10 @@ body{
   width:10px;height:10px;border-radius:50%;flex-shrink:0;
   background:var(--gray-300);
 }
-.budget-status.done{background:#66BB6A}
-.budget-status.planned{background:#FFB74D}
 .budget-info{flex:1;min-width:0}
 .budget-title{font-size:13.5px;font-weight:500;color:var(--gray-800)}
 .budget-meta{font-size:11px;color:var(--gray-400);margin-top:2px}
-.budget-amounts{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.budget-amounts{display:flex;flex-direction:row;align-items:center;gap:10px;flex-shrink:0;white-space:nowrap}
 .budget-budget{font-size:12px;color:var(--gray-500)}
 .budget-actual{font-size:13px;font-weight:700;color:var(--gray-800)}
 .budget-actual.over{color:#E65100}
@@ -910,10 +911,29 @@ body{
   width:24px;height:24px;border-radius:50%;border:none;
   background:transparent;color:var(--gray-400);cursor:pointer;
   font-size:15px;display:flex;align-items:center;justify-content:center;
-  transition:all .2s;opacity:0;flex-shrink:0;
+  transition:all .2s;opacity:.55;flex-shrink:0;
 }
 .budget-item:hover .budget-del{opacity:1}
 .budget-del:hover{background:#FFEBEE;color:#F44336}
+/* 分类筛选提示 */
+.budget-filter-hint{font-size:12px;color:var(--gray-500);margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.budget-filter-hint .bf-tag{font-weight:700;color:var(--gray-700)}
+.budget-filter-hint .bf-clear{color:var(--orange-600);cursor:pointer;font-weight:600}
+/* 子项目编辑器 */
+.bd-sub-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.bd-sub-row input{flex:1;min-width:0}
+.bd-sub-name{flex:1.6 !important}
+.bd-sub-del{
+  width:26px;height:26px;border-radius:6px;border:none;background:transparent;
+  color:var(--gray-400);cursor:pointer;font-size:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.bd-sub-del:hover{background:#FFEBEE;color:#F44336}
+.btn-sub-add{
+  border:1.5px dashed var(--gray-300);background:transparent;color:var(--gray-500);
+  border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;transition:all .15s;width:100%;
+}
+.btn-sub-add:hover{border-color:var(--orange-400);color:var(--orange-600);background:var(--orange-50)}
+.bd-subs-hint{font-size:11px;color:var(--gray-400);margin-bottom:6px;line-height:1.4}
 
 /* ===== Check-in ===== */
 .checkin-card{border-top:3px solid #4CAF50}
@@ -1215,7 +1235,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.49</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.50</div>
     </div>
   </aside>
 
@@ -1740,6 +1760,12 @@ body{
         <label>备注（可选）</label>
         <input type="text" id="bdNote" placeholder="如：休假1天、机票2400+酒店1400" maxlength="200">
       </div>
+      <div class="form-group form-group-full">
+        <label>子项目明细（可选）</label>
+        <div class="bd-subs-hint">填写子项目后，列表中的预算/实际花销按子项目加总显示，忽略上面的手动金额。</div>
+        <div id="bdSubs"></div>
+        <button type="button" class="btn-sub-add" id="btnAddSub">➕ 添加子项目</button>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btnBudgetCancel">取消</button>
@@ -1775,7 +1801,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.49</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.50</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1826,7 +1852,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.49';
+const APP_VERSION = 'v14.50';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -3806,12 +3832,8 @@ function renderOvStats() {
   const blist = state.budget.filter(b => b.year === year);
   let total = 0, actual = 0, hasBudget = false;
   blist.forEach(b => {
-    if (b.budget !== null && b.budget !== undefined && b.budget !== '') {
-      const n = budgetN(b.budget); if (n !== null) { total += n; hasBudget = true; }
-    }
-    if (b.actual !== null && b.actual !== undefined && b.actual !== '') {
-      const n = budgetN(b.actual); if (n !== null) actual += n;
-    }
+    const nb = effBudget(b); if (nb !== null) { total += nb; hasBudget = true; }
+    const na = effActual(b); if (na !== null) actual += na;
   });
   const remaining = total - actual;
   const bpct = total > 0 ? Math.round(actual / total * 100) : 0;
@@ -3887,8 +3909,8 @@ function renderYearReviewHTML() {
   const blist = state.budget.filter(b => b.year === year);
   let total = 0, actual = 0;
   blist.forEach(b => {
-    const bn = budgetN(b.budget); if (bn !== null) total += bn;
-    const an = budgetN(b.actual); if (an !== null) actual += an;
+    const bn = effBudget(b); if (bn !== null) total += bn;
+    const an = effActual(b); if (an !== null) actual += an;
   });
   const bpct = total > 0 ? Math.round(actual / total * 100) : 0;
 
@@ -5183,10 +5205,33 @@ function budgetN(v) {
   return isNaN(n) ? null : n;
 }
 
+// 子项目：有子项目时按加总，否则用主记录手动金额
+function budgetSubs(b) { return (b && b.subs && b.subs.length) ? b.subs : null; }
+function effBudget(b) {
+  var subs = budgetSubs(b);
+  if (subs) {
+    var sum = 0, has = false;
+    subs.forEach(function(s){ var n = budgetN(s.budget); if (n !== null) { sum += n; has = true; } });
+    return has ? sum : null;
+  }
+  return budgetN(b.budget);
+}
+function effActual(b) {
+  var subs = budgetSubs(b);
+  if (subs) {
+    var sum = 0, has = false;
+    subs.forEach(function(s){ var n = budgetN(s.actual); if (n !== null) { sum += n; has = true; } });
+    return has ? sum : null;
+  }
+  return budgetN(b.actual);
+}
+
 function fmtMoney(n) {
   if (n === null || n === undefined) return '—';
   return '¥' + Math.round(n).toLocaleString();
 }
+
+var _budgetCatFilter = null; // 分类筛选（null=全部）
 
 function renderBudgetPage() {
   seedBudgetData();
@@ -5204,13 +5249,14 @@ function renderBudgetPage() {
     btn.dataset.year = y;
     yWrap.appendChild(btn);
   });
-  yWrap.addEventListener('click', function(e) {
+  yWrap.onclick = function(e) {
     var btn = e.target.closest('.budget-year-btn');
     if (!btn) return;
     state.budgetYear = parseInt(btn.dataset.year);
     localStorage.setItem('amber_budget_year', state.budgetYear);
+    _budgetCatFilter = null;
     renderBudgetPage();
-  });
+  };
 
   // --- Filter by year ---
   var list = state.budget.filter(function(b){ return b.year === state.budgetYear; });
@@ -5218,10 +5264,10 @@ function renderBudgetPage() {
   if (list.length === 0) { listEl.classList.add('hidden'); empty.classList.remove('hidden'); $('#budgetSummary').innerHTML=''; $('#budgetCats').innerHTML=''; return; }
   listEl.classList.remove('hidden'); empty.classList.add('hidden');
 
-  // --- Summary cards ---
+  // --- Summary cards（子项目加总后的预算/实际） ---
   var totalBudget = 0, totalActual = 0, hasBudget = false;
   list.forEach(function(b) {
-    var bd = budgetN(b.budget), ac = budgetN(b.actual);
+    var bd = effBudget(b), ac = effActual(b);
     if (bd !== null) { totalBudget += bd; hasBudget = true; }
     if (ac !== null) totalActual += ac;
   });
@@ -5237,12 +5283,12 @@ function renderBudgetPage() {
     '</div>' +
     '<div class="bs-card' + (over ? ' bs-over' : '') + '"><div class="bs-label">' + (over ? '超支' : '剩余') + '</div><div class="bs-value">' + fmtMoney(Math.abs(remaining)) + '</div></div>';
 
-  // --- Category breakdown ---
+  // --- Category breakdown（可点击筛选） ---
   var cats = {};
   list.forEach(function(b) {
     var c = b.cat || '其他';
     if (!cats[c]) cats[c] = { budget: 0, actual: 0, count: 0 };
-    var bd = budgetN(b.budget), ac = budgetN(b.actual);
+    var bd = effBudget(b), ac = effActual(b);
     if (bd !== null) cats[c].budget += bd;
     if (ac !== null) cats[c].actual += ac;
     cats[c].count++;
@@ -5252,16 +5298,40 @@ function renderBudgetPage() {
     var d = cats[c];
     var p = d.budget > 0 ? (d.actual / d.budget * 100) : (d.actual > 0 ? 100 : 0);
     var color = BUDGET_CAT_COLORS[c] || '#9E9E9E';
-    catHtml += '<div class="bc-item">' +
-      '<div class="bc-head"><span class="bc-name">' + c + '</span><span class="bc-num">' + fmtMoney(d.actual) + ' <small>/ ' + fmtMoney(d.budget) + '</small></span></div>' +
+    var active = _budgetCatFilter === c;
+    catHtml += '<div class="bc-item' + (active ? ' active' : '') + '" data-cat="' + escapeHtml(c) + '">' +
+      '<div class="bc-head"><span class="bc-name">' + escapeHtml(c) + '</span><span class="bc-num">' + fmtMoney(d.actual) + ' <small>/ ' + fmtMoney(d.budget) + '</small></span></div>' +
       '<div class="bc-bar"><div class="bc-fill' + (p>100?' over':'') + '" style="width:' + Math.min(100,p) + '%;background:' + color + '"></div></div>' +
       '</div>';
   });
   $('#budgetCats').innerHTML = catHtml;
+  $('#budgetCats').onclick = function(e) {
+    var item = e.target.closest('.bc-item');
+    if (!item) return;
+    var c = item.dataset.cat;
+    _budgetCatFilter = (_budgetCatFilter === c) ? null : c;
+    renderBudgetPage();
+  };
 
-  // --- Monthly detail ---
+  // --- Monthly detail（按分类筛选） ---
   listEl.innerHTML = '';
-  var sorted = [...list].sort(function(a,b){ return a.month - b.month; });
+  var showList = list;
+  if (_budgetCatFilter) {
+    showList = list.filter(function(b){ return (b.cat || '其他') === _budgetCatFilter; });
+    var hint = document.createElement('div');
+    hint.className = 'budget-filter-hint';
+    hint.innerHTML = '<span>已筛选分类：<span class="bf-tag">' + escapeHtml(_budgetCatFilter) + '</span>（' + showList.length + ' 项）</span><span class="bf-clear">✕ 清除筛选</span>';
+    listEl.appendChild(hint);
+    hint.querySelector('.bf-clear').onclick = function() { _budgetCatFilter = null; renderBudgetPage(); };
+  }
+  if (showList.length === 0) {
+    var none = document.createElement('div');
+    none.className = 'plan-empty';
+    none.textContent = '该分类下暂无预算明细';
+    listEl.appendChild(none);
+    return;
+  }
+  var sorted = [...showList].sort(function(a,b){ return a.month - b.month; });
   var months = {};
   sorted.forEach(function(b) {
     if (!months[b.month]) months[b.month] = [];
@@ -5278,17 +5348,19 @@ function renderBudgetPage() {
     months[m].forEach(function(b) {
       var li = document.createElement('li');
       li.className = 'budget-item';
-      var bd = budgetN(b.budget), ac = budgetN(b.actual);
+      var bd = effBudget(b), ac = effActual(b);
       var over = ac !== null && bd !== null && ac > bd;
+      var color = BUDGET_CAT_COLORS[b.cat] || '#9E9E9E';
+      var subs = budgetSubs(b);
       li.innerHTML =
-        '<div class="budget-status ' + (b.done ? 'done' : 'planned') + '"></div>' +
+        '<div class="budget-status" style="background:' + color + '"></div>' +
         '<div class="budget-info">' +
           '<div class="budget-title">' + escapeHtml(b.item || '') + '</div>' +
-          '<div class="budget-meta">' + (b.range ? escapeHtml(b.range) + ' · ' : '') + escapeHtml(b.cat || '') + (b.note ? ' · ' + escapeHtml(b.note.replace(/\n/g,' ')) : '') + '</div>' +
+          '<div class="budget-meta">' + (b.range ? escapeHtml(b.range) + ' · ' : '') + escapeHtml(b.cat || '') + (subs ? ' · ' + subs.length + ' 个子项目' : '') + (b.note ? ' · ' + escapeHtml(b.note.replace(/\n/g,' ')) : '') + '</div>' +
         '</div>' +
         '<div class="budget-amounts">' +
-          '<span class="budget-actual' + (over ? ' over' : '') + '">' + fmtMoney(ac) + '</span>' +
           '<span class="budget-budget">预算 ' + fmtMoney(bd) + '</span>' +
+          '<span class="budget-actual' + (over ? ' over' : '') + '">实际 ' + fmtMoney(ac) + '</span>' +
         '</div>' +
         '<button class="budget-del" data-id="' + b.id + '">×</button>';
       ul.appendChild(li);
@@ -5324,6 +5396,39 @@ function initBudgetSelects() {
   }
 }
 
+// 子项目一行 HTML
+function subRowHTML(sub) {
+  sub = sub || {};
+  return '<div class="bd-sub-row">' +
+    '<input type="text" class="bd-sub-name" placeholder="名称" maxlength="50" value="' + escapeHtml(sub.name || '') + '">' +
+    '<input type="number" class="bd-sub-budget" placeholder="预算" min="0" step="100" value="' + (sub.budget !== null && sub.budget !== undefined ? sub.budget : '') + '">' +
+    '<input type="number" class="bd-sub-actual" placeholder="实际" min="0" step="100" value="' + (sub.actual !== null && sub.actual !== undefined ? sub.actual : '') + '">' +
+    '<button type="button" class="bd-sub-del" title="删除">×</button>' +
+  '</div>';
+}
+function renderBudgetSubs(subs) {
+  var box = $('#bdSubs');
+  box.innerHTML = '';
+  if (subs && subs.length) {
+    subs.forEach(function(s){ box.insertAdjacentHTML('beforeend', subRowHTML(s)); });
+  } else {
+    box.insertAdjacentHTML('beforeend', subRowHTML(null));
+  }
+}
+// 弹窗内子项目增删（事件委托）
+$('#bdSubs').addEventListener('click', function(e) {
+  var del = e.target.closest('.bd-sub-del');
+  if (!del) return;
+  del.closest('.bd-sub-row').remove();
+  if (!$('#bdSubs').children.length) renderBudgetSubs([]);
+});
+$('#btnAddSub').addEventListener('click', function() {
+  $('#bdSubs').insertAdjacentHTML('beforeend', subRowHTML(null));
+  var rows = $('#bdSubs').querySelectorAll('.bd-sub-row');
+  var last = rows[rows.length - 1];
+  if (last) last.querySelector('.bd-sub-name').focus();
+});
+
 function openBudgetModal(bObj) {
   _editingBudgetId = bObj ? bObj.id : null;
   $('#budgetModalTitle').textContent = bObj ? '✏️ 编辑预算' : '➕ 添加预算';
@@ -5338,6 +5443,7 @@ function openBudgetModal(bObj) {
     $('#bdBudget').value = bObj.budget === null || bObj.budget === undefined ? '' : bObj.budget;
     $('#bdActual').value = bObj.actual === null || bObj.actual === undefined ? '' : bObj.actual;
     $('#bdNote').value = bObj.note || '';
+    renderBudgetSubs(bObj.subs || []);
   } else {
     var n = new Date();
     $('#bdYear').value = state.budgetYear || n.getFullYear();
@@ -5345,6 +5451,7 @@ function openBudgetModal(bObj) {
     $('#bdRange').value = ''; $('#bdItem').value = '';
     $('#bdCat').value = '旅游'; $('#bdStatus').value = 'planned';
     $('#bdBudget').value = ''; $('#bdActual').value = ''; $('#bdNote').value = '';
+    renderBudgetSubs([]);
   }
   $('#budgetOverlay').classList.remove('hidden');
   setTimeout(function(){ $('#bdItem').focus(); }, 100);
@@ -5364,7 +5471,17 @@ function saveBudgetModal() {
   var note = $('#bdNote').value.trim() || null;
   if (!item) { showDiagToast('请填写事项', 'error'); return; }
 
-  var payload = { year: year, month: month, range: range, item: item, cat: cat, budget: budget, actual: actual, note: note, done: done };
+  // 收集子项目（只保留填写了名称的行）
+  var subs = [];
+  $('#bdSubs').querySelectorAll('.bd-sub-row').forEach(function(row) {
+    var name = row.querySelector('.bd-sub-name').value.trim();
+    if (!name) return;
+    var sb = row.querySelector('.bd-sub-budget').value;
+    var sa = row.querySelector('.bd-sub-actual').value;
+    subs.push({ name: name, budget: sb ? budgetN(sb) : null, actual: sa ? budgetN(sa) : null });
+  });
+
+  var payload = { year: year, month: month, range: range, item: item, cat: cat, budget: budget, actual: actual, note: note, done: done, subs: subs };
   if (_editingBudgetId) {
     updateRecord('budget', _editingBudgetId, payload);
   } else {

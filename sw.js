@@ -1,4 +1,4 @@
-// amber的工作台 Service Worker v14.49
+// amber的工作台 Service Worker v14.50
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
 // v14.37: cloudPush遇到schema cache错误时自动等3秒重试（给PostgREST reload时间）
@@ -13,8 +13,9 @@
 // v14.47: 旅行规划列表纯时间排序 + 年份/月份时间轴 + 目的地自动匹配经纬度
 // v14.48: 旅行相册入口移到总览页，索引栏不再展示相册
 // v14.49: 旅行列表月份移到左侧 + 早/晚排序切换 + 按年度折叠
+// v14.50: 预算分类色点 + 金额并排 + 子项目加总 + 分类筛选
 
-const VERSION = 'amber-workbench-v14.49';
+const VERSION = 'amber-workbench-v14.50';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
