@@ -696,20 +696,39 @@ body{
   width:10px;height:10px;border-radius:50%;display:inline-block;
 }
 /* Timeline */
-.travel-timeline{position:relative;padding-left:20px}
-.travel-timeline::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--gray-200)}
+.travel-timeline{position:relative;padding-left:60px}
+.travel-timeline::before{content:'';position:absolute;left:24px;top:10px;bottom:10px;width:2px;background:var(--gray-200)}
+.travel-year-group{position:relative}
 .travel-year{
-  position:relative;font-size:15px;font-weight:800;color:var(--orange-600);
-  margin:18px 0 10px;letter-spacing:.5px;
+  position:relative;display:flex;align-items:center;gap:8px;width:100%;
+  margin:16px 0 10px;border:none;background:none;padding:0;cursor:pointer;text-align:left;
+  font-size:15px;font-weight:800;color:var(--orange-600);letter-spacing:.5px;
 }
 .travel-year:first-child{margin-top:2px}
-.travel-year::before{
-  content:'';position:absolute;left:-20px;top:3px;width:12px;height:12px;border-radius:50%;
-  background:var(--surface);border:3px solid var(--orange-400);box-sizing:border-box;
+.travel-year-dot{
+  position:absolute;left:-42px;top:50%;transform:translateY(-50%);
+  width:12px;height:12px;border-radius:50%;background:var(--surface);
+  border:3px solid var(--orange-400);box-sizing:border-box;
 }
+.travel-year-text{flex-shrink:0}
+.travel-year-count{font-size:11px;font-weight:600;color:var(--gray-500);background:var(--gray-100);padding:1px 8px;border-radius:10px;flex-shrink:0}
+.travel-year-arrow{margin-left:auto;font-size:13px;color:var(--gray-400);transition:transform .2s;flex-shrink:0}
+.travel-year-group.collapsed .travel-year-arrow{transform:rotate(-90deg)}
+.travel-year-group.collapsed .travel-year-body{display:none}
+.travel-tl-row{position:relative;display:flex;margin-bottom:10px}
+.travel-month{
+  position:absolute;left:-60px;top:50%;transform:translateY(-50%);
+  width:44px;text-align:center;font-size:12px;font-weight:700;
+  color:var(--orange-600);background:var(--orange-50);padding:4px 0;border-radius:12px;white-space:nowrap;
+}
+.travel-sort{
+  padding:7px 10px;border:1px solid var(--gray-300);border-radius:var(--radius-sm);
+  font-size:13px;background:var(--surface);color:var(--gray-700);outline:none;cursor:pointer;
+}
+.travel-sort:focus{border-color:var(--orange-400)}
 /* Card */
 .travel-card-item{
-  display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:10px;
+  flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:10px 12px;
   border-radius:var(--radius-sm);background:var(--gray-50);
   transition:all .15s;cursor:pointer;position:relative;
 }
@@ -736,10 +755,6 @@ body{
   text-decoration:none;cursor:pointer;transition:all .15s;
 }
 .travel-doc:hover{background:var(--blue-500);color:#fff}
-.travel-month{
-  flex-shrink:0;font-size:12px;font-weight:700;color:var(--orange-600);
-  background:var(--orange-50);padding:3px 9px;border-radius:12px;white-space:nowrap;
-}
 .travel-del{
   width:24px;height:24px;border-radius:50%;border:none;
   background:transparent;color:var(--gray-400);cursor:pointer;
@@ -1200,7 +1215,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.48</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.49</div>
     </div>
   </aside>
 
@@ -1324,7 +1339,13 @@ body{
       <div class="card travel-card">
         <div class="card-header">
           <span class="card-title">✈️ 旅行规划</span>
-          <button class="btn-add" id="btnAddTravel" style="background:var(--orange-400)">➕ 添加行程</button>
+          <div style="display:flex;align-items:center;gap:8px">
+            <select class="travel-sort" id="travelSort" title="行程排序方式">
+              <option value="asc">从早到晚</option>
+              <option value="desc">最新行程优先</option>
+            </select>
+            <button class="btn-add" id="btnAddTravel" style="background:var(--orange-400)">➕ 添加行程</button>
+          </div>
         </div>
         <div class="card-body">
           <!-- Next trip countdown -->
@@ -1754,7 +1775,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.48</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.49</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1805,7 +1826,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.48';
+const APP_VERSION = 'v14.49';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -4424,43 +4445,63 @@ function renderTravelPage() {
   var photoCount = {};
   state.photos.forEach(function(p){ if (p.travel_id) photoCount[p.travel_id] = (photoCount[p.travel_id] || 0) + 1; });
 
-  // 排序：按开始时间升序（时间轴从早到晚，不考虑是否已完成）
+  // 排序：asc=从早到晚（时间轴升序），desc=最新行程优先（开始时间降序）
   var sorted = [...state.travels].sort(function(a, b) {
-    return travelStartTs(a) - travelStartTs(b);
+    var d = travelStartTs(a) - travelStartTs(b);
+    return _travelSort === 'desc' ? -d : d;
+  });
+
+  // 按年份分组（保持排序后的首次出现顺序）
+  var groups = [];
+  var groupMap = {};
+  sorted.forEach(function(t) {
+    var y = t.year || 0;
+    if (!groupMap[y]) { groupMap[y] = []; groups.push(y); }
+    groupMap[y].push(t);
   });
 
   var html = '<div class="travel-timeline">';
-  var lastYear = null;
-  sorted.forEach(function(t) {
-    var thumb = t.image
-      ? '<img src="' + t.image + '" alt="" loading="lazy">'
-      : '<span>' + escapeHtml((t.destination || '✈').trim().charAt(0)) + '</span>';
-    var meta = '';
-    if (t.cost) meta += '<span>💰¥' + t.cost + '</span>';
-    if (t.doc_link) {
-      var href = normalizeUrl(t.doc_link);
-      if (href) meta += '<a class="travel-doc" href="' + escapeHtml(href) + '" target="_blank" rel="noopener noreferrer">📄 计划文档 ↗</a>';
-    }
-    if (photoCount[t.id]) meta += '<span class="travel-photo-link" data-travel="' + t.id + '">🖼️ ' + photoCount[t.id] + '</span>';
-    if (t.location && t.location.lat) meta += '<span>📍</span>';
-    // 月份标签（跨月显示区间），具体出行日期不在列表展示
-    var monthLabel = t.month + '月';
-    if (t.month_end && t.month_end !== t.month) monthLabel = t.month + '-' + t.month_end + '月';
-    if (t.year !== lastYear) {
-      html += '<div class="travel-year">' + t.year + '年</div>';
-      lastYear = t.year;
-    }
-    html +=
-      '<div class="travel-card-item" data-id="' + t.id + '">' +
-        '<div class="travel-thumb">' + thumb + '</div>' +
-        '<div class="travel-info">' +
-          '<div class="travel-title">' + escapeHtml(t.destination || '') + (t.tag ? '<span class="travel-tag">' + escapeHtml(t.tag) + '</span>' : '') + '</div>' +
-          (meta ? '<div class="travel-meta">' + meta + '</div>' : '') +
-        '</div>' +
-        '<span class="travel-month">' + monthLabel + '</span>' +
-        '<button class="travel-edit" data-id="' + t.id + '" title="编辑行程">✏️</button>' +
-        '<button class="travel-del" data-id="' + t.id + '" title="删除">×</button>' +
-      '</div>';
+  groups.forEach(function(y) {
+    var list = groupMap[y];
+    var collapsed = !!_collapsedYears[y];
+    html += '<div class="travel-year-group' + (collapsed ? ' collapsed' : '') + '">';
+    html += '<button type="button" class="travel-year" data-year="' + y + '" aria-expanded="' + (!collapsed) + '">' +
+      '<span class="travel-year-dot"></span>' +
+      '<span class="travel-year-text">' + y + '年</span>' +
+      '<span class="travel-year-count">' + list.length + ' 次</span>' +
+      '<span class="travel-year-arrow">▾</span>' +
+      '</button>';
+    html += '<div class="travel-year-body">';
+    list.forEach(function(t) {
+      var thumb = t.image
+        ? '<img src="' + t.image + '" alt="" loading="lazy">'
+        : '<span>' + escapeHtml((t.destination || '✈').trim().charAt(0)) + '</span>';
+      var meta = '';
+      if (t.cost) meta += '<span>💰¥' + t.cost + '</span>';
+      if (t.doc_link) {
+        var href = normalizeUrl(t.doc_link);
+        if (href) meta += '<a class="travel-doc" href="' + escapeHtml(href) + '" target="_blank" rel="noopener noreferrer">📄 计划文档 ↗</a>';
+      }
+      if (photoCount[t.id]) meta += '<span class="travel-photo-link" data-travel="' + t.id + '">🖼️ ' + photoCount[t.id] + '</span>';
+      if (t.location && t.location.lat) meta += '<span>📍</span>';
+      // 月份标签（跨月显示区间，左侧展示），具体出行日期不在列表展示
+      var monthLabel = t.month + '月';
+      if (t.month_end && t.month_end !== t.month) monthLabel = t.month + '-' + t.month_end + '月';
+      html +=
+        '<div class="travel-tl-row">' +
+          '<span class="travel-month">' + monthLabel + '</span>' +
+          '<div class="travel-card-item" data-id="' + t.id + '">' +
+            '<div class="travel-thumb">' + thumb + '</div>' +
+            '<div class="travel-info">' +
+              '<div class="travel-title">' + escapeHtml(t.destination || '') + (t.tag ? '<span class="travel-tag">' + escapeHtml(t.tag) + '</span>' : '') + '</div>' +
+              (meta ? '<div class="travel-meta">' + meta + '</div>' : '') +
+            '</div>' +
+            '<button class="travel-edit" data-id="' + t.id + '" title="编辑行程">✏️</button>' +
+            '<button class="travel-del" data-id="' + t.id + '" title="删除">×</button>' +
+          '</div>' +
+        '</div>';
+    });
+    html += '</div></div>';
   });
   html += '</div>';
   container.innerHTML = html;
@@ -4468,6 +4509,14 @@ function renderTravelPage() {
 
 // Click delegation
 $('#travelTimeline').addEventListener('click', function(e) {
+  // 年份头：折叠/展开该年度行程
+  var yh = e.target.closest('.travel-year');
+  if (yh) {
+    var yr = yh.dataset.year;
+    _collapsedYears[yr] = !_collapsedYears[yr];
+    renderTravelPage();
+    return;
+  }
   // 文档链接：让 <a> 默认新窗口跳转，不触发行程编辑
   if (e.target.closest('.travel-doc')) { e.stopPropagation(); return; }
   // 照片数入口：跳转到相册并过滤该行程
@@ -4788,6 +4837,19 @@ $('#btnTravelSave').addEventListener('click', saveTravelModal);
 $('#btnTravelCancel').addEventListener('click', closeTravelModal);
 $('#travelOverlay').addEventListener('click', function(e) { if (e.target === $('#travelOverlay')) closeTravelModal(); });
 $('#tvDest').addEventListener('keydown', function(e) { if (e.key === 'Enter') saveTravelModal(); });
+
+// 行程排序方式（持久化）：asc=从早到晚，desc=最新行程优先
+var _travelSort = localStorage.getItem('amber_travel_sort') || 'asc';
+var _collapsedYears = {};
+var tsSel = $('#travelSort');
+if (tsSel) {
+  tsSel.value = _travelSort;
+  tsSel.addEventListener('change', function() {
+    _travelSort = this.value;
+    localStorage.setItem('amber_travel_sort', _travelSort);
+    renderTravelPage();
+  });
+}
 
 // ============================================================
 // TRAVEL ALBUM — photos linked to trips (v14.45)
