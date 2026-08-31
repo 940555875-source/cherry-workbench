@@ -1034,7 +1034,8 @@ body{
 .ov-album-strip .ov-album-more{width:64px;height:64px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--gray-100);color:var(--gray-500);font-size:12px;font-weight:600}
 .ov-album-empty{font-size:13px;color:var(--gray-400);line-height:1.5}
 .ov-yr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
-.ov-yr-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;background:var(--gray-50);border-radius:10px}
+.ov-yr-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;background:var(--gray-50);border-radius:10px;cursor:pointer;transition:all .15s}
+.ov-yr-item:hover{background:var(--gray-100);transform:translateY(-1px)}
 .ov-yr-num{font-size:18px;font-weight:700;letter-spacing:-.5px}
 .ov-yr-label{font-size:11px;color:var(--gray-500)}
 .ov-checkin-item{padding:8px;background:var(--gray-50);border-radius:8px}
@@ -1235,7 +1236,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.51</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.52</div>
     </div>
   </aside>
 
@@ -1801,7 +1802,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.51</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.52</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1852,7 +1853,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.51';
+const APP_VERSION = 'v14.52';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -3915,16 +3916,16 @@ function renderYearReviewHTML() {
   const bpct = total > 0 ? Math.round(actual / total * 100) : 0;
 
   const items = [
-    { n: trips.length, label: '✈️ 出行', color: 'var(--blue-400)' },
-    { n: tripCost > 0 ? fmtMoney(tripCost) : '—', label: '💰 旅行花费', color: '#EC7FA0' },
-    { n: ckTotal, label: '✅ 累计打卡', color: '#4CAF50' },
-    { n: bestStreak, label: '🔥 连续打卡', color: '#FF9800' },
-    { n: donePlans, label: '📋 完成计划', color: 'var(--pink-400)' },
-    { n: doneEvents, label: '🔔 完成事件', color: 'var(--blue-500)' },
+    { n: trips.length, label: '✈️ 出行', color: 'var(--blue-400)', act: "goYearReview('travels')" },
+    { n: tripCost > 0 ? fmtMoney(tripCost) : '—', label: '💰 旅行花费', color: '#EC7FA0', act: "goYearReview('budget-travel')" },
+    { n: ckTotal, label: '✅ 累计打卡', color: '#4CAF50', act: "goYearReview('checkins')" },
+    { n: bestStreak, label: '🔥 连续打卡', color: '#FF9800', act: "goYearReview('checkins')" },
+    { n: donePlans, label: '📋 完成计划', color: 'var(--pink-400)', act: "goYearReview('plans')" },
+    { n: doneEvents, label: '🔔 完成事件', color: 'var(--blue-500)', act: "goYearReview('events')" },
   ];
-  const grid = items.map(it => `<div class="ov-yr-item"><span class="ov-yr-num" style="color:${it.color}">${it.n}</span><span class="ov-yr-label">${it.label}</span></div>`).join('');
+  const grid = items.map(it => `<div class="ov-yr-item" onclick="${it.act}"><span class="ov-yr-num" style="color:${it.color}">${it.n}</span><span class="ov-yr-label">${it.label}</span></div>`).join('');
 
-  return `<div class="ov-module ov-year-review" onclick="switchToPage('budget')">
+  return `<div class="ov-module ov-year-review">
     <div class="ov-module-header"><span class="ov-module-title">📊 ${year} 年度回顾</span><span class="ov-module-badge green">预算 ${bpct}%</span></div>
     <div class="ov-yr-grid">${grid}</div>
   </div>`;
@@ -3993,6 +3994,18 @@ function goPlansSection(key) {
   switchToPage('plans');
 }
 window.goPlansSection = goPlansSection;
+
+// 年度回顾统计项点击跳转：出行→旅行规划 / 旅行花费→预算(筛旅游) / 打卡→打卡 / 计划→每日计划 / 事件→事件提醒
+function goYearReview(target) {
+  if (target === 'budget-travel') {
+    _budgetCatFilter = '旅游';
+    state.budgetYear = new Date().getFullYear();
+    switchToPage('budget');
+    return;
+  }
+  switchToPage(target);
+}
+window.goYearReview = goYearReview;
 
 // ============================================================
 // CLOCK
