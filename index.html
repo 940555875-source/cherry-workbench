@@ -1235,7 +1235,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.50</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.51</div>
     </div>
   </aside>
 
@@ -1801,7 +1801,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.50</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.51</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1852,7 +1852,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.50';
+const APP_VERSION = 'v14.51';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -4140,6 +4140,10 @@ var TRAVEL_SEED_DATA = [
 // get backfilled even when state.travels already has some records (e.g. partial cloud pull).
 function seedTravelData() {
   var existing = new Set(state.travels.map(function(t){ return t.id; }));
+  // 已删除（墓碑 deleted_at）的种子条目不再复活
+  try {
+    JSON.parse(localStorage.getItem(LS_KEYS.travels) || '[]').forEach(function(r){ if (r.deleted_at) existing.add(r.id); });
+  } catch(e) {}
   var added = 0;
   TRAVEL_SEED_DATA.forEach(function(d) {
     if (existing.has(d.id)) return;
@@ -5177,6 +5181,10 @@ var BUDGET_SEED = [
 // has some records (e.g. partial cloud pull).
 function seedBudgetData() {
   var existing = new Set(state.budget.map(function(b){ return b.id; }));
+  // 已删除（墓碑 deleted_at）的种子条目不再复活
+  try {
+    JSON.parse(localStorage.getItem(LS_KEYS.budget) || '[]').forEach(function(r){ if (r.deleted_at) existing.add(r.id); });
+  } catch(e) {}
   var added = 0;
   BUDGET_SEED.forEach(function(b, i) {
     var seedId = 'b_' + b.year + '_' + i;
