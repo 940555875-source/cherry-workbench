@@ -1236,7 +1236,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.52</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.53</div>
     </div>
   </aside>
 
@@ -1802,7 +1802,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.52</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.53</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1853,7 +1853,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.52';
+const APP_VERSION = 'v14.53';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -2268,6 +2268,8 @@ async function fullSyncAll() {
   if (newConflicts > 0) {
     console.warn(`⚠️ 同步时 ${newConflicts} 条记录被云端较新版本覆盖（多端修改冲突），已采用云端版本。控制台执行 showSyncConflicts() 查看明细。`);
   }
+  // v14.53: 同步完成后统一刷新 UI，保证跨设备拉取的新数据（如另一台设备的日历事件）立即可见
+  try { renderAll(); } catch(e) { console.warn('renderAll after sync failed', e.message); }
 }
 
 /** Debounced full sync for a table */
@@ -2388,7 +2390,7 @@ async function init() {
   });
 
   safe('cleanupOldTombstones', () => cleanupOldTombstones());
-  safe('periodicSync setup', () => setInterval(periodicSync, 300000));
+  safe('periodicSync setup', () => setInterval(periodicSync, 120000));
   safe('monitorOnline', () => monitorOnline());
   safe('initReminders', () => initReminders());
   safe('registerSW', () => registerSW());
@@ -2512,6 +2514,13 @@ function monitorOnline() {
   window.addEventListener('offline', () => setSyncStatus('offline', '断网'));
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden && syncEnabled) periodicSync();
+  });
+  // v14.53: 窗口重新聚焦 / bfcache 恢复时也主动同步，覆盖移动端从后台切回 PWA 的场景
+  window.addEventListener('focus', () => {
+    if (syncEnabled) periodicSync();
+  });
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted && syncEnabled) periodicSync();
   });
   update();
 }

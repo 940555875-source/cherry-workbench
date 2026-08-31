@@ -1,4 +1,4 @@
-// amber的工作台 Service Worker v14.52
+// amber的工作台 Service Worker v14.53
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
 // v14.37: cloudPush遇到schema cache错误时自动等3秒重试（给PostgREST reload时间）
@@ -17,8 +17,9 @@
 // v14.51: 修复删除预算/旅行种子条目后被 seedBudgetData/seedTravelData 复活的问题
 
 // v14.52: 年度回顾统计项可点击跳转（出行→旅行/花费→预算筛旅游/打卡/计划/事件）
+// v14.53: 跨设备同步增强（同步后统一刷新 UI + focus/pageshow 触发同步 + 同步间隔缩短）
 
-const VERSION = 'amber-workbench-v14.52';
+const VERSION = 'amber-workbench-v14.53';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
