@@ -992,6 +992,12 @@ body{
 .ov-module-item.done{text-decoration:line-through;opacity:.5}
 /* 年度回顾 */
 .ov-year-review{grid-column:1 / -1}
+/* 旅行相册入口 */
+.ov-album{grid-column:1 / -1}
+.ov-album-strip{display:flex;gap:8px;overflow:hidden;margin-top:2px}
+.ov-album-strip img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--gray-100)}
+.ov-album-strip .ov-album-more{width:64px;height:64px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--gray-100);color:var(--gray-500);font-size:12px;font-weight:600}
+.ov-album-empty{font-size:13px;color:var(--gray-400);line-height:1.5}
 .ov-yr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
 .ov-yr-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;background:var(--gray-50);border-radius:10px}
 .ov-yr-num{font-size:18px;font-weight:700;letter-spacing:-.5px}
@@ -1189,13 +1195,12 @@ body{
       <button class="nav-item" data-page="plans"><span class="nav-emoji">📋</span> 每日计划</button>
       <button class="nav-item" data-page="events"><span class="nav-emoji">🔔</span> 事件提醒</button>
       <button class="nav-item" data-page="travels"><span class="nav-emoji">✈️</span> 旅行规划</button>
-      <button class="nav-item" data-page="album"><span class="nav-emoji">📷</span> 旅行相册</button>
       <button class="nav-item" data-page="budget"><span class="nav-emoji">💰</span> 年度预算</button>
       <button class="nav-item" data-page="checkins"><span class="nav-emoji">✅</span> 打卡</button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.47</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.48</div>
     </div>
   </aside>
 
@@ -1399,7 +1404,6 @@ body{
       <button class="mobile-nav-item" data-page="plans"><span class="mni-icon">📋</span>计划</button>
       <button class="mobile-nav-item" data-page="events"><span class="mni-icon">🔔</span>事件</button>
       <button class="mobile-nav-item" data-page="travels"><span class="mni-icon">✈️</span>旅行</button>
-      <button class="mobile-nav-item" data-page="album"><span class="mni-icon">📷</span>相册</button>
       <button class="mobile-nav-item" data-page="budget"><span class="mni-icon">💰</span>预算</button>
       <button class="mobile-nav-item" data-page="checkins"><span class="mni-icon">✅</span>打卡</button>
     </div>
@@ -1750,7 +1754,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.47</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.48</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1801,7 +1805,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.47';
+const APP_VERSION = 'v14.48';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -3890,6 +3894,11 @@ function renderOverviewModules() {
 
   const today = fmtDate(new Date());
   const upcomingEvents = state.events.filter(e => e.date >= today).sort((a,b) => a.date > b.date ? 1 : -1).slice(0, 3);
+  const photos = sortPhotos(state.photos);
+  const recentPhotos = photos.slice(0, 5);
+  const albumStrip = photos.length
+    ? `<div class="ov-album-strip">${recentPhotos.map(p => `<img src="${p.image}" alt="" loading="lazy">`).join('')}${photos.length > 5 ? `<div class="ov-album-more">+${photos.length - 5}</div>` : ''}</div>`
+    : '<div class="ov-album-empty">还没有照片，点击上传旅行回忆 📷</div>';
 
   const container = $('#overviewModules');
   container.innerHTML = `
@@ -3903,6 +3912,10 @@ function renderOverviewModules() {
     <div class="ov-module" style="text-align:center;padding:20px">
       <div style="font-size:28px;font-weight:300;letter-spacing:-1px" id="ovClock">--:--</div>
       <div style="font-size:12px;color:var(--gray-400);margin-top:4px" id="ovDate">----年--月--日 星期-</div>
+    </div>
+    <div class="ov-module ov-album" onclick="switchToPage('album')">
+      <div class="ov-module-header"><span class="ov-module-title">📷 旅行相册</span><span class="ov-module-badge pink">${photos.length} 张</span></div>
+      ${albumStrip}
     </div>
     ${renderYearReviewHTML()}`;
   updateClock();
