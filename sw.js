@@ -1,4 +1,4 @@
-// amber的工作台 Service Worker v14.53
+// amber的工作台 Service Worker v14.56
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
 // v14.37: cloudPush遇到schema cache错误时自动等3秒重试（给PostgREST reload时间）
@@ -20,8 +20,9 @@
 // v14.53: 跨设备同步增强（同步后统一刷新 UI + focus/pageshow 触发同步 + 同步间隔缩短）
 // v14.54: supabase-js 自托管（vendor/supabase.js 同源加载，摆脱 CDN 依赖）
 // v14.55: networkFirst 加版本校验 — fetch 失败时 fallback 只接受同版本缓存，避免老 HTML 卡住
+// v14.56: 修复 fullSync 丢失墓碑导致 budget/travel 删除后复活的 bug
 
-const VERSION = 'amber-workbench-v14.55';
+const VERSION = 'amber-workbench-v14.56';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

@@ -1236,7 +1236,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.55</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.56</div>
     </div>
   </aside>
 
@@ -1802,7 +1802,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.55</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.56</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1853,7 +1853,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.55';
+const APP_VERSION = 'v14.56';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -2188,18 +2188,26 @@ async function fullSync(key) {
     }
 
     // 2. Build lookup maps
+    // v14.56 修复:从 localStorage 全集读(含墓碑),而不是 state[key](state 已 filter 墓碑)
+    //   否则墓碑进不了 mergedMap → saveLocal 时被覆盖丢墓碑 → renderBudgetPage/renderTravelPage
+    //   每次跑 seedBudgetData/seedTravelData 时检查不到墓碑 → 被删的种子条目复活
     const localMap = {};
-    state[key].forEach(r => { localMap[r.id] = r; });
+    try {
+      const allLocal = JSON.parse(localStorage.getItem(LS_KEYS[key]) || '[]');
+      allLocal.forEach(r => { localMap[r.id] = r; });
+    } catch(e) {
+      state[key].forEach(r => { localMap[r.id] = r; });
+    }
 
     const cloudMap = {};
     cloudRecords.forEach(r => { cloudMap[r.id] = r; });
 
-    // 3. Apply tombstones: remove local records that are tombstoned in cloud
+    // 3. 收集云端墓碑 id(用于后续过滤 toPush,避免重推云端墓碑)
     const cloudTombstones = cloudRecords.filter(r => r.deleted_at);
     const tombstoneIds = new Set(cloudTombstones.map(r => r.id));
 
-    // 4. Merge non-tombstone cloud records into local
-    const mergedMap = { ...localMap };
+    // 4. Merge non-tombstone cloud records into local (墓碑条目不入这一步)
+    const mergedMap = { ...localMap };  // 包含本地墓碑
     const toPush = [];
 
     cloudRecords.filter(r => !r.deleted_at).forEach(cr => {
@@ -2212,27 +2220,31 @@ async function fullSync(key) {
         const cloudTime = new Date(cr.updated_at || 0).getTime();
         const localTime = new Date(local.updated_at || 0).getTime();
         if (cloudTime > localTime) {
-          // v14.41: 云端更新覆盖本地 → 记录冲突（另一设备修改了同一记录；2s 阈值排除时钟抖动）
+          // v14.41: 云端更新覆盖本地 → 记录冲突(另一设备修改了同一记录;2s 阈值排除时钟抖动)
           if (cloudTime - localTime > 2000) recordConflict(key, local);
           mergedMap[cr.id] = { ...local, ...cr, id: cr.id }; // cloud wins but keep local shape
         }
       }
     });
 
-    // 5. Push local-only records (not in cloud at all)
+    // 5. Push local-only records (not in cloud at all) — 但跳过本地墓碑以免覆盖云端墓碑
     Object.values(localMap).forEach(lr => {
+      if (lr.deleted_at) return;
       if (!cloudMap[lr.id]) {
         toPush.push(withDeviceId(lr));
       }
     });
 
-    // 6. Remove tombstoned records from merged
-    tombstoneIds.forEach(id => { delete mergedMap[id]; });
+    // 6. v14.56 不再删除墓碑 — 让墓碑留在 mergedMap,state 自然通过 filter(!deleted_at) 剔除
+    //    saveLocal 保留墓碑供 seed 函数防复活
 
-    // 7. Update state
+    // 7. Update state (active only,墓碑在渲染时被 .filter(!deleted_at) 自动过滤)
     const merged = Object.values(mergedMap).filter(r => !r.deleted_at);
     state[key] = merged;
-    saveLocal(key, merged);
+
+    // 7b. v14.56: Save to localStorage INCLUDING tombstones
+    //   关键!必须保留墓碑 — seed 函数依赖墓碑防复活
+    saveLocal(key, Object.values(mergedMap));
 
     // 8. Push local-only records
     if (toPush.length) {
