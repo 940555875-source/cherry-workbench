@@ -19,8 +19,9 @@
 // v14.52: 年度回顾统计项可点击跳转（出行→旅行/花费→预算筛旅游/打卡/计划/事件）
 // v14.53: 跨设备同步增强（同步后统一刷新 UI + focus/pageshow 触发同步 + 同步间隔缩短）
 // v14.54: supabase-js 自托管（vendor/supabase.js 同源加载，摆脱 CDN 依赖）
+// v14.55: networkFirst 加版本校验 — fetch 失败时 fallback 只接受同版本缓存，避免老 HTML 卡住
 
-const VERSION = 'amber-workbench-v14.54';
+const VERSION = 'amber-workbench-v14.55';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
@@ -105,7 +106,25 @@ async function networkFirst(request) {
     }
     return res;
   } catch (e) {
+    // v14.55: fallback 时严格校验版本 — 绝不返回老版本 HTML，避免「代码已上但页面还是老的」
     const cached = await caches.match(request) || await caches.match('./index.html');
-    return cached || new Response('offline', { status: 503 });
+    if (cached) {
+      try {
+        const txt = await cached.text();
+        if (txt.includes(VERSION)) {
+          console.log('[SW] 同版本缓存命中:', VERSION);
+          return cached;
+        }
+        // 版本不匹配：清理并报错（不静默返回老代码）
+        const c = await caches.open(STATIC_CACHE);
+        await c.delete(request);
+        await c.delete('./index.html');
+        console.warn('[SW] 已清理过期缓存（HTML 不是当前 ' + VERSION + '），需联网刷新');
+      } catch (_) {}
+    }
+    return new Response('需要联网以加载最新版 HTML，请刷新页面\nNeed network to load latest HTML, please reload', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    });
   }
 }

@@ -1236,7 +1236,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.54</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.55</div>
     </div>
   </aside>
 
@@ -1802,7 +1802,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.54</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.55</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1853,7 +1853,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.54';
+const APP_VERSION = 'v14.55';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -1914,7 +1914,7 @@ let _supaLoading = null;
 function loadSupabaseScript() {
   if (window.supabase && window.supabase.createClient) return Promise.resolve(true);
   if (_supaLoading) return _supaLoading;
-  // v14.54: 本地 vendor 优先（同源，稳定），彻底摆脱 jsdelivr/unpkg CDN 依赖；
+  // v14.55: 本地 vendor 优先（同源，稳定），彻底摆脱 jsdelivr/unpkg CDN 依赖；
   // CDN 仅作为兜底 fallback。
   const sources = [
     './vendor/supabase.js',
@@ -2392,7 +2392,7 @@ async function init() {
           setSyncStatus('error', '同步失败');
         });
       } else {
-        // v14.54: 凭据缺失时明确提示离线，避免卡在「同步中」
+        // v14.55: 凭据缺失时明确提示离线，避免卡在「同步中」
         setSyncStatus('offline', '未连接');
       }
     });
