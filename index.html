@@ -1236,7 +1236,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.53</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.54</div>
     </div>
   </aside>
 
@@ -1802,7 +1802,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.53</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.54</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1853,7 +1853,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.53';
+const APP_VERSION = 'v14.54';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -1914,18 +1914,24 @@ let _supaLoading = null;
 function loadSupabaseScript() {
   if (window.supabase && window.supabase.createClient) return Promise.resolve(true);
   if (_supaLoading) return _supaLoading;
-  const cdns = [
+  // v14.54: 本地 vendor 优先（同源，稳定），彻底摆脱 jsdelivr/unpkg CDN 依赖；
+  // CDN 仅作为兜底 fallback。
+  const sources = [
+    './vendor/supabase.js',
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
     'https://unpkg.com/@supabase/supabase-js@2',
   ];
   _supaLoading = new Promise((resolve) => {
     let i = 0;
     const tryNext = () => {
-      if (i >= cdns.length) { resolve(false); return; }
+      if (i >= sources.length) { resolve(false); return; }
       const s = document.createElement('script');
-      s.src = cdns[i++];
+      s.src = sources[i++];
       s.async = true;
-      s.onload = () => resolve(true);
+      s.onload = () => {
+        if (window.supabase && window.supabase.createClient) resolve(true);
+        else { s.remove(); tryNext(); }
+      };
       s.onerror = () => { s.remove(); tryNext(); };
       document.head.appendChild(s);
     };
@@ -2385,6 +2391,9 @@ async function init() {
           console.warn('Initial sync failed', e.message);
           setSyncStatus('error', '同步失败');
         });
+      } else {
+        // v14.54: 凭据缺失时明确提示离线，避免卡在「同步中」
+        setSyncStatus('offline', '未连接');
       }
     });
   });

@@ -18,14 +18,16 @@
 
 // v14.52: 年度回顾统计项可点击跳转（出行→旅行/花费→预算筛旅游/打卡/计划/事件）
 // v14.53: 跨设备同步增强（同步后统一刷新 UI + focus/pageshow 触发同步 + 同步间隔缩短）
+// v14.54: supabase-js 自托管（vendor/supabase.js 同源加载，摆脱 CDN 依赖）
 
-const VERSION = 'amber-workbench-v14.53';
+const VERSION = 'amber-workbench-v14.54';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
 const APP_SHELL = [
   './',
   './index.html',
+  './vendor/supabase.js',
   './manifest.json',
   './icons/icon-48x48.png',
   './icons/icon-72x72.png',
