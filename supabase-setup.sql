@@ -108,6 +108,24 @@ CREATE TABLE public.budget (
 );
 
 -- ============================================================
+-- 5b. 跨模块关联字段（v14.57 新增）
+--   设计：单向存储 + 双向反查
+--   - budget.travel_id → travels.id   （预算关联旅行计划）
+--   - budget.event_id  → events.id    （预算关联事件，可选项）
+--   travels / events 表不加字段，展示时反查 budget，避免双向数据不一致
+--   幂等：用 IF NOT EXISTS，重跑安全
+-- ============================================================
+ALTER TABLE public.budget ADD COLUMN IF NOT EXISTS travel_id TEXT;
+ALTER TABLE public.budget ADD COLUMN IF NOT EXISTS event_id  TEXT;
+
+-- 索引（加速反查）
+CREATE INDEX IF NOT EXISTS idx_budget_travel ON public.budget(travel_id);
+CREATE INDEX IF NOT EXISTS idx_budget_event  ON public.budget(event_id);
+
+-- 刷新 PostgREST schema cache，让新列立即可用
+NOTIFY pgrst, 'reload schema';
+
+-- ============================================================
 -- 6. 旅行相册表（v14.45 新增，照片关联旅行规划）
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.photos (
@@ -141,6 +159,9 @@ CREATE INDEX IF NOT EXISTS idx_events_date         ON public.events(date);
 CREATE INDEX IF NOT EXISTS idx_travels_year        ON public.travels(year);
 CREATE INDEX IF NOT EXISTS idx_budget_year         ON public.budget(year);
 CREATE INDEX IF NOT EXISTS idx_photos_travel       ON public.photos(travel_id);
+-- v14.57 跨模块关联索引（上面 5b 段已建，此处为幂等兜底）
+CREATE INDEX IF NOT EXISTS idx_budget_travel       ON public.budget(travel_id);
+CREATE INDEX IF NOT EXISTS idx_budget_event        ON public.budget(event_id);
 CREATE INDEX IF NOT EXISTS idx_photos_taken_at     ON public.photos(taken_at);
 
 -- ============================================================

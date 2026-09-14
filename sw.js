@@ -21,8 +21,10 @@
 // v14.54: supabase-js 自托管（vendor/supabase.js 同源加载，摆脱 CDN 依赖）
 // v14.55: networkFirst 加版本校验 — fetch 失败时 fallback 只接受同版本缓存，避免老 HTML 卡住
 // v14.56: 修复 fullSync 丢失墓碑导致 budget/travel 删除后复活的 bug
+// v14.57: 跨模块关联（预算 ↔ 旅行 / 预算 ↔ 事件），单向存储 budget.travel_id / event_id + 双向反查
+// v14.58: 莫兰迪色系全局换肤（米杏底 / 灰绿主色 / 灰粉 / 灰蓝 / 暖杏，暗色模式同步适配）
 
-const VERSION = 'amber-workbench-v14.56';
+const VERSION = 'amber-workbench-v14.58';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
