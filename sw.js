@@ -1,4 +1,4 @@
-// amber的工作台 Service Worker v14.56
+// amber的工作台 Service Worker v14.59
 // Strategy: HTML uses network-first WITH cache:'no-cache' so users ALWAYS get
 // the latest code (never a stale cached index.html); static assets cache-first.
 // v14.37: cloudPush遇到schema cache错误时自动等3秒重试（给PostgREST reload时间）
@@ -24,7 +24,7 @@
 // v14.57: 跨模块关联（预算 ↔ 旅行 / 预算 ↔ 事件），单向存储 budget.travel_id / event_id + 双向反查
 // v14.58: 莫兰迪色系全局换肤（米杏底 / 灰绿主色 / 灰粉 / 灰蓝 / 暖杏，暗色模式同步适配）
 
-const VERSION = 'amber-workbench-v14.58';
+const VERSION = 'amber-workbench-v14.59';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
