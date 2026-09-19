@@ -1,4 +1,5 @@
-// amber的工作台 Service Worker v14.62
+// amber的工作台 Service Worker v14.63
+// v14.63: 补上 saveTravelModal 缺失的 __new__ 分支（v14.62 编辑丢失导致新建预算无效）
 // v14.62: 旅行弹窗关联预算支持「新建」（自动带入预估费用）+ 年度预算页待完善提醒
 // v14.61: 修复弹窗超高无法滚动 — .modal 加 max-height:88vh + overflow-y:auto
 // v14.60: 暗色模式重做为「夜玫瑰」— 深夜蓝黑底 × 玫瑰木主色（取色自 iPhone 18 Pro 图）
@@ -27,7 +28,7 @@
 // v14.57: 跨模块关联（预算 ↔ 旅行 / 预算 ↔ 事件），单向存储 budget.travel_id / event_id + 双向反查
 // v14.58: 莫兰迪色系全局换肤（米杏底 / 灰绿主色 / 灰粉 / 灰蓝 / 暖杏，暗色模式同步适配）
 
-const VERSION = 'amber-workbench-v14.62';
+const VERSION = 'amber-workbench-v14.63';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
