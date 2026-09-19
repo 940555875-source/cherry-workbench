@@ -1266,7 +1266,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.63</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.64</div>
     </div>
   </aside>
 
@@ -1847,7 +1847,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.63</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.64</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1898,7 +1898,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.63';
+const APP_VERSION = 'v14.64';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -3936,7 +3936,8 @@ function renderOvStats() {
 
   // --- 年度预算 ---
   seedBudgetData();
-  const year = state.budgetYear;
+  // v14.64: 首页预算卡固定展示当前年份，不跟随预算页选中的年份（避免提前展示未来年度）
+  const year = new Date().getFullYear();
   const blist = state.budget.filter(b => b.year === year);
   let total = 0, actual = 0, hasBudget = false;
   blist.forEach(b => {
