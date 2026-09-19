@@ -875,6 +875,20 @@ body{
 .bs-fill{height:100%;background:linear-gradient(90deg,#94BB8D,#6EA469);border-radius:5px;transition:width .4s}
 .bs-fill.over{background:linear-gradient(90deg,#E8BB7A,#AC642E)}
 .budget-cats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+/* v14.62: 预算待完善提醒条 */
+.budget-remind{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.br-item{
+  display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--gray-700);
+  background:rgba(223,159,70,.10);border:1px solid rgba(223,159,70,.28);
+  border-radius:var(--radius-xs);padding:8px 12px;
+}
+.br-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br-btn{
+  margin-left:auto;background:var(--orange-500);color:#fff;border:none;border-radius:var(--radius-xs);
+  padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;
+}
+.br-btn:hover{filter:brightness(1.08)}
+[data-theme="dark"] .br-item{background:#3A2A16;border-color:#5A4422}
 .bc-item{
   background:var(--surface);border:1px solid var(--gray-200);border-radius:var(--radius-xs);
   padding:10px 12px;display:flex;flex-direction:column;gap:4px;
@@ -1252,7 +1266,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.61</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.62</div>
     </div>
   </aside>
 
@@ -1668,7 +1682,7 @@ body{
       <div class="form-group form-group-full">
         <label>关联预算（可选）</label>
         <select id="tvBudgetId"></select>
-        <div style="font-size:11px;color:var(--gray-400);margin-top:4px">选择后，该预算会标记为此行程的花销，预算页也会显示关联标签。</div>
+        <div style="font-size:11px;color:var(--gray-400);margin-top:4px">选「➕ 新建预算」会自动创建一条预算并带入上面的预估费用；选已有预算则标记为此行程的花销，预算页也会显示关联标签。</div>
       </div>
       <div class="form-group form-group-full">
         <label>计划文档链接（可选）</label>
@@ -1833,7 +1847,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.61</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.62</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1884,7 +1898,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.61';
+const APP_VERSION = 'v14.62';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -4736,7 +4750,9 @@ function fillTravelBudgetSelect(currentTravelId) {
   var budgets = state.budget.slice().sort(function(a, b) {
     return (b.year - a.year) || (b.month - a.month);
   });
-  sel.innerHTML = '<option value="">（不关联）</option>' + budgets.map(function(b) {
+  // v14.62: 「__new__」= 保存时自动新建一条预算（金额取预估费用）
+  sel.innerHTML = '<option value="">（不关联）</option>' +
+    '<option value="__new__">➕ 新建预算（自动带入预估费用）</option>' + budgets.map(function(b) {
     var label = b.year + '.' + String(b.month).padStart(2, '0') + ' ' + (b.item || '未命名预算');
     return '<option value="' + escapeHtml(b.id) + '">' + escapeHtml(label) + '</option>';
   }).join('');
@@ -5392,6 +5408,39 @@ function fmtMoney(n) {
 
 var _budgetCatFilter = null; // 分类筛选（null=全部）
 
+// v14.62: 年度预算「待完善」提醒
+// 两类：① 今年行程填了预估费用但还没关联预算 → 可一键创建；② 关联了行程/事件但金额和子项目都空着 → 提醒补全
+function renderBudgetRemind(list) {
+  var rw = $('#budgetRemind');
+  if (!rw) return;
+  var yearTravels = state.travels.filter(function(t){ return t.year === state.budgetYear; });
+  var noBudget = yearTravels.filter(function(t){
+    return t.cost !== null && t.cost !== undefined && linkedBudgetsForTravel(t.id).length === 0;
+  });
+  var pending = list.filter(function(b){
+    return (b.travel_id || b.event_id) && effBudget(b) === null && !(b.subs && b.subs.length);
+  });
+  var html = '';
+  if (noBudget.length) {
+    var names = noBudget.slice(0, 3).map(function(t){
+      return (t.destination || '行程') + '（' + fmtMoney(t.cost) + '）';
+    }).join('、');
+    html += '<div class="br-item"><span>✈️</span><span class="br-txt">有 ' + noBudget.length + ' 个行程还没建预算：' + escapeHtml(names) + (noBudget.length > 3 ? ' 等' : '') + '</span>' +
+      '<button class="br-btn" data-br-create>一键创建</button></div>';
+  }
+  if (pending.length) {
+    html += '<div class="br-item"><span>📝</span><span class="br-txt">有 ' + pending.length + ' 条关联预算还没填金额，点下方明细补充</span></div>';
+  }
+  rw.innerHTML = html;
+  rw.style.display = html ? '' : 'none';
+  rw.onclick = function(e) {
+    var btn = e.target.closest('[data-br-create]');
+    if (!btn) return;
+    noBudget.forEach(function(t){ createBudgetForTravel(t); });
+    renderBudgetPage();
+  };
+}
+
 function renderBudgetPage() {
   seedBudgetData();
 
@@ -5419,6 +5468,8 @@ function renderBudgetPage() {
 
   // --- Filter by year ---
   var list = state.budget.filter(function(b){ return b.year === state.budgetYear; });
+  // v14.62: 预算待完善提醒（放在早退之前，没有预算记录时也要提醒）
+  renderBudgetRemind(list);
   var empty = $('#budgetEmpty'), listEl = $('#budgetList');
   if (list.length === 0) { listEl.classList.add('hidden'); empty.classList.remove('hidden'); $('#budgetSummary').innerHTML=''; $('#budgetCats').innerHTML=''; return; }
   listEl.classList.remove('hidden'); empty.classList.add('hidden');
@@ -5673,6 +5724,32 @@ function clearBudgetLinks(field, targetId) {
   state.budget.forEach(function(b) {
     if (b[field] === targetId) updateRecord('budget', b.id, { [field]: null });
   });
+}
+
+// v14.62: 为行程一键创建预算（金额=预估费用，分类=旅游，双向关联）
+// t 需要 { id, year, month, destination, cost }
+function createBudgetForTravel(t) {
+  if (!t || !t.id) return null;
+  var bid = 'b_' + Date.now();
+  createRecord('budget', {
+    id: bid,
+    year: t.year || new Date().getFullYear(),
+    month: t.month || 1,
+    range: travelPeriod(t) || '',
+    item: (t.destination || '行程') + ' 预算',
+    cat: '旅游',
+    budget: (t.cost !== null && t.cost !== undefined) ? t.cost : null,
+    actual: null,
+    note: '由行程「' + (t.destination || '') + '」自动创建，可继续补充子项目明细',
+    done: false,
+    subs: [],
+    travel_id: t.id,
+    event_id: null
+  });
+  state.budgetYear = t.year || state.budgetYear;
+  localStorage.setItem('amber_budget_year', state.budgetYear);
+  showDiagToast('已为「' + (t.destination || '行程') + '」创建预算 ✓', 'online');
+  return bid;
 }
 
 function openBudgetModal(bObj) {
