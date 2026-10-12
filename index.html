@@ -100,7 +100,7 @@ body{
 .sync-pill.offline{background:var(--gray-100);color:var(--gray-500)}
 .sync-pill.syncing{background:var(--blue-50);color:var(--blue-500)}
 .sync-pill.error{background:#F5EBDC;color:#AC642E}
-.sync-pill.partial{background:#F7F5EA;color:#C3833E}  /* v14.38: 部分同步 — 黄/橙，避免红色 */
+.sync-pill.partial{background:#F7F5EA;color:#C3833E;cursor:pointer}  /* v14.38: 部分同步 — 黄/橙，避免红色；v14.65: 可点击重试 */
 .sync-pill-dot{
   width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:all .3s;
 }
@@ -1266,7 +1266,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.64</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.65</div>
     </div>
   </aside>
 
@@ -1847,7 +1847,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.64</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.65</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1898,7 +1898,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.64';
+const APP_VERSION = 'v14.65';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -2000,6 +2000,16 @@ function initSyncPills() {
   pillEls.labelMobile = $('#syncLabelMobile');
   pillEls.testBtnDesktop = $('#syncTestBtnDesktop');
   pillEls.testBtnMobile = $('#syncTestBtnMobile');
+  // v14.65: 点击「部分同步」徽章一键清熔断黑名单并重新同步（原先只能开控制台敲 resetDisabledTables()）
+  [pillEls.desktop, pillEls.mobile].forEach(el => {
+    if (!el) return;
+    el.addEventListener('click', () => {
+      if (disabledTables.size > 0) {
+        setSyncStatus('syncing', '重试中…');
+        resetDisabledTables();
+      }
+    });
+  });
 }
 
 // v14.38: 同步状态机 — 状态分类细化为 online / partial / error / offline
@@ -2323,8 +2333,8 @@ async function fullSyncAll() {
     setSyncStatus('error', '同步失败', `有表同步失败，详情见控制台`);
   } else if (hasPartial) {
     const disabledNow = [...disabledTables];
-    setSyncStatus('partial', `部分同步（${disabledNow.length} 表暂不可用）`,
-      `已熔断表: ${disabledNow.join(', ')}。控制台执行 resetDisabledTables() 重试`);
+    setSyncStatus('partial', `部分同步（${disabledNow.length} 表暂不可用）· 点击重试`,
+      `已熔断表: ${disabledNow.join(', ')}。点击徽章即可重试；或控制台执行 resetDisabledTables()`);
   } else {
     setSyncStatus('online', '已同步');
   }
