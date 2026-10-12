@@ -1,4 +1,6 @@
-// amber的工作台 Service Worker v14.65
+// amber的工作台 Service Worker v14.66
+// v14.66: 修复同步引擎关键漏洞 — fullSync 现在会推送「本地比云端新」的已有记录，
+// 编辑不再因 updateRecord 单次推送失败而永久滞留本地
 // v14.65: 「部分同步」徽章可点击一键重试（清熔断黑名单 + 重新同步）
 // v14.64: 首页预算卡固定展示当前年份，不跟随预算页年份选择
 // v14.63: 补上 saveTravelModal 缺失的 __new__ 分支（v14.62 编辑丢失导致新建预算无效）
@@ -30,7 +32,7 @@
 // v14.57: 跨模块关联（预算 ↔ 旅行 / 预算 ↔ 事件），单向存储 budget.travel_id / event_id + 双向反查
 // v14.58: 莫兰迪色系全局换肤（米杏底 / 灰绿主色 / 灰粉 / 灰蓝 / 暖杏，暗色模式同步适配）
 
-const VERSION = 'amber-workbench-v14.65';
+const VERSION = 'amber-workbench-v14.66';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.

@@ -1266,7 +1266,7 @@ body{
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.65</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.66</div>
     </div>
   </aside>
 
@@ -1847,7 +1847,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.65</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.66</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1898,7 +1898,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.65';
+const APP_VERSION = 'v14.66';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -2282,10 +2282,21 @@ async function fullSync(key) {
       }
     });
 
-    // 5. Push local-only records (not in cloud at all) — 但跳过本地墓碑以免覆盖云端墓碑
+    // 5. Push local-only records + 本地更新的已有记录（v14.66 关键修复）
+    //    原先只推「云端不存在的记录」——updateRecord 当场推送一旦失败（网络抖动/表被熔断），
+    //    这条编辑就永久滞留本地、永远到不了云端，导致多端数据各自漂移。
+    //    现在对云端已有的记录也比较 updated_at，本地更新则入队重推。
     Object.values(localMap).forEach(lr => {
       if (lr.deleted_at) return;
-      if (!cloudMap[lr.id]) {
+      const cr = cloudMap[lr.id];
+      if (!cr) {
+        toPush.push(withDeviceId(lr));
+        return;
+      }
+      // v14.66: 本地比云端新（>1s 容差避免时钟抖动）→ 补推
+      const lt = new Date(lr.updated_at || 0).getTime();
+      const ct = new Date(cr.updated_at || 0).getTime();
+      if (lt - ct > 1000) {
         toPush.push(withDeviceId(lr));
       }
     });
