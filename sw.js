@@ -1,4 +1,5 @@
-// amber的工作台 Service Worker v14.67
+// amber的工作台 Service Worker v14.68
+// v14.68: 修复「删除后复活」— fullSync 应用云端墓碑到本地 + 重推滞留的本地墓碑
 // v14.67: 「同步失败」状态也可点击徽章触发重同步
 // v14.66: 修复同步引擎关键漏洞 — fullSync 现在会推送「本地比云端新」的已有记录，
 // 编辑不再因 updateRecord 单次推送失败而永久滞留本地
@@ -33,7 +34,7 @@
 // v14.57: 跨模块关联（预算 ↔ 旅行 / 预算 ↔ 事件），单向存储 budget.travel_id / event_id + 双向反查
 // v14.58: 莫兰迪色系全局换肤（米杏底 / 灰绿主色 / 灰粉 / 灰蓝 / 暖杏，暗色模式同步适配）
 
-const VERSION = 'amber-workbench-v14.67';
+const VERSION = 'amber-workbench-v14.68';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
