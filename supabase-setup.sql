@@ -142,8 +142,21 @@ CREATE TABLE IF NOT EXISTS public.photos (
 );
 
 -- ============================================================
+-- 7. 读书空间快照表（v14.69 新增，微信读书数据）
+--    单行存储：id 固定 'main'，整包 JSON 放 data，避免同步引擎逐条处理。
+--    由本地 sync-reading.js 定时 upsert，前端只读，不进 TABLE_MAP / 不走双向同步。
+--    幂等：CREATE IF NOT EXISTS + ADD COLUMN IF NOT EXISTS，重跑安全。
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.reading (
+  id TEXT PRIMARY KEY,
+  data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- RLS：个人使用（anon key），直接禁用，减少变量、避免权限问题
 -- ============================================================
+ALTER TABLE public.reading  DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.plans    DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.events   DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.checkins DISABLE ROW LEVEL SECURITY;

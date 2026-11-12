@@ -201,15 +201,160 @@ body{
   -webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.06);
   padding:6px 10px env(safe-area-inset-bottom,10px);
 }
-.mobile-nav-items{display:flex;gap:2px}
+.mobile-nav-items{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mobile-nav-items::-webkit-scrollbar{display:none}
 .mobile-nav-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:6px 4px;border-radius:10px;border:none;background:transparent;
+  flex:1 0 auto;min-width:44px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 3px;border-radius:10px;border:none;background:transparent;
   font-size:10px;color:var(--gray-500);cursor:pointer;font-family:inherit;
-  transition:all .2s;
+  white-space:nowrap;transition:all .2s;
 }
 .mobile-nav-item .mni-icon{font-size:20px}
 .mobile-nav-item.active{color:var(--blue-500);background:var(--blue-50)}
+
+/* ===== Reading Space (v14.69 读书空间 / 微信读书) ===== */
+.rd-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;border-radius:var(--radius-sm);
+  background:var(--blue-50);border:1px solid var(--gray-200);
+  font-size:12px;color:var(--gray-700);
+}
+.rd-bar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.rd-bar-dot{width:8px;height:8px;border-radius:50%;background:var(--sage-500);flex-shrink:0}
+.rd-bar.warn .rd-bar-dot{background:var(--orange-400)}
+.rd-bar.err .rd-bar-dot{background:var(--pink-400)}
+.rd-bar-time{color:var(--gray-500);font-variant-numeric:tabular-nums}
+.rd-reload{
+  padding:5px 12px;border-radius:8px;border:1px solid var(--gray-300);
+  background:var(--surface);font-size:12px;color:var(--gray-700);
+  cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;
+}
+.rd-reload:hover{border-color:var(--blue-300);color:var(--blue-500);background:var(--blue-50)}
+.rd-reload:disabled{opacity:.5;cursor:default}
+
+/* section title */
+.rd-sec{margin-top:4px}
+.rd-sec-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.rd-sec-title{font-size:14px;font-weight:700;color:var(--gray-700);display:flex;align-items:center;gap:7px}
+.rd-sec-sub{font-size:11px;color:var(--gray-500);font-weight:500}
+.rd-switch{display:inline-flex;background:var(--gray-100);border-radius:9px;padding:2px;gap:2px}
+.rd-switch button{
+  border:none;background:transparent;padding:5px 12px;border-radius:7px;cursor:pointer;
+  font-size:12px;color:var(--gray-500);font-family:inherit;transition:all .2s;white-space:nowrap;
+}
+.rd-switch button.on{background:var(--surface);color:var(--blue-500);font-weight:600;box-shadow:var(--shadow)}
+
+/* stat grid */
+.rd-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px}
+.rd-stat{
+  background:var(--surface);border:1px solid var(--gray-200);border-radius:var(--radius-sm);
+  padding:13px 14px;min-width:0;
+}
+.rd-stat-k{font-size:11px;color:var(--gray-500);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd-stat-v{font-size:21px;font-weight:700;color:var(--gray-900);line-height:1.15;font-variant-numeric:tabular-nums}
+.rd-stat-v small{font-size:12px;font-weight:600;color:var(--gray-500);margin-left:2px}
+.rd-stat-x{font-size:10px;color:var(--gray-500);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd-stat-x.up{color:#C0873B}
+[data-theme="dark"] .rd-stat-x.up{color:var(--orange-400)}
+
+/* two-column insight row */
+.rd-insights{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media(max-width:720px){.rd-insights{grid-template-columns:1fr}}
+.rd-insight{background:var(--surface);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px}
+.rd-insight-h{font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:12px}
+.rd-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:11px}
+.rd-bar-row:last-child{margin-bottom:0}
+.rd-bar-name{width:76px;flex-shrink:0;color:var(--gray-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd-bar-track{flex:1;height:7px;border-radius:5px;background:var(--gray-100);overflow:hidden;min-width:20px}
+.rd-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue-300),var(--blue-400))}
+.rd-bar-val{width:52px;text-align:right;color:var(--gray-500);flex-shrink:0;font-variant-numeric:tabular-nums}
+.rd-tags{display:flex;flex-wrap:wrap;gap:6px}
+.rd-tag{
+  padding:5px 10px;border-radius:20px;background:var(--pink-50);
+  color:var(--pink-500);font-size:11px;white-space:nowrap;
+}
+.rd-tag.blue{background:var(--blue-50);color:var(--blue-500)}
+
+/* book grid (shelf / recent) */
+.rd-books{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:14px}
+.rd-book{cursor:pointer;min-width:0;text-decoration:none;display:block;transition:transform .2s}
+.rd-book:hover{transform:translateY(-3px)}
+.rd-cover{
+  width:100%;aspect-ratio:3/4;border-radius:8px;overflow:hidden;
+  background:linear-gradient(135deg,var(--blue-100),var(--pink-100));
+  box-shadow:0 3px 10px rgba(94,84,70,.14);position:relative;
+}
+.rd-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.rd-cover-ph{
+  width:100%;height:100%;display:none;align-items:center;justify-content:center;
+  padding:8px;text-align:center;font-size:11px;line-height:1.4;color:var(--gray-700);font-weight:600;
+}
+.rd-cover.rd-noimg .rd-cover-ph{display:flex}
+.rd-badge{
+  position:absolute;top:5px;right:5px;padding:2px 6px;border-radius:6px;
+  font-size:9px;font-weight:700;background:rgba(254,253,250,.92);color:#587E52;
+}
+.rd-badge.album{background:rgba(254,253,250,.92);color:var(--orange-600)}
+.rd-book-name{
+  font-size:12px;font-weight:600;color:var(--gray-900);margin-top:7px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;
+}
+.rd-book-author{font-size:10px;color:var(--gray-500);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd-progress{height:4px;border-radius:3px;background:var(--gray-200);margin-top:6px;overflow:hidden}
+.rd-progress-fill{height:100%;border-radius:3px;background:var(--blue-400)}
+.rd-progress-txt{font-size:10px;color:var(--gray-500);margin-top:3px}
+
+/* toolbar */
+.rd-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rd-search{
+  padding:6px 11px;border-radius:8px;border:1px solid var(--gray-200);
+  background:var(--surface);color:var(--gray-900);font-size:12px;font-family:inherit;
+  width:170px;max-width:100%;outline:none;transition:border-color .2s;
+}
+.rd-search:focus{border-color:var(--blue-300)}
+.rd-more{
+  padding:6px 13px;border-radius:8px;border:1px solid var(--gray-300);
+  background:var(--surface);font-size:12px;color:var(--gray-700);cursor:pointer;font-family:inherit;
+}
+.rd-more:hover{border-color:var(--blue-300);color:var(--blue-500)}
+
+/* notebooks list */
+.rd-nb-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:9px}
+.rd-nb{
+  display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;
+  background:var(--surface);border:1px solid var(--gray-200);text-decoration:none;min-width:0;
+}
+.rd-nb:hover{border-color:var(--blue-300)}
+.rd-nb img{width:34px;height:46px;object-fit:cover;border-radius:4px;flex-shrink:0;background:var(--gray-100)}
+.rd-nb-info{min-width:0;flex:1}
+.rd-nb-name{font-size:12px;font-weight:600;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd-nb-meta{font-size:10px;color:var(--gray-500);margin-top:3px}
+.rd-nb-count{font-size:13px;font-weight:700;color:var(--blue-500);flex-shrink:0;font-variant-numeric:tabular-nums}
+
+/* highlights */
+.rd-hl-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.rd-hl{
+  background:var(--surface);border:1px solid var(--gray-200);border-left:3px solid var(--pink-300);
+  border-radius:9px;padding:12px 14px;min-width:0;
+}
+.rd-hl-text{font-size:12.5px;line-height:1.65;color:var(--gray-900);word-break:break-word}
+.rd-hl-src{font-size:10px;color:var(--gray-500);margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* empty / loading / hint */
+.rd-empty{
+  padding:36px 20px;text-align:center;color:var(--gray-500);font-size:13px;line-height:1.8;
+  background:var(--surface);border:1px dashed var(--gray-300);border-radius:var(--radius-sm);
+}
+.rd-empty code{
+  background:var(--gray-100);padding:2px 6px;border-radius:4px;
+  font-size:11px;color:var(--gray-700);word-break:break-all;
+}
+.rd-empty-h{font-size:22px;margin-bottom:8px}
+.rd-skeleton{animation:rdPulse 1.2s ease-in-out infinite}
+@keyframes rdPulse{0%,100%{opacity:.45}50%{opacity:1}}
+[data-theme="dark"] .rd-badge{background:rgba(30,36,48,.92);color:var(--sage-300)}
+[data-theme="dark"] .rd-tag{color:var(--pink-400)}
+[data-theme="dark"] .rd-tag.blue{color:var(--blue-400)}
 
 /* ===== Cards ===== */
 .card{
@@ -1263,10 +1408,11 @@ body{
       <button class="nav-item" data-page="travels"><span class="nav-emoji">✈️</span> 旅行规划</button>
       <button class="nav-item" data-page="budget"><span class="nav-emoji">💰</span> 年度预算</button>
       <button class="nav-item" data-page="checkins"><span class="nav-emoji">✅</span> 打卡</button>
+      <button class="nav-item" data-page="reading"><span class="nav-emoji">📚</span> 读书空间</button>
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.68</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.69</div>
     </div>
   </aside>
 
@@ -1468,6 +1614,27 @@ body{
       </div>
     </div>
 
+    <!-- PAGE: 读书空间 (v14.69 微信读书) -->
+    <div class="page" id="page-reading">
+      <div class="card" style="border-top:3px solid var(--pink-300)">
+        <div class="card-header">
+          <span class="card-title">📚 读书空间</span>
+          <span class="rd-sec-sub" id="rdSource">数据来自微信读书 · 云端同步</span>
+        </div>
+        <div class="card-body">
+          <div class="rd-bar" id="rdStatusBar">
+            <div class="rd-bar-left">
+              <span class="rd-bar-dot"></span>
+              <span id="rdStatusText">正在读取云端数据…</span>
+              <span class="rd-bar-time" id="rdSyncTime"></span>
+            </div>
+            <button class="rd-reload" id="rdReload">↻ 重新读取</button>
+          </div>
+          <div id="rdContent" style="margin-top:18px"></div>
+        </div>
+      </div>
+    </div>
+
 
   <!-- === Mobile Bottom Nav === -->
   <nav class="mobile-nav" id="mobileNav">
@@ -1478,6 +1645,7 @@ body{
       <button class="mobile-nav-item" data-page="travels"><span class="mni-icon">✈️</span>旅行</button>
       <button class="mobile-nav-item" data-page="budget"><span class="mni-icon">💰</span>预算</button>
       <button class="mobile-nav-item" data-page="checkins"><span class="mni-icon">✅</span>打卡</button>
+      <button class="mobile-nav-item" data-page="reading"><span class="mni-icon">📚</span>读书</button>
     </div>
   </nav>
 
@@ -1847,7 +2015,7 @@ body{
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.68</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.69</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -1898,7 +2066,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.68';
+const APP_VERSION = 'v14.69';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -2666,6 +2834,7 @@ function initNavigation() {
     if (page === 'album') renderAlbumPage();
     if (page === 'budget') renderBudgetPage();
     if (page === 'checkins') renderCheckinPage();
+    if (page === 'reading') renderReadingPage();
   };
 
   $$('.nav-item, .mobile-nav-item').forEach(b => {
@@ -4143,6 +4312,7 @@ function switchToPage(page) {
   if (page === 'album') renderAlbumPage();
   if (page === 'budget') renderBudgetPage();
   if (page === 'checkins') renderCheckinPage();
+  if (page === 'reading') renderReadingPage();
 }
 // Exposed globally for inline onclick handlers (stat cards + overview modules)
 window.switchToPage = switchToPage;
@@ -6058,6 +6228,311 @@ $('#importFileInput').addEventListener('change', (e) => {
   reader.readAsText(file);
   e.target.value = '';
 });
+
+// ============================================================
+// READING SPACE (v14.69) — 微信读书数据，只读 Supabase reading 快照表
+//   安全：微信读书 API key 从不进入前端；网关 CORS 也只允许 weread.qq.com。
+//   数据由本地 sync-reading.js 定时写入 Supabase，前端只负责展示。
+// ============================================================
+const _rd = { snapshot: null, loadedAt: 0, loading: false, scope: 'annual', query: '', shelfLimit: 24 };
+// 仅用于在「表未创建」时一键复制，不含任何凭据，可安全内嵌
+const RD_DDL = `CREATE TABLE IF NOT EXISTS public.reading (
+  id          TEXT PRIMARY KEY,
+  data        JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE public.reading DISABLE ROW LEVEL SECURITY;
+NOTIFY pgrst, 'reload schema';`;
+
+function rdEsc(s) { return escapeHtml(s == null ? '' : String(s)); }
+function rdSafeUrl(u) {
+  const s = String(u || '');
+  return /^https?:\/\//i.test(s) ? rdEsc(s) : '';
+}
+function rdDate(sec) {
+  if (!sec) return '';
+  const d = new Date(Number(sec) * 1000);
+  if (isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function rdHours(sec) {
+  const s = Math.max(0, Math.round(Number(sec) || 0));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h > 0 ? `${h}<small>小时</small>${m ? m + '<small>分</small>' : ''}` : `${m}<small>分钟</small>`;
+}
+function rdShortHours(sec) {
+  const h = (Number(sec) || 0) / 3600;
+  return h >= 10 ? Math.round(h) + 'h' : h.toFixed(1) + 'h';
+}
+function rdSyncedLabel(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function rdStatVal(scope, key) {
+  const found = (scope.readStat || []).find(x => x.stat === key);
+  return found ? found.counts : '—';
+}
+
+function rdStatus(kind, text, timeText) {
+  const bar = $('#rdStatusBar');
+  if (!bar) return;
+  bar.className = 'rd-bar' + (kind === 'warn' ? ' warn' : kind === 'err' ? ' err' : '');
+  $('#rdStatusText').textContent = text;
+  $('#rdSyncTime').textContent = timeText || '';
+}
+
+function rdEmpty(icon, title, lines) {
+  return `<div class="rd-empty"><div class="rd-empty-h">${icon}</div><div style="font-weight:600;color:var(--gray-700);margin-bottom:6px">${title}</div>${lines.join('<br>')}</div>`;
+}
+
+async function rdFetch(force) {
+  if (_rd.loading) return;
+  if (!force && _rd.snapshot && Date.now() - _rd.loadedAt < 60000) { rdRender(); return; }
+  _rd.loading = true;
+  const btn = $('#rdReload');
+  if (btn) btn.disabled = true;
+  rdStatus('', '正在读取云端数据…');
+  $('#rdContent').innerHTML = '<div class="rd-empty rd-skeleton">正在加载读书数据…</div>';
+  try {
+    // v14.69: 首屏可能 supabase.js 还没加载完，读之前先确保 SDK 与 client 就绪
+    if (!sb) {
+      try { await loadSupabaseScript(); } catch (_) {}
+      initSupabase();
+    }
+    if (!sb) {
+      _rd.loading = false; if (btn) btn.disabled = false;
+      rdStatus('warn', '尚未配置 Supabase');
+      $('#rdContent').innerHTML = rdEmpty('⚙️', '需要先配置云端', [
+        '读书空间的数据存放在你自己的 Supabase 中。',
+        '请到「设置」填入 Supabase URL 与 anon key，然后回来重新读取。'
+      ]);
+      return;
+    }
+    const { data: rows, error } = await sb.from('reading').select('data,updated_at').eq('id', 'main').limit(1);
+    const data = Array.isArray(rows) ? rows[0] : null;
+    if (error) {
+      const code = error.code || '';
+      const msg = String(error.message || '');
+      _rd.loading = false; if (btn) btn.disabled = false;
+      if (code === 'PGRST205' || code === '42P01' || /reading/i.test(msg) && /not find|does not exist/i.test(msg)) {
+        rdStatus('err', 'reading 表未创建');
+        $('#rdContent').innerHTML = `<div class="rd-empty"><div class="rd-empty-h">🗄️</div>
+          <div style="font-weight:600;color:var(--gray-700);margin-bottom:8px">还差一步：创建数据表</div>
+          <div style="max-width:560px;margin:0 auto;text-align:left;line-height:1.8">
+            请到 <b>Supabase → SQL Editor</b> 执行下面这段（只新增一张表，不影响现有数据）：
+            <pre style="margin:10px 0;padding:12px;border-radius:8px;background:var(--gray-100);color:var(--gray-700);font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-word;overflow-x:auto">${rdEsc(RD_DDL)}</pre>
+            <div style="text-align:center"><button class="rd-reload" id="rdCopyDdl" style="margin-bottom:10px">📋 复制建表 SQL</button></div>
+            建好表后同步脚本会自动写入数据，再点右上角「重新读取」即可。
+          </div></div>`;
+      } else {
+        rdStatus('err', '读取失败');
+        $('#rdContent').innerHTML = rdEmpty('⚠️', '云端数据读取失败', [rdEsc(msg.slice(0, 160)), '可点右上角「重新读取」重试。']);
+      }
+      return;
+    }
+    if (!data || !data.data) {
+      _rd.loading = false; if (btn) btn.disabled = false;
+      rdStatus('warn', '暂无数据');
+      $('#rdContent').innerHTML = rdEmpty('📭', '还没有同步过读书数据', [
+        '数据由本地的同步脚本写入云端（每日自动刷新）。',
+        '首次使用请先运行一次同步，再点「重新读取」。'
+      ]);
+      return;
+    }
+    _rd.snapshot = data.data;
+    _rd.loadedAt = Date.now();
+    _rd.loading = false; if (btn) btn.disabled = false;
+    rdStatus('', '已同步', '更新于 ' + rdSyncedLabel(_rd.snapshot.syncedAt || data.updated_at));
+    rdRender();
+  } catch (e) {
+    _rd.loading = false; if (btn) btn.disabled = false;
+    rdStatus('err', '读取异常');
+    $('#rdContent').innerHTML = rdEmpty('⚠️', '云端数据读取异常', [rdEsc(String(e.message || e).slice(0, 160)), '可点右上角「重新读取」重试。']);
+  }
+}
+
+function rdBookCard(b, opts) {
+  opts = opts || {};
+  const link = rdSafeUrl(b.readerLink || b.deepLink);
+  const coverUrl = rdSafeUrl(b.cover);
+  const badge = opts.album ? '<span class="rd-badge album">有声</span>'
+    : (b.finishReading ? '<span class="rd-badge">读完</span>' : '');
+  const cover = coverUrl
+    ? `<img src="${coverUrl}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('rd-noimg');this.remove()">`
+    : '';
+  const ph = `<div class="rd-cover-ph">${rdEsc(b.title)}</div>`;
+  const noImgCls = coverUrl ? '' : ' rd-noimg';
+  const progress = (opts.progress != null && opts.progress > 0)
+    ? `<div class="rd-progress"><div class="rd-progress-fill" style="width:${Math.min(100, Math.max(0, Number(opts.progress) || 0))}%"></div></div>
+       <div class="rd-progress-txt">读到 ${Math.round(Number(opts.progress) || 0)}%${opts.date ? ' · ' + rdEsc(opts.date) : ''}</div>` : '';
+  const inner = `<div class="rd-cover${noImgCls}">${cover}${ph}${badge}</div>
+    <div class="rd-book-name">${rdEsc(b.title)}</div>
+    <div class="rd-book-author">${rdEsc(b.author || (opts.album ? '有声书' : ''))}</div>${progress}`;
+  return link
+    ? `<a class="rd-book" href="${link}" target="_blank" rel="noopener noreferrer" title="${rdEsc(b.title)}">${inner}</a>`
+    : `<div class="rd-book" title="${rdEsc(b.title)}">${inner}</div>`;
+}
+
+function rdStatsHTML(snap) {
+  const sc = _rd.scope === 'overall' ? snap.stats.overall : snap.stats.annual;
+  const isYear = _rd.scope === 'annual';
+  const cmp = (isYear && typeof sc.compare === 'number')
+    ? (sc.compare >= 0 ? `较上一周期 +${Math.round(sc.compare * 100)}%` : `较上一周期 ${Math.round(sc.compare * 100)}%`) : '';
+  const cards = [
+    { k: isYear ? '今年阅读时长' : '累计阅读时长', v: rdHours(sc.totalReadTime), x: cmp, up: sc.compare > 0 },
+    { k: '阅读天数', v: (sc.readDays || 0) + '<small>天</small>', x: isYear ? '单日满 1 分钟计' : '累计有效阅读' },
+    { k: '读过', v: rdStatVal(sc, '读过') },
+    { k: '读完', v: rdStatVal(sc, '读完') },
+    { k: '笔记', v: rdStatVal(sc, '笔记') },
+    { k: '日均时长', v: (sc.dayAverageReadTime > 0 ? rdHours(sc.dayAverageReadTime) : '—'), x: isYear ? '按自然日平均' : '' },
+  ];
+  const stats = `<div class="rd-stats">${cards.map(c =>
+    `<div class="rd-stat"><div class="rd-stat-k">${c.k}</div><div class="rd-stat-v">${c.v}</div>${c.x ? `<div class="rd-stat-x${c.up ? ' up' : ''}">${rdEsc(c.x)}</div>` : ''}</div>`
+  ).join('')}</div>`;
+
+  // 偏好分类条形图
+  const cats = (sc.preferCategory || []).slice(0, 6);
+  const maxVal = Math.max(1, ...cats.map(c => c.val || 0));
+  const catBars = cats.length ? cats.map(c =>
+    `<div class="rd-bar-row"><span class="rd-bar-name" title="${rdEsc(c.title)}">${rdEsc(c.title)}</span>
+      <span class="rd-bar-track"><span class="rd-bar-fill" style="width:${Math.round((c.val || 0) / maxVal * 100)}%"></span></span>
+      <span class="rd-bar-val">${rdShortHours(c.readingTime)}</span></div>`
+  ).join('') : '<div style="font-size:11px;color:var(--gray-500)">暂无分类数据</div>';
+
+  // 读得最多的书 + 偏好标签
+  const longest = (sc.readLongest || []).slice(0, 3).map(b => `${rdEsc(b.title)} ${rdShortHours(b.readTime)}`);
+  const tags = [];
+  if (sc.preferCategoryWord) tags.push(`<span class="rd-tag">${rdEsc(sc.preferCategoryWord)}</span>`);
+  if (sc.preferTimeWord) tags.push(`<span class="rd-tag blue">${rdEsc(sc.preferTimeWord)}</span>`);
+  (sc.preferAuthor || []).slice(0, 3).forEach(a => tags.push(`<span class="rd-tag blue">${rdEsc(a.name)} · ${a.count}本</span>`));
+  const right = `<div class="rd-insight"><div class="rd-insight-h">🏆 读得最多</div>
+      ${longest.length ? longest.map(t => `<div style="font-size:11.5px;color:var(--gray-700);margin-bottom:7px;line-height:1.5">${t}</div>`).join('') : '<div style="font-size:11px;color:var(--gray-500)">暂无数据</div>'}
+      ${tags.length ? `<div class="rd-tags" style="margin-top:12px">${tags.join('')}</div>` : ''}</div>`;
+
+  return `<div class="rd-sec">
+    <div class="rd-sec-hd">
+      <div class="rd-sec-title">📊 阅读统计 <span class="rd-sec-sub">${isYear ? sc.year + ' 年' : '全部历史'}</span></div>
+      <div class="rd-switch" id="rdScope">
+        <button data-scope="annual" class="${isYear ? 'on' : ''}">今年</button>
+        <button data-scope="overall" class="${!isYear ? 'on' : ''}">总计</button>
+      </div>
+    </div>
+    ${stats}
+    <div class="rd-insights">
+      <div class="rd-insight"><div class="rd-insight-h">📈 偏好分类</div>${catBars}</div>
+      ${right}
+    </div>
+  </div>`;
+}
+
+function rdRecentHTML(snap) {
+  const list = snap.recent || [];
+  if (!list.length) return '';
+  return `<div class="rd-sec">
+    <div class="rd-sec-hd"><div class="rd-sec-title">📖 最近在读 <span class="rd-sec-sub">${list.length} 本</span></div></div>
+    <div class="rd-books">${list.map(b => rdBookCard(b, { progress: b.readingProgress, date: rdDate(b.readUpdateTime) })).join('')}</div>
+  </div>`;
+}
+
+function rdShelfHTML(snap) {
+  const s = snap.shelf || {};
+  const books = s.books || [], albums = s.albums || [];
+  let all = books.map(b => ({ ...b, _album: false })).concat(albums.map(a => ({
+    bookId: a.albumId, title: a.name, author: a.authorName, cover: a.cover,
+    deepLink: '', readerLink: '', _album: true, finishReading: 0,
+  })));
+  const q = _rd.query.trim().toLowerCase();
+  if (q) all = all.filter(b => (b.title || '').toLowerCase().includes(q) || (b.author || '').toLowerCase().includes(q));
+  const shown = all.slice(0, _rd.shelfLimit);
+  const more = all.length > shown.length
+    ? `<button class="rd-more" id="rdMore">显示更多（还有 ${all.length - shown.length} 本）</button>` : '';
+  return `<div class="rd-sec">
+    <div class="rd-sec-hd">
+      <div class="rd-sec-title">📚 我的书架 <span class="rd-sec-sub">${s.total || all.length} 项 · ${s.bookCount || books.length} 本电子书 + ${s.albumCount || albums.length} 有声书${s.hasMp ? ' + 文章收藏' : ''}</span></div>
+      <div class="rd-tools"><input class="rd-search" id="rdSearch" type="search" placeholder="搜索书名 / 作者" value="${rdEsc(_rd.query)}"></div>
+    </div>
+    ${all.length ? `<div class="rd-books">${shown.map(b => rdBookCard(b, { album: b._album })).join('')}</div>` : '<div class="rd-empty">没有匹配的书籍</div>'}
+    ${more ? `<div style="text-align:center;margin-top:14px">${more}</div>` : ''}
+  </div>`;
+}
+
+function rdNotesHTML(snap) {
+  const n = snap.notebooks || {};
+  const hls = snap.highlights || [];
+  const nbs = (n.books || []).slice(0, 8);
+  const nbList = nbs.length ? `<div class="rd-nb-list">${nbs.map(b => {
+    const link = rdSafeUrl(b.readerLink || b.deepLink);
+    const cover = rdSafeUrl(b.cover);
+    const inner = `${cover ? `<img src="${cover}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.visibility='hidden'">` : ''}
+      <div class="rd-nb-info"><div class="rd-nb-name">${rdEsc(b.title)}</div>
+      <div class="rd-nb-meta">划线 ${b.noteCount || 0} · 想法 ${b.reviewCount || 0} · 书签 ${b.bookmarkCount || 0}</div></div>
+      <div class="rd-nb-count">${b.total || 0}</div>`;
+    return link ? `<a class="rd-nb" href="${link}" target="_blank" rel="noopener noreferrer">${inner}</a>` : `<div class="rd-nb">${inner}</div>`;
+  }).join('')}</div>` : '';
+  const hlList = hls.length ? `<div class="rd-hl-list">${hls.slice(0, 12).map(h =>
+    `<div class="rd-hl"><div class="rd-hl-text">「${rdEsc(h.markText)}」</div>
+      <div class="rd-hl-src">— ${rdEsc(h.title)}${h.chapterTitle ? ' · ' + rdEsc(h.chapterTitle) : ''}${h.createTime ? ' · ' + rdDate(h.createTime) : ''}</div></div>`
+  ).join('')}</div>` : '';
+  return `<div class="rd-sec">
+    <div class="rd-sec-hd"><div class="rd-sec-title">✍️ 笔记与划线 <span class="rd-sec-sub">${n.totalBookCount || 0} 本书 · ${n.totalNoteCount || 0} 条笔记</span></div></div>
+    ${nbList ? `<div class="rd-insight-h" style="margin-bottom:10px">笔记最多的书</div>${nbList}` : ''}
+    ${hlList ? `<div class="rd-insight-h" style="margin:18px 0 10px">最近的划线</div>${hlList}` : ''}
+    ${!nbList && !hlList ? '<div class="rd-empty">暂无笔记数据</div>' : ''}
+  </div>`;
+}
+
+function rdRender() {
+  const snap = _rd.snapshot;
+  if (!snap) return;
+  const el = $('#rdContent');
+  if (!el) return;
+  el.innerHTML = rdStatsHTML(snap) + rdRecentHTML(snap) + rdShelfHTML(snap) + rdNotesHTML(snap);
+}
+
+function renderReadingPage() { rdFetch(false); }
+
+function rdFallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (_) {}
+  ta.remove();
+}
+
+// 事件委托：切换 / 搜索 / 展开更多 / 复制 SQL / 重新读取
+(function initReadingSpace() {
+  const content = $('#rdContent');
+  if (content) {
+    content.addEventListener('click', e => {
+      const sw = e.target.closest('#rdScope button');
+      if (sw) { _rd.scope = sw.dataset.scope; rdRender(); return; }
+      if (e.target.closest('#rdMore')) { _rd.shelfLimit += 24; rdRender(); return; }
+      const copyBtn = e.target.closest('#rdCopyDdl');
+      if (copyBtn) {
+        const done = () => { copyBtn.textContent = '✓ 已复制'; setTimeout(() => { copyBtn.textContent = '📋 复制建表 SQL'; }, 2000); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(RD_DDL).then(done).catch(() => rdFallbackCopy(RD_DDL, done));
+        } else rdFallbackCopy(RD_DDL, done);
+        return;
+      }
+    });
+    content.addEventListener('input', e => {
+      if (e.target.id === 'rdSearch') {
+        _rd.query = e.target.value;
+        _rd.shelfLimit = 24;
+        const pos = e.target.selectionStart;
+        rdRender();
+        const next = $('#rdSearch');
+        if (next) { next.focus(); try { next.setSelectionRange(pos, pos); } catch (_) {} }
+      }
+    });
+  }
+  const btn = $('#rdReload');
+  if (btn) btn.addEventListener('click', () => rdFetch(true));
+})();
 
 // ============================================================
 // TEST CONNECTION BUTTONS
