@@ -363,6 +363,62 @@ a.rd-note-book:hover{color:var(--blue-500)}
 
 
 
+
+/* ===== v14.72 书架排序切换 ===== */
+.rd-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.rd-sort{display:inline-flex;background:var(--gray-100);border-radius:9px;padding:2px;gap:2px}
+.rd-sort button{border:none;background:transparent;padding:6px 11px;border-radius:7px;cursor:pointer;font-size:11.5px;color:var(--gray-500);font-family:inherit;transition:all .2s;white-space:nowrap}
+.rd-sort button.on{background:var(--surface);color:#3E5C46;font-weight:700;box-shadow:var(--shadow)}
+[data-theme="dark"] .rd-sort button.on{color:#A7C9AC}
+.rd-sort-hint{font-size:10.5px;color:var(--gray-400);white-space:nowrap}
+
+/* ===== v14.72 读书笔记（用户自建，复用 reading 表独立行） ===== */
+.rdn-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.rdn-add{padding:8px 16px;border-radius:9px;border:none;background:#3E5C46;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
+.rdn-add:hover{background:#4C7A58}
+.rdn-select{padding:7px 10px;border-radius:9px;border:1px solid var(--gray-200);background:var(--surface);color:var(--gray-700);font-size:12px;font-family:inherit;max-width:210px;outline:none}
+.rdn-select:focus{border-color:var(--blue-300)}
+.rdn-list{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:900px){.rdn-list{grid-template-columns:1fr 1fr}}
+.rdn-card{background:var(--surface);border:1px solid var(--gray-200);border-radius:12px;padding:14px 16px;min-width:0}
+.rdn-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.rdn-book{display:flex;align-items:center;gap:7px;min-width:0;font-size:12.5px;font-weight:700;color:var(--gray-900)}
+.rdn-book img{width:20px;height:27px;object-fit:cover;border-radius:3px;flex-shrink:0;background:var(--gray-100)}
+.rdn-book .rdn-bk-ph{width:20px;height:27px;border-radius:3px;background:linear-gradient(135deg,#DCE5D4,#E8DED0);flex-shrink:0}
+.rdn-book span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rdn-time{margin-left:auto;font-size:10.5px;color:var(--gray-500);white-space:nowrap;font-variant-numeric:tabular-nums}
+.rdn-text{font-size:12.5px;line-height:1.75;color:var(--gray-700);word-break:break-word;white-space:pre-wrap;margin-bottom:2px}
+.rdn-imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px;margin-top:10px}
+.rdn-img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;border:1px solid var(--gray-200);cursor:zoom-in;display:block;background:var(--gray-100)}
+.rdn-ops{display:flex;gap:8px;margin-top:11px;padding-top:9px;border-top:1px solid var(--gray-100)}
+.rdn-op{padding:4px 11px;border-radius:7px;border:1px solid var(--gray-200);background:var(--surface);font-size:11px;color:var(--gray-600);cursor:pointer;font-family:inherit;transition:all .15s}
+.rdn-op:hover{border-color:var(--blue-300);color:var(--blue-500)}
+.rdn-op.danger:hover{border-color:#E7B4AE;color:#CF574D}
+.rdn-edit-flag{font-size:10px;color:var(--gray-400);margin-left:auto;align-self:center}
+.rdn-count{font-size:11px;color:var(--gray-500)}
+
+/* 笔记编辑弹窗 */
+.rdn-field{margin-top:15px}
+.rdn-field:first-child{margin-top:0}
+.rdn-field label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin:0 0 6px}
+.rdn-field select,.rdn-field textarea{width:100%;border:1.5px solid var(--gray-200);border-radius:var(--radius-xs);padding:10px 12px;font-size:13px;outline:none;font-family:inherit;background:var(--gray-50);color:var(--gray-900);box-sizing:border-box;transition:border-color .2s}
+.rdn-field select:focus,.rdn-field textarea:focus{border-color:var(--blue-300);background:var(--surface)}
+.rdn-field textarea{min-height:130px;resize:vertical;line-height:1.7}
+.rdn-upload{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:9px;border:1.5px dashed var(--gray-300);background:var(--gray-50);font-size:12px;color:var(--gray-600);cursor:pointer;font-family:inherit;transition:all .2s}
+.rdn-upload:hover{border-color:#8FB48C;color:#3E5C46;background:#F4F8F1}
+.rdn-prev{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:9px;margin-top:11px}
+.rdn-prev-item{position:relative;aspect-ratio:1/1}
+.rdn-prev-item img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--gray-200)}
+.rdn-prev-x{position:absolute;top:-6px;right:-6px;width:21px;height:21px;border-radius:50%;border:2px solid var(--surface);background:#CF574D;color:#fff;font-size:12px;line-height:17px;text-align:center;cursor:pointer;padding:0;font-family:inherit;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.rdn-hintline{font-size:11px;color:var(--gray-400);margin-top:7px;line-height:1.6}
+.rdn-modal .modal-actions{margin-top:20px}
+
+/* 图片放大 */
+.rdn-lightbox{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;backdrop-filter:blur(3px)}
+.rdn-lightbox.hidden{display:none}
+.rdn-lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 10px 50px rgba(0,0,0,.5)}
+.rdn-lightbox-x{position:absolute;top:18px;right:22px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:20px;cursor:pointer;line-height:36px;text-align:center}
+
 /* ===== Cards ===== */
 .card{
   background:var(--panel);
@@ -1419,7 +1475,7 @@ a.rd-note-book:hover{color:var(--blue-500)}
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.71</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.72</div>
     </div>
   </aside>
 
@@ -1666,6 +1722,39 @@ a.rd-note-book:hover{color:var(--blue-500)}
   <div class="widget-header"><h3>amber 挂件</h3><button class="widget-close" id="btnWidgetClose">✕</button></div>
   <div class="widget-section"><h4>📋 今日计划</h4><ul class="widget-mini-todos" id="wPlans"></ul></div>
   <div class="widget-section"><h4>🔔 近期事件</h4><ul class="widget-mini-todos" id="wEvents"></ul></div>
+</div>
+
+
+<!-- === v14.72 读书笔记编辑弹窗（用户自建笔记，复用 reading 表） === -->
+<div class="modal-overlay hidden" id="rdNoteOverlay">
+  <div class="modal rdn-modal" style="max-width:480px">
+    <h2 id="rdNoteModalTitle">📝 写读书笔记</h2>
+    <div class="rdn-field">
+      <label>关联书籍</label>
+      <select id="rdNoteBook"></select>
+    </div>
+    <div class="rdn-field">
+      <label>笔记内容</label>
+      <textarea id="rdNoteText" placeholder="记下你的想法、感悟、摘录…"></textarea>
+    </div>
+    <div class="rdn-field">
+      <label>图片</label>
+      <label class="rdn-upload" for="rdNoteFile">📷 添加图片</label>
+      <input type="file" id="rdNoteFile" accept="image/*" multiple style="display:none">
+      <div class="rdn-prev" id="rdNotePrev"></div>
+      <div class="rdn-hintline">可多选，图片会压缩后存入云端；单篇笔记建议不超过 6 张。</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="rdNoteCancel">取消</button>
+      <button class="btn btn-primary" id="rdNoteSave">保存笔记</button>
+    </div>
+  </div>
+</div>
+
+<!-- === v14.72 图片放大 === -->
+<div class="rdn-lightbox hidden" id="rdNoteLightbox">
+  <button class="rdn-lightbox-x" id="rdNoteLightboxX">✕</button>
+  <img id="rdNoteLightboxImg" src="" alt="">
 </div>
 
 <!-- === Event Modal (add/edit, opened by clicking a calendar date) === -->
@@ -2022,7 +2111,7 @@ a.rd-note-book:hover{color:var(--blue-500)}
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.71</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.72</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -2073,7 +2162,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.71';
+const APP_VERSION = 'v14.72';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -6244,10 +6333,13 @@ $('#importFileInput').addEventListener('change', (e) => {
 const _rd = {
   snapshot: null, loadedAt: 0, loading: false,
   calY: 0, calM: 0,                        // 阅读日历当前年月（calM 0-based）
-  shelfFilter: 'all', shelfQuery: '', shelfLimit: 24,
+  shelfFilter: 'all', shelfQuery: '', shelfLimit: 24, shelfSort: 'recent',
   kbQuery: '', kbTag: 'all', kbLimit: 12,
   recentLimit: 6,
   scope: 'annual', navActive: 'cal', autoMsg: '', autoMsgKind: '',
+  // v14.72 读书笔记（用户自建，云端 reading 表独立行）
+  myNotes: [], myNotesLoaded: false, myNoteQuery: '', myNoteBook: 'all',
+  noteDraft: null, noteSaving: false,
 };
 // 仅用于在「表未创建」时一键复制，不含任何凭据，可安全内嵌
 const RD_DDL = `CREATE TABLE IF NOT EXISTS public.reading (
@@ -6382,6 +6474,7 @@ const RD_NAV = [
   { k: 'recent', t: '最近读到', icon: '📖' },
   { k: 'shelf', t: '我的书架', icon: '📚' },
   { k: 'kb', t: '知识库', icon: '🗂️' },
+  { k: 'notes', t: '读书笔记', icon: '📝' },
   { k: 'stats', t: '阅读统计', icon: '📊' },
 ];
 function rdNavHTML() {
@@ -6499,7 +6592,10 @@ function rdEmpty(icon, title, lines) {
 
 async function rdFetch(force) {
   if (_rd.loading) return;
-  if (!force && _rd.snapshot && Date.now() - _rd.loadedAt < 60000) { rdRender(); return; }
+  if (!force && _rd.snapshot && Date.now() - _rd.loadedAt < 60000) {
+    if (!_rd.myNotesLoaded) rdMyNotesLoad().then(rdRender).catch(() => {});
+    rdRender(); return;
+  }
   _rd.loading = true;
   const btn = $('#rdReload');
   if (btn) btn.disabled = true;
@@ -6557,6 +6653,7 @@ async function rdFetch(force) {
     rdApplyAutoCheckin(_rd.snapshot);
     rdStatus('', '已同步', '更新于 ' + rdSyncedLabel(_rd.snapshot.syncedAt || data.updated_at));
     rdRender();
+    rdMyNotesLoad().then(rdRender).catch(() => {});
   } catch (e) {
     _rd.loading = false; if (btn) btn.disabled = false;
     rdStatus('err', '读取异常');
@@ -6640,19 +6737,28 @@ function rdRecentHTML(snap, jm) {
   </div>`;
 }
 
-// ---------- 板块 3：我的书架 ----------
+// ---------- 板块 3：我的书架（v14.72：三态筛选 + 排序切换） ----------
+// 三态由同步脚本算好写进 readingStatus；旧快照无该字段时用本地信号兜底推断。
 function rdShelfStatus(b) {
-  if (b._album) return { k: 'album', t: '有声' };
-  if (b.finishReading) return { k: 'done', t: '读完' };
-  if (Number(b.readUpdateTime) > 0) return { k: 'reading', t: '在读' };
-  return { k: 'wish', t: '想读' };
+  if (b._album) return { k: 'reading', t: '有声' };
+  let st = b.readingStatus;
+  if (!st) {
+    const prog = Number(b._prog) || 0;
+    if (b.finishReading || prog >= 100) st = 'done';
+    else if (prog > 0 || Number(b.readUpdateTime) > 0) st = 'reading';
+    else st = 'unread';
+  }
+  if (st === 'done') return { k: 'done', t: '已读' };
+  if (st === 'reading') return { k: 'reading', t: '在读中' };
+  return { k: 'unread', t: '未读' };
 }
 function rdBookCard(b, opts) {
   opts = opts || {};
   const link = rdSafeUrl(b.readerLink || b.deepLink);
   const coverUrl = rdSafeUrl(b.cover);
   const st = opts.status || { k: '', t: '' };
-  const badge = st.t ? `<span class="rd-badge${st.k && st.k !== 'done' && st.k !== 'album' ? ' ' + st.k : ''}${st.k === 'album' ? ' album' : ''}">${st.t}</span>` : '';
+  const cls = st.badge || (st.k && st.k !== 'done' ? ' ' + st.k : '');
+  const badge = st.t ? `<span class="rd-badge${cls}">${st.t}</span>` : '';
   const cover = coverUrl
     ? `<img src="${coverUrl}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.add('rd-noimg');this.remove()">`
     : '';
@@ -6671,14 +6777,21 @@ function rdBookCard(b, opts) {
 function rdShelfHTML(snap, jm) {
   const s = snap.shelf || {};
   const all = (s.books || []).map(b => ({ ...b, _album: false }))
-    .concat((s.albums || []).map(a => ({
+    .concat((s.albums || []).map((a, i) => ({
       bookId: a.albumId, title: a.name, author: a.authorName, cover: a.cover,
-      readerLink: '', deepLink: '', _album: true, finishReading: 0, readUpdateTime: 1,
+      readerLink: '', deepLink: '', _album: true, finishReading: 0,
+      readUpdateTime: 1, updateTime: 0, shelfIndex: 10000 + i,
     })));
-  // v14.71：按最近阅读时间倒序（最新在读排最前，无阅读记录的排最后）
-  all.sort((a, b) => (Number(b.readUpdateTime) || 0) - (Number(a.readUpdateTime) || 0));
-  const counts = { all: all.length, reading: 0, wish: 0, done: 0 };
-  all.forEach(b => { const k = rdShelfStatus(b).k; if (k === 'reading') counts.reading++; else if (k === 'wish') counts.wish++; else if (k === 'done') counts.done++; });
+  all.forEach(b => { b._prog = jm.prog[b.bookId] || 0; });
+  // v14.72 排序：recent=最新在读(readUpdateTime)，added=最新加入书架(updateTime，兜底原始书架顺序)
+  if (_rd.shelfSort === 'added') {
+    all.sort((a, b) => (Number(b.updateTime) || 0) - (Number(a.updateTime) || 0)
+      || (Number(a.shelfIndex) || 0) - (Number(b.shelfIndex) || 0));
+  } else {
+    all.sort((a, b) => (Number(b.readUpdateTime) || 0) - (Number(a.readUpdateTime) || 0));
+  }
+  const counts = { all: all.length, done: 0, reading: 0, unread: 0 };
+  all.forEach(b => { const k = rdShelfStatus(b).k; if (k in counts && k !== 'all') counts[k]++; });
   const q = _rd.shelfQuery.trim().toLowerCase();
   let fl = _rd.shelfFilter === 'all' ? all : all.filter(b => rdShelfStatus(b).k === _rd.shelfFilter);
   if (q) fl = fl.filter(b => (b.title || '').toLowerCase().includes(q) || (b.author || '').toLowerCase().includes(q));
@@ -6686,10 +6799,18 @@ function rdShelfHTML(snap, jm) {
   const more = fl.length > shown.length
     ? `<button class="rd-more" id="rdShelfMore">显示更多（还有 ${fl.length - shown.length} 本）</button>` : '';
   const chip = (k, label) => `<button class="rd-chip${_rd.shelfFilter === k ? ' on' : ''}" data-shelf="${k}">${label}<b>${counts[k]}</b></button>`;
+  const sortBtn = (k, t) => `<button data-rdsort="${k}" class="${_rd.shelfSort === k ? 'on' : ''}">${t}</button>`;
+  const sortTxt = _rd.shelfSort === 'added' ? '按加入时间' : '按最近阅读';
+  const hint = _rd.shelfSort === 'added'
+    ? '依据微信读书的书籍加入/更新时间' : '依据最近一次阅读时间';
   return `<div class="rd-sec">
-    <div class="rd-sec-hd"><div class="rd-sec-title" id="rd-sec-shelf">我的书架</div><div class="rd-sec-sub">${s.total || all.length} 项 · 按最近阅读排序 · ${s.bookCount || (s.books || []).length} 本电子书 + ${s.albumCount || (s.albums || []).length} 有声书${s.hasMp ? ' + 文章收藏' : ''}</div></div>
-    <div class="rd-tools" style="margin-bottom:12px"><input class="rd-search" id="rdShelfSearch" type="search" placeholder="搜索书名或作者" value="${rdEsc(_rd.shelfQuery)}"></div>
-    <div class="rd-chips">${chip('all', '全部')}${chip('reading', '在读')}${chip('wish', '想读')}${chip('done', '读完')}</div>
+    <div class="rd-sec-hd"><div class="rd-sec-title" id="rd-sec-shelf">我的书架</div><div class="rd-sec-sub">${s.total || all.length} 项 · ${sortTxt} · ${s.bookCount || (s.books || []).length} 本电子书 + ${s.albumCount || (s.albums || []).length} 有声书${s.hasMp ? ' + 文章收藏' : ''}</div></div>
+    <div class="rd-toolbar">
+      <input class="rd-search" id="rdShelfSearch" type="search" placeholder="搜索书名或作者" value="${rdEsc(_rd.shelfQuery)}">
+      <div class="rd-sort" id="rdShelfSort">${sortBtn('recent', '最新在读')}${sortBtn('added', '最新加入书架')}</div>
+      <span class="rd-sort-hint">${hint}</span>
+    </div>
+    <div class="rd-chips">${chip('all', '全部')}${chip('done', '已读')}${chip('reading', '在读中')}${chip('unread', '未读')}</div>
     ${fl.length ? `<div class="rd-books">${shown.map(b => rdBookCard(b, {
       album: b._album, status: rdShelfStatus(b), progress: b._album ? null : jm.prog[b.bookId],
     })).join('')}</div>` : '<div class="rd-empty">没有匹配的书籍</div>'}
@@ -6729,6 +6850,202 @@ function rdKBHTML(snap, jm) {
   </div>`;
 }
 
+
+// ---------- v14.72 读书笔记（用户自建 · 复用 reading 表独立行 id=note_xxx） ----------
+// 与微信读书只读快照里的 snap.notes（划线/想法）区分：这些是用户在本工作台撰写、可多次修改的笔记。
+// 存储：reading 表 id='note_<uuid>'，data(JSONB) = {bookId,bookTitle,bookCover,content,images,createdAt,updatedAt}
+// reading 表本来就是独立快照表（不走 TABLE_MAP 双向同步），因此这里直接读写云端，多设备天然一致。
+const RD_NOTE_PREFIX = 'note_';
+const RD_NOTE_MAX_IMG = 6;
+
+function rdSafeImg(u) {
+  const s = String(u || '');
+  return /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(s) ? s : '';
+}
+function rdNoteId() {
+  return RD_NOTE_PREFIX + (crypto.randomUUID ? crypto.randomUUID() : 'n' + Date.now() + Math.random().toString(36).slice(2, 8));
+}
+
+async function rdMyNotesLoad() {
+  _rd.myNotes = [];
+  if (!sb) { _rd.myNotesLoaded = true; return; }
+  try {
+    const { data: rows, error } = await sb.from('reading').select('id,data,updated_at').neq('id', 'main');
+    if (error || !Array.isArray(rows)) { _rd.myNotesLoaded = true; return; }
+    _rd.myNotes = rows
+      .filter(r => String(r.id || '').indexOf(RD_NOTE_PREFIX) === 0 && r.data && typeof r.data === 'object')
+      .map(r => ({ ...r.data, id: r.id, updatedAt: r.data.updatedAt || r.updated_at || '' }))
+      .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
+  } catch (e) { console.warn('[reading] 笔记加载失败', e.message); }
+  _rd.myNotesLoaded = true;
+}
+
+function rdMyNoteBookLabel(n) { return n.bookTitle || '未关联书籍'; }
+
+function rdMyNoteCardHTML(n) {
+  const cover = rdSafeUrl(n.bookCover);
+  const coverEl = cover
+    ? `<img src="${cover}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<span class=rdn-bk-ph></span>'">`
+    : `<span class="rdn-bk-ph"></span>`;
+  const imgs = (Array.isArray(n.images) ? n.images : []).map(rdSafeImg).filter(Boolean);
+  const imgEl = imgs.length
+    ? `<div class="rdn-imgs">${imgs.map((s, i) => `<img class="rdn-img" src="${rdEsc(s)}" data-rdnimg="${i}" data-rdnid="${rdEsc(n.id)}" alt="笔记图片${i + 1}">`).join('')}</div>`
+    : '';
+  const txt = n.content ? `<div class="rdn-text">${rdEsc(n.content)}</div>` : '';
+  const edited = n.updatedAt && n.createdAt && n.updatedAt !== n.createdAt;
+  return `<div class="rdn-card">
+    <div class="rdn-hd">
+      <span class="rdn-book" title="${rdEsc(rdMyNoteBookLabel(n))}">${coverEl}<span>${rdEsc(rdMyNoteBookLabel(n))}</span></span>
+      <span class="rdn-time">${rdEsc(rdSyncedLabel(n.updatedAt || n.createdAt))}</span>
+    </div>
+    ${txt}${imgEl}
+    <div class="rdn-ops">
+      <button class="rdn-op" data-rdne="${rdEsc(n.id)}">✏️ 编辑</button>
+      <button class="rdn-op danger" data-rdnd="${rdEsc(n.id)}">🗑 删除</button>
+      ${edited ? '<span class="rdn-edit-flag">已编辑</span>' : ''}
+    </div>
+  </div>`;
+}
+
+function rdMyNotesHTML(snap) {
+  const notes = _rd.myNotes || [];
+  const books = (snap.shelf || {}).books || [];
+  const q = (_rd.myNoteQuery || '').trim().toLowerCase();
+  let fl = notes;
+  if (_rd.myNoteBook !== 'all') fl = fl.filter(n => (n.bookId || '') === _rd.myNoteBook);
+  if (q) fl = fl.filter(n => ((n.content || '') + ' ' + rdMyNoteBookLabel(n)).toLowerCase().includes(q));
+  const usedBooks = books.filter(b => notes.some(n => n.bookId === b.bookId));
+  const bookOpts = '<option value="all">全部书籍</option>' + usedBooks.map(b =>
+    `<option value="${rdEsc(b.bookId)}"${_rd.myNoteBook === b.bookId ? ' selected' : ''}>${rdEsc(b.title)}</option>`).join('');
+  const list = !_rd.myNotesLoaded
+    ? '<div class="rd-empty rd-skeleton">正在加载笔记…</div>'
+    : (fl.length
+      ? `<div class="rdn-list">${fl.map(rdMyNoteCardHTML).join('')}</div>`
+      : `<div class="rd-empty">${notes.length ? '没有匹配的笔记' : '还没有读书笔记，点「写笔记」记下第一篇吧 📝'}</div>`);
+  return `<div class="rd-sec">
+    <div class="rd-sec-hd"><div class="rd-sec-title" id="rd-sec-notes">📝 读书笔记</div><div class="rd-sec-sub">你写的笔记 · 存在云端，可随时修改</div></div>
+    <div class="rdn-toolbar">
+      <button class="rdn-add" id="rdNoteAdd">＋ 写笔记</button>
+      <select class="rdn-select" id="rdMyNoteBookFilter">${bookOpts}</select>
+      <input class="rd-search" id="rdMyNoteSearch" type="search" placeholder="搜索笔记内容/书名" value="${rdEsc(_rd.myNoteQuery || '')}">
+      <span class="rdn-count">共 ${notes.length} 篇</span>
+    </div>
+    ${list}
+  </div>`;
+}
+
+// ----- 笔记编辑弹窗 -----
+function rdNoteBookOptions(sel) {
+  const books = ((_rd.snapshot || {}).shelf || {}).books || [];
+  let opts = '<option value="">（不关联书籍）</option>';
+  opts += books.map(b => `<option value="${rdEsc(b.bookId)}">${rdEsc(b.title)}${b.author ? ' · ' + rdEsc(b.author) : ''}</option>`).join('');
+  if (sel && !books.some(b => b.bookId === sel)) {
+    const n = (_rd.myNotes || []).find(x => x.bookId === sel);
+    opts += `<option value="${rdEsc(sel)}">${rdEsc(n ? n.bookTitle : '原书籍')}</option>`;
+  }
+  return opts;
+}
+
+function rdNoteModalOpen(note) {
+  _rd.noteDraft = note
+    ? { id: note.id, bookId: note.bookId || '', bookTitle: note.bookTitle || '', bookCover: note.bookCover || '',
+        content: note.content || '', images: (Array.isArray(note.images) ? note.images : []).map(rdSafeImg).filter(Boolean),
+        createdAt: note.createdAt || '' }
+    : { id: '', bookId: '', bookTitle: '', bookCover: '', content: '', images: [], createdAt: '' };
+  const ov = $('#rdNoteOverlay'); if (!ov) return;
+  const ti = $('#rdNoteModalTitle'); if (ti) ti.textContent = note ? '✏️ 编辑读书笔记' : '📝 写读书笔记';
+  const bs = $('#rdNoteBook'); if (bs) { bs.innerHTML = rdNoteBookOptions(_rd.noteDraft.bookId); bs.value = _rd.noteDraft.bookId; }
+  const ta = $('#rdNoteText'); if (ta) ta.value = _rd.noteDraft.content;
+  const fi = $('#rdNoteFile'); if (fi) fi.value = '';
+  const hint = $('#rdNoteHint'); if (hint) hint.textContent = '';
+  rdNoteDraftRender();
+  ov.classList.remove('hidden');
+}
+function rdNoteModalClose() { const ov = $('#rdNoteOverlay'); if (ov) ov.classList.add('hidden'); _rd.noteDraft = null; }
+
+function rdNoteDraftRender() {
+  const box = $('#rdNotePrev'); if (!box || !_rd.noteDraft) return;
+  box.innerHTML = _rd.noteDraft.images.map((s, i) =>
+    `<div class="rdn-prev-item"><img src="${rdEsc(s)}" alt=""><button class="rdn-prev-x" data-rdnrm="${i}" title="移除">✕</button></div>`).join('');
+}
+
+async function rdNoteAddFiles(fileList) {
+  if (!_rd.noteDraft) return;
+  const files = Array.from(fileList || []).slice(0, RD_NOTE_MAX_IMG - _rd.noteDraft.images.length);
+  for (const f of files) {
+    try { const url = await compressImage(f, 1000, 0.72); if (rdSafeImg(url)) _rd.noteDraft.images.push(url); }
+    catch (e) { console.warn('[reading] 图片压缩失败', e.message); }
+  }
+  rdNoteDraftRender();
+}
+
+let _rdNoteHintTimer = null;
+function rdNoteSaveHint(msg) {
+  const m = $('#rdNoteOverlay .modal'); if (!m) return;
+  let h = $('#rdNoteHint');
+  if (!h) {
+    h = document.createElement('div'); h.id = 'rdNoteHint';
+    h.style.cssText = 'margin-top:12px;font-size:12px;color:#CF574D;line-height:1.6';
+    m.insertBefore(h, m.querySelector('.modal-actions'));
+  }
+  h.textContent = msg;
+  clearTimeout(_rdNoteHintTimer);
+  _rdNoteHintTimer = setTimeout(() => { if (h) h.textContent = ''; }, 3200);
+}
+
+async function rdNoteSave() {
+  const d = _rd.noteDraft;
+  if (!d || _rd.noteSaving) return;
+  if (!sb) { rdNoteSaveHint('云端未连接，请先在「设置」配置 Supabase。'); return; }
+  const ta = $('#rdNoteText'), bs = $('#rdNoteBook');
+  d.content = ta ? ta.value.trim() : '';
+  d.bookId = bs ? bs.value : '';
+  if (!d.content && !d.images.length) { rdNoteSaveHint('写点内容或加一张图片再保存～'); return; }
+  const books = ((_rd.snapshot || {}).shelf || {}).books || [];
+  const bk = books.find(b => b.bookId === d.bookId);
+  if (bk) { d.bookTitle = bk.title; d.bookCover = rdSafeUrl(bk.cover); }
+  else if (!d.bookId) { d.bookTitle = ''; d.bookCover = ''; }
+  const now = new Date().toISOString();
+  const rec = {
+    bookId: d.bookId, bookTitle: d.bookTitle, bookCover: d.bookCover,
+    content: d.content, images: d.images,
+    createdAt: d.createdAt || now, updatedAt: now,
+  };
+  const id = d.id || rdNoteId();
+  _rd.noteSaving = true;
+  const btn = $('#rdNoteSave'); if (btn) { btn.disabled = true; btn.textContent = '保存中…'; }
+  try {
+    const { error } = await sb.from('reading').upsert({ id, data: rec, updated_at: now }, { onConflict: 'id' });
+    if (error) throw error;
+    rdNoteModalClose();
+    await rdMyNotesLoad();
+    rdRender();
+    rdScrollToSection('notes');
+  } catch (e) {
+    rdNoteSaveHint('保存失败：' + (e.message || e));
+  } finally {
+    _rd.noteSaving = false;
+    const btn2 = $('#rdNoteSave'); if (btn2) { btn2.disabled = false; btn2.textContent = '保存笔记'; }
+  }
+}
+
+async function rdNoteDelete(id) {
+  const n = (_rd.myNotes || []).find(x => x.id === id);
+  if (!n || !sb) return;
+  if (typeof confirm === 'function' && !confirm('确定删除这篇读书笔记吗？删除后无法恢复。')) return;
+  const { error } = await sb.from('reading').delete().eq('id', id);
+  if (error) { rdNoteSaveHint('删除失败：' + error.message); return; }
+  await rdMyNotesLoad();
+  rdRender();
+}
+
+function rdLightboxOpen(src) {
+  const lb = $('#rdNoteLightbox'), img = $('#rdNoteLightboxImg');
+  if (!lb || !img || !rdSafeImg(src)) return;
+  img.src = src; lb.classList.remove('hidden');
+}
+function rdLightboxClose() { const lb = $('#rdNoteLightbox'); if (lb) lb.classList.add('hidden'); }
+
 function rdRender() {
   const snap = _rd.snapshot;
   if (!snap) return;
@@ -6736,7 +7053,8 @@ function rdRender() {
   if (!el) return;
   const jm = rdJoinMaps(snap);
   el.innerHTML = rdNavHTML() + rdAutoMsgHTML() +
-    rdCalHTML(snap) + rdRecentHTML(snap, jm) + rdShelfHTML(snap, jm) + rdKBHTML(snap, jm) + rdStatsHTML(snap);
+    rdCalHTML(snap) + rdRecentHTML(snap, jm) + rdShelfHTML(snap, jm) + rdKBHTML(snap, jm) +
+    rdMyNotesHTML(snap) + rdStatsHTML(snap);
 }
 
 function renderReadingPage() { rdFetch(false); }
@@ -6767,6 +7085,8 @@ function rdFallbackCopy(text, done) {
       if (e.target.closest('#rdCalNext')) { _rd.calM++; if (_rd.calM > 11) { _rd.calM = 0; _rd.calY++; } rdRender(); return; }
       const shelfChip = e.target.closest('.rd-chip[data-shelf]');
       if (shelfChip) { _rd.shelfFilter = shelfChip.dataset.shelf; _rd.shelfLimit = 24; rdRender(); return; }
+      const sortBtn = e.target.closest('#rdShelfSort button');
+      if (sortBtn) { _rd.shelfSort = sortBtn.dataset.rdsort || 'recent'; _rd.shelfLimit = 24; rdRender(); return; }
       const kbChip = e.target.closest('.rd-chip[data-kbtag]');
       if (kbChip) { _rd.kbTag = kbChip.dataset.kbtag; _rd.kbLimit = 12; rdRender(); return; }
       if (e.target.closest('#rdShelfMore')) { _rd.shelfLimit += 24; rdRender(); return; }
@@ -6780,12 +7100,27 @@ function rdFallbackCopy(text, done) {
         } else rdFallbackCopy(RD_DDL, done);
         return;
       }
+      // v14.72 读书笔记
+      if (e.target.closest('#rdNoteAdd')) { rdNoteModalOpen(null); return; }
+      const edBtn = e.target.closest('[data-rdne]');
+      if (edBtn) { const nn = (_rd.myNotes || []).find(x => x.id === edBtn.dataset.rdne); if (nn) rdNoteModalOpen(nn); return; }
+      const delBtn = e.target.closest('[data-rdnd]');
+      if (delBtn) { rdNoteDelete(delBtn.dataset.rdnd); return; }
+      const zoomImg = e.target.closest('[data-rdnimg]');
+      if (zoomImg) {
+        const nn = (_rd.myNotes || []).find(x => x.id === zoomImg.dataset.rdnid);
+        const arr = nn && Array.isArray(nn.images) ? nn.images : [];
+        const src = rdSafeImg(arr[Number(zoomImg.dataset.rdnimg)]);
+        if (src) rdLightboxOpen(src);
+        return;
+      }
     });
     content.addEventListener('input', e => {
-      const map = { rdShelfSearch: 'shelfQuery', rdKBSearch: 'kbQuery' };
+      const map = { rdShelfSearch: 'shelfQuery', rdKBSearch: 'kbQuery', rdMyNoteSearch: 'myNoteQuery' };
       if (map[e.target.id]) {
         _rd[map[e.target.id]] = e.target.value;
-        if (e.target.id === 'rdShelfSearch') _rd.shelfLimit = 24; else _rd.kbLimit = 12;
+        if (e.target.id === 'rdShelfSearch') _rd.shelfLimit = 24;
+        else if (e.target.id === 'rdKBSearch') _rd.kbLimit = 12;
         const pos = e.target.selectionStart;
         rdRender();
         const next = $('#' + e.target.id);
@@ -6793,10 +7128,36 @@ function rdFallbackCopy(text, done) {
       }
     });
   }
+  content.addEventListener('change', e => {
+    if (e.target.id === 'rdMyNoteBookFilter') { _rd.myNoteBook = e.target.value; rdRender(); }
+  });
   const btn = $('#rdReload');
   if (btn) btn.addEventListener('click', () => rdFetch(true));
   const mainEl = document.querySelector('.main');
   if (mainEl) mainEl.addEventListener('scroll', rdSyncNavActive, { passive: true });
+
+  // v14.72 笔记弹窗 / 图片放大（这些元素在 rdContent 之外，单独绑定）
+  const noteOv = $('#rdNoteOverlay');
+  if (noteOv) {
+    noteOv.addEventListener('click', e => {
+      if (e.target === noteOv) { rdNoteModalClose(); return; }
+      const rm = e.target.closest('[data-rdnrm]');
+      if (rm && _rd.noteDraft) { _rd.noteDraft.images.splice(Number(rm.dataset.rdnrm), 1); rdNoteDraftRender(); return; }
+      if (e.target.closest('#rdNoteCancel')) { rdNoteModalClose(); return; }
+      if (e.target.closest('#rdNoteSave')) { rdNoteSave(); return; }
+    });
+    const fileEl = $('#rdNoteFile');
+    if (fileEl) fileEl.addEventListener('change', e => { rdNoteAddFiles(e.target.files); e.target.value = ''; });
+  }
+  const lb = $('#rdNoteLightbox');
+  if (lb) {
+    lb.addEventListener('click', rdLightboxClose);
+    const lx = $('#rdNoteLightboxX');
+    if (lx) lx.addEventListener('click', rdLightboxClose);
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { rdLightboxClose(); const ov = $('#rdNoteOverlay'); if (ov && !ov.classList.contains('hidden')) rdNoteModalClose(); }
+  });
 })();
 
 // TEST CONNECTION BUTTONS

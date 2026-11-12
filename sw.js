@@ -1,4 +1,4 @@
-// amber的工作台 Service Worker v14.71
+// amber的工作台 Service Worker v14.72
 // v14.70: 读书空间重做四板块（阅读日历/最近读到/我的书架/知识库），快照结构 version 2
 // v14.68: 修复「删除后复活」— fullSync 应用云端墓碑到本地 + 重推滞留的本地墓碑
 // v14.67: 「同步失败」状态也可点击徽章触发重同步
@@ -36,7 +36,8 @@
 // v14.58: 莫兰迪色系全局换肤（米杏底 / 灰绿主色 / 灰粉 / 灰蓝 / 暖杏，暗色模式同步适配）
 
 // v14.71: 读书空间加顶部导航、恢复阅读统计并置底、单日>30min自动为「阅读」打卡+1、书架按最近阅读排序
-const VERSION = 'amber-workbench-v14.71';
+// v14.72: 书架三态筛选(已读/在读中/未读)+排序切换(最新在读/最新加入)、新增读书笔记板块(文字+图片、可多次修改，复用 reading 表)
+const VERSION = 'amber-workbench-v14.72';
 const STATIC_CACHE = VERSION + '-static';
 
 // Use relative paths so this works on both domain root and GitHub Pages sub-paths.
