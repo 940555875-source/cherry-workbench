@@ -212,7 +212,7 @@ body{
 .mobile-nav-item .mni-icon{font-size:20px}
 .mobile-nav-item.active{color:var(--blue-500);background:var(--blue-50)}
 
-/* ===== Reading Space (v14.70 读书空间·四板块：阅读日历/最近读到/我的书架/知识库) ===== */
+/* ===== Reading Space (v14.71 读书空间·四板块：阅读日历/最近读到/我的书架/知识库) ===== */
 /* 状态栏 */
 .rd-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:var(--radius-sm);background:var(--gray-100);border:1px solid var(--gray-200);font-size:12px;color:var(--gray-700)}
 .rd-bar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
@@ -320,6 +320,47 @@ a.rd-note-book:hover{color:var(--blue-500)}
 .rd-empty-h{font-size:22px;margin-bottom:8px}
 .rd-skeleton{animation:rdPulse 1.2s ease-in-out infinite}
 @keyframes rdPulse{0%,100%{opacity:.45}50%{opacity:1}}
+/* ===== v14.71 顶部锚点导航 ===== */
+.rd-nav{position:sticky;top:0;z-index:6;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 0 10px;margin-bottom:6px;background:var(--panel)}
+.rd-nav::-webkit-scrollbar{display:none}
+.rd-nav-btn{flex:0 0 auto;padding:7px 14px;border-radius:18px;border:1px solid var(--gray-200);background:var(--surface);font-size:12px;font-weight:600;color:var(--gray-700);cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .18s}
+.rd-nav-btn:hover{border-color:#8FB48C;color:#3E5C46}
+.rd-nav-btn.on{background:#3E5C46;border-color:#3E5C46;color:#fff}
+[data-theme="dark"] .rd-nav-btn.on{background:#4C7A58;border-color:#4C7A58;color:#fff}
+.rd-sec-title{scroll-margin-top:60px}
+.rd-auto{padding:9px 13px;border-radius:9px;background:#EEF3E9;border:1px solid #D7E4D0;font-size:11.5px;color:#4A6B4E;margin-bottom:16px;line-height:1.6}
+.rd-auto.warn{background:#FDF3E7;border-color:#F0DCC0;color:#9A6B2F}
+[data-theme="dark"] .rd-auto{background:rgba(94,148,96,.16);border-color:rgba(94,148,96,.3);color:#A7C9AC}
+[data-theme="dark"] .rd-auto.warn{background:rgba(192,135,59,.16);border-color:rgba(192,135,59,.3);color:#E0B878}
+
+/* ===== v14.71 阅读统计（独立前缀，不干扰知识库统计卡） ===== */
+.rds-switch{display:inline-flex;background:var(--gray-100);border-radius:9px;padding:2px;gap:2px}
+.rds-switch button{border:none;background:transparent;padding:5px 12px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--gray-500);font-family:inherit;transition:all .2s;white-space:nowrap}
+.rds-switch button.on{background:var(--surface);color:#3E5C46;font-weight:700;box-shadow:var(--shadow)}
+.rds-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px}
+.rds-card{background:var(--surface);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:13px 14px;min-width:0}
+.rds-k{font-size:11px;color:var(--gray-500);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rds-v{font-size:21px;font-weight:700;color:var(--gray-900);line-height:1.15;font-variant-numeric:tabular-nums}
+.rds-v small{font-size:12px;font-weight:600;color:var(--gray-500);margin-left:2px}
+.rds-x{font-size:10px;color:var(--gray-500);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rds-x.up{color:#C0873B}
+[data-theme="dark"] .rds-x.up{color:var(--orange-400)}
+.rds-insights{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+@media(max-width:720px){.rds-insights{grid-template-columns:1fr}}
+.rds-insight{background:var(--surface);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:14px}
+.rds-insight-h{font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:12px}
+.rds-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:11px}
+.rds-bar-row:last-child{margin-bottom:0}
+.rds-bar-name{width:76px;flex-shrink:0;color:var(--gray-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rds-bar-track{flex:1;height:7px;border-radius:5px;background:var(--gray-100);overflow:hidden;min-width:20px}
+.rds-bar-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,#9FC79A,#5E9460)}
+.rds-bar-val{width:52px;text-align:right;color:var(--gray-500);flex-shrink:0;font-variant-numeric:tabular-nums}
+.rds-tags{display:flex;flex-wrap:wrap;gap:6px}
+.rds-tag{padding:5px 10px;border-radius:20px;background:#EEF3E9;color:#4A6B4E;font-size:11px;white-space:nowrap}
+.rds-tag.blue{background:var(--blue-50);color:var(--blue-500)}
+[data-theme="dark"] .rds-tag{background:rgba(94,148,96,.18);color:#A7C9AC}
+[data-theme="dark"] .rds-tag.blue{background:rgba(96,165,250,.15);color:var(--blue-400)}
+
 
 
 /* ===== Cards ===== */
@@ -1378,7 +1419,7 @@ a.rd-note-book:hover{color:var(--blue-500)}
     </nav>
     <div class="sidebar-footer">
       <button class="btn-settings" id="btnSettings">⚙ 设置</button>
-      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.70</div>
+      <div id="footerVersion" style="text-align:center;font-size:10px;color:var(--gray-400);margin-top:8px;user-select:none">v14.71</div>
     </div>
   </aside>
 
@@ -1580,7 +1621,7 @@ a.rd-note-book:hover{color:var(--blue-500)}
       </div>
     </div>
 
-    <!-- PAGE: 读书空间 (v14.70 微信读书) -->
+    <!-- PAGE: 读书空间 (v14.71 微信读书) -->
     <div class="page" id="page-reading">
       <div class="card" style="border-top:3px solid var(--pink-300)">
         <div class="card-header">
@@ -1981,7 +2022,7 @@ a.rd-note-book:hover{color:var(--blue-500)}
     <input type="file" id="importFileInput" accept="application/json,.json" style="display:none">
     <label style="margin-top:12px">版本与更新</label>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.70</span>
+      <span id="settingsVersion" style="font-size:13px;color:var(--gray-500);font-weight:600;white-space:nowrap">v14.71</span>
       <button type="button" class="btn btn-secondary" id="btnForceUpdate" style="flex:1">🔄 一键强制更新</button>
     </div>
     <p class="modal-hint">卸载离线缓存并重新加载最新代码。若页面底部版本号没变（缓存没刷新），点这里即可。</p>
@@ -2032,7 +2073,7 @@ var WORLD_MAP = null;
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 // 当前应用版本号（页脚与设置页显示；升级时与 sw.js 的 VERSION 一起改）
-const APP_VERSION = 'v14.70';
+const APP_VERSION = 'v14.71';
 const fmtDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const LS_KEYS = {
   plans: 'amber_plans_v3', events: 'amber_events_v3', checkins: 'amber_checkins_v3',
@@ -6196,7 +6237,7 @@ $('#importFileInput').addEventListener('change', (e) => {
 });
 
 // ============================================================
-// READING SPACE (v14.70) — 四板块：阅读日历 / 最近读到 / 我的书架 / 知识库
+// READING SPACE (v14.71) — 四板块：阅读日历 / 最近读到 / 我的书架 / 知识库
 //   微信读书数据，只读 Supabase reading 快照表（version 2 结构）。
 //   安全：微信读书 API key 从不进入前端；数据由本地 sync-reading.js 定时写入。
 // ============================================================
@@ -6206,6 +6247,7 @@ const _rd = {
   shelfFilter: 'all', shelfQuery: '', shelfLimit: 24,
   kbQuery: '', kbTag: 'all', kbLimit: 12,
   recentLimit: 6,
+  scope: 'annual', navActive: 'cal', autoMsg: '', autoMsgKind: '',
 };
 // 仅用于在「表未创建」时一键复制，不含任何凭据，可安全内嵌
 const RD_DDL = `CREATE TABLE IF NOT EXISTS public.reading (
@@ -6251,6 +6293,179 @@ function rdSyncedLabel(iso) {
   if (isNaN(d.getTime())) return '';
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+// ---------- v14.71 辅助：阅读统计格式 ----------
+function rdHours(sec) {
+  const s = Math.max(0, Math.round(Number(sec) || 0));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  return h > 0 ? `${h}<small>小时</small>${m ? m + '<small>分</small>' : ''}` : `${m}<small>分钟</small>`;
+}
+function rdShortHours(sec) {
+  const h = (Number(sec) || 0) / 3600;
+  return h >= 10 ? Math.round(h) + 'h' : h.toFixed(1) + 'h';
+}
+function rdStatVal(scope, key) {
+  const found = (scope.readStat || []).find(x => x.stat === key);
+  return found ? rdEsc(found.counts) : '—';
+}
+
+// ---------- v14.71 自动打卡：单日阅读 > 30 分钟 → 「阅读」习惯 +1 ----------
+// 口径：今年内每个「单日阅读时长 > 1800 秒」的自然日计 1 次，按 YYYY-MM-DD 去重写入
+//       dates（与打卡模块口径一致，首页日历会据此显示打卡徽章）。
+// 幂等：dates 已有该日期就跳过；用户手动撤回过的日期记入排除集，不再自动补回。
+// 安全：只操作本地 state.checkins，经 updateRecord 写入并触发云端同步；失败回滚。
+const RD_CK_AUTO = 'amber_rd_ck_auto_v1';
+const RD_CK_EXCLUDE = 'amber_rd_ck_exclude_v1';
+const RD_CK_THRESHOLD = 1800;
+
+function rdQualifiedDays(daily) {
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const start = new Date(now.getFullYear(), 0, 1);
+  const out = [];
+  for (let d = new Date(start); d <= now; d = new Date(d.getTime() + 86400000)) {
+    if (Number(daily[Math.floor(d.getTime() / 1000)] || 0) > RD_CK_THRESHOLD) out.push(fmtDate(d));
+  }
+  return out;
+}
+
+function rdAutoCheckin(snap) {
+  const daily = (snap.stats && snap.stats.daily) || {};
+  const qualified = rdQualifiedDays(daily);
+  const habit = (state.checkins || []).find(h => !h.deleted_at && /阅读|读书|看书/.test(String(h.name || '')));
+  if (!habit) return { added: 0, qualified: qualified.length, found: false };
+  if (!qualified.length) return { added: 0, qualified: 0, found: true };
+
+  let auto = [], excluded = [];
+  try { auto = JSON.parse(localStorage.getItem(RD_CK_AUTO) || '[]'); } catch (_) { auto = []; }
+  try { excluded = JSON.parse(localStorage.getItem(RD_CK_EXCLUDE) || '[]'); } catch (_) { excluded = []; }
+  const existing = new Set(habit.dates || []);
+  const exSet = new Set(excluded);
+  // 曾被自动补录、如今不在 dates → 视为用户主动撤回，加入排除集
+  auto.forEach(d => { if (!existing.has(d)) exSet.add(d); });
+  try { localStorage.setItem(RD_CK_EXCLUDE, JSON.stringify([...exSet])); } catch (_) {}
+
+  const toAdd = qualified.filter(d => !existing.has(d) && !exSet.has(d));
+  if (!toAdd.length) return { added: 0, qualified: qualified.length, found: true };
+  const before = habit.dates || [];
+  habit.dates = before.concat(toAdd).sort();
+  try {
+    updateRecord('checkins', habit.id, { dates: habit.dates });
+    try { localStorage.setItem(RD_CK_AUTO, JSON.stringify([...new Set([...auto, ...toAdd])])); } catch (_) {}
+    return { added: toAdd.length, qualified: qualified.length, found: true };
+  } catch (e) {
+    habit.dates = before;   // 回滚，避免本地与云端不一致
+    return { added: 0, qualified: qualified.length, found: true };
+  }
+}
+
+function rdApplyAutoCheckin(snap) {
+  let r;
+  try { r = rdAutoCheckin(snap); } catch (_) { _rd.autoMsg = ''; _rd.autoMsgKind = ''; return; }
+  if (!r.found) {
+    _rd.autoMsg = '⚠️ 未找到「阅读」打卡习惯，自动打卡未启用（可在「打卡」页添加名称含「阅读」的习惯）';
+    _rd.autoMsgKind = 'warn';
+  } else if (r.added > 0) {
+    _rd.autoMsg = `✅ 已按「单日阅读 > 30 分钟」为「阅读」打卡自动补录 ${r.added} 天（今年共 ${r.qualified} 天达标）`;
+    _rd.autoMsgKind = '';
+  } else if (r.qualified > 0) {
+    _rd.autoMsg = `📖 今年单日阅读 > 30 分钟共 ${r.qualified} 天，已同步至「阅读」打卡`;
+    _rd.autoMsgKind = '';
+  } else {
+    _rd.autoMsg = ''; _rd.autoMsgKind = '';
+  }
+}
+
+// ---------- v14.71 顶部锚点导航 ----------
+const RD_NAV = [
+  { k: 'cal', t: '阅读日历', icon: '📅' },
+  { k: 'recent', t: '最近读到', icon: '📖' },
+  { k: 'shelf', t: '我的书架', icon: '📚' },
+  { k: 'kb', t: '知识库', icon: '🗂️' },
+  { k: 'stats', t: '阅读统计', icon: '📊' },
+];
+function rdNavHTML() {
+  return '<div class="rd-nav" id="rdNav">' + RD_NAV.map(n =>
+    `<button class="rd-nav-btn${_rd.navActive === n.k ? ' on' : ''}" data-rdnav="${n.k}">${n.icon} ${n.t}</button>`
+  ).join('') + '</div>';
+}
+function rdAutoMsgHTML() {
+  return _rd.autoMsg
+    ? `<div class="rd-auto${_rd.autoMsgKind === 'warn' ? ' warn' : ''}">${rdEsc(_rd.autoMsg)}</div>`
+    : '';
+}
+function rdScrollToSection(k) {
+  const sec = document.getElementById('rd-sec-' + k);
+  if (sec && typeof sec.scrollIntoView === 'function') {
+    try { sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) { sec.scrollIntoView(); }
+  }
+}
+function rdSyncNavActive() {
+  const main = document.querySelector('.main');
+  if (!main || typeof main.getBoundingClientRect !== 'function') return;
+  const rootTop = main.getBoundingClientRect().top;
+  let cur = 'cal';
+  RD_NAV.forEach(n => {
+    const sec = document.getElementById('rd-sec-' + n.k);
+    if (sec && sec.getBoundingClientRect().top - rootTop <= 130) cur = n.k;
+  });
+  if (_rd.navActive !== cur) {
+    _rd.navActive = cur;
+    document.querySelectorAll('#rdNav .rd-nav-btn').forEach(b => b.classList.toggle('on', b.dataset.rdnav === cur));
+  }
+}
+
+// ---------- v14.71 板块 5：阅读统计（置底） ----------
+function rdStatsHTML(snap) {
+  const st = snap.stats || {};
+  const sc = _rd.scope === 'overall' ? (st.overall || {}) : (st.annual || {});
+  const isYear = _rd.scope === 'annual';
+  const cmp = (isYear && typeof sc.compare === 'number')
+    ? (sc.compare >= 0 ? `较上一周期 +${Math.round(sc.compare * 100)}%` : `较上一周期 ${Math.round(sc.compare * 100)}%`) : '';
+  const cards = [
+    { k: isYear ? '今年阅读时长' : '累计阅读时长', v: rdHours(sc.totalReadTime), x: cmp, up: sc.compare > 0 },
+    { k: '阅读天数', v: (sc.readDays || 0) + '<small>天</small>', x: isYear ? '单日满 1 分钟计' : '累计有效阅读' },
+    { k: '读过', v: rdStatVal(sc, '读过') },
+    { k: '读完', v: rdStatVal(sc, '读完') },
+    { k: '笔记', v: rdStatVal(sc, '笔记') },
+    { k: '日均时长', v: (sc.dayAverageReadTime > 0 ? rdHours(sc.dayAverageReadTime) : '—'), x: isYear ? '按自然日平均' : '' },
+  ];
+  const grid = '<div class="rds-grid">' + cards.map(c =>
+    `<div class="rds-card"><div class="rds-k">${c.k}</div><div class="rds-v">${c.v}</div>${c.x ? `<div class="rds-x${c.up ? ' up' : ''}">${rdEsc(c.x)}</div>` : ''}</div>`
+  ).join('') + '</div>';
+
+  const cats = (sc.preferCategory || []).filter(c => c.title).slice(0, 6);
+  const maxVal = Math.max(1, ...cats.map(c => c.val || 0));
+  const catBars = cats.length ? cats.map(c =>
+    `<div class="rds-bar-row"><span class="rds-bar-name" title="${rdEsc(c.title)}">${rdEsc(c.title)}</span>
+      <span class="rds-bar-track"><span class="rds-bar-fill" style="width:${Math.round((c.val || 0) / maxVal * 100)}%"></span></span>
+      <span class="rds-bar-val">${rdShortHours(c.readingTime)}</span></div>`
+  ).join('') : '<div style="font-size:11px;color:var(--gray-500)">暂无分类数据</div>';
+
+  const longest = (sc.readLongest || []).filter(b => b.title).slice(0, 3)
+    .map(b => `${rdEsc(b.title)} ${rdShortHours(b.readTime)}`);
+  const tags = [];
+  if (sc.preferCategoryWord) tags.push(`<span class="rds-tag">${rdEsc(sc.preferCategoryWord)}</span>`);
+  if (sc.preferTimeWord) tags.push(`<span class="rds-tag blue">${rdEsc(sc.preferTimeWord)}</span>`);
+  (sc.preferAuthor || []).slice(0, 3).forEach(a => tags.push(`<span class="rds-tag blue">${rdEsc(a.name)} · ${a.count}本</span>`));
+  const right = `<div class="rds-insight"><div class="rds-insight-h">🏆 读得最多</div>
+      ${longest.length ? longest.map(t => `<div style="font-size:11.5px;color:var(--gray-700);margin-bottom:7px;line-height:1.5">${t}</div>`).join('') : '<div style="font-size:11px;color:var(--gray-500)">暂无数据</div>'}
+      ${tags.length ? `<div class="rds-tags" style="margin-top:12px">${tags.join('')}</div>` : ''}</div>`;
+
+  return `<div class="rd-sec" id="rd-sec-stats">
+    <div class="rd-sec-hd">
+      <div class="rd-sec-title">📊 阅读统计 <span class="rd-sec-sub">${isYear ? (sc.year || new Date().getFullYear()) + ' 年' : '全部历史'}</span></div>
+      <div class="rds-switch" id="rdScope">
+        <button data-scope="annual" class="${isYear ? 'on' : ''}">今年</button>
+        <button data-scope="overall" class="${!isYear ? 'on' : ''}">总计</button>
+      </div>
+    </div>
+    ${grid}
+    <div class="rds-insights">
+      <div class="rds-insight"><div class="rds-insight-h">📈 偏好分类</div>${catBars}</div>
+      ${right}
+    </div>
+  </div>`;
 }
 
 // 书架分类 / 阅读进度 / 跳转链接 的 bookId 映射（单向 join，不改数据）
@@ -6339,6 +6554,7 @@ async function rdFetch(force) {
     _rd.snapshot = data.data;
     _rd.loadedAt = Date.now();
     _rd.loading = false; if (btn) btn.disabled = false;
+    rdApplyAutoCheckin(_rd.snapshot);
     rdStatus('', '已同步', '更新于 ' + rdSyncedLabel(_rd.snapshot.syncedAt || data.updated_at));
     rdRender();
   } catch (e) {
@@ -6381,7 +6597,7 @@ function rdCalHTML(snap) {
     <span class="rd-legend">少 <i style="background:#E3ECDD"></i><i style="background:#C9DEC4"></i><i style="background:#9FC79A"></i><i style="background:#5E9460"></i> 多</span>
   </div>`;
   return `<div class="rd-sec">
-    <div class="rd-sec-hd"><div class="rd-sec-title">阅读日历</div><div class="rd-sec-sub">连续 <b style="color:#4E8B5E">${rdStreak(daily)}</b> 天 · 点 ‹ › 翻月</div></div>
+    <div class="rd-sec-hd"><div class="rd-sec-title" id="rd-sec-cal">阅读日历</div><div class="rd-sec-sub">连续 <b style="color:#4E8B5E">${rdStreak(daily)}</b> 天 · 点 ‹ › 翻月</div></div>
     <div class="rd-cal-hd">
       <button class="rd-cal-nav" id="rdCalPrev" title="上个月">‹</button>
       <span class="rd-cal-title">${_rd.calY} 年 ${_rd.calM + 1} 月</span>
@@ -6418,7 +6634,7 @@ function rdRecentHTML(snap, jm) {
   const more = notes.length > _rd.recentLimit
     ? `<button class="rd-more" id="rdRecentMore">查看更多（还有 ${notes.length - _rd.recentLimit} 条）</button>` : '';
   return `<div class="rd-sec">
-    <div class="rd-sec-hd"><div class="rd-sec-title">最近读到</div><div class="rd-sec-sub">按笔记时间排序</div></div>
+    <div class="rd-sec-hd"><div class="rd-sec-title" id="rd-sec-recent">最近读到</div><div class="rd-sec-sub">按笔记时间排序</div></div>
     <div class="rd-note-list">${list.map(n => rdNoteCard(n, jm)).join('')}</div>
     ${more ? `<div style="text-align:center;margin-top:14px">${more}</div>` : ''}
   </div>`;
@@ -6459,6 +6675,8 @@ function rdShelfHTML(snap, jm) {
       bookId: a.albumId, title: a.name, author: a.authorName, cover: a.cover,
       readerLink: '', deepLink: '', _album: true, finishReading: 0, readUpdateTime: 1,
     })));
+  // v14.71：按最近阅读时间倒序（最新在读排最前，无阅读记录的排最后）
+  all.sort((a, b) => (Number(b.readUpdateTime) || 0) - (Number(a.readUpdateTime) || 0));
   const counts = { all: all.length, reading: 0, wish: 0, done: 0 };
   all.forEach(b => { const k = rdShelfStatus(b).k; if (k === 'reading') counts.reading++; else if (k === 'wish') counts.wish++; else if (k === 'done') counts.done++; });
   const q = _rd.shelfQuery.trim().toLowerCase();
@@ -6469,7 +6687,7 @@ function rdShelfHTML(snap, jm) {
     ? `<button class="rd-more" id="rdShelfMore">显示更多（还有 ${fl.length - shown.length} 本）</button>` : '';
   const chip = (k, label) => `<button class="rd-chip${_rd.shelfFilter === k ? ' on' : ''}" data-shelf="${k}">${label}<b>${counts[k]}</b></button>`;
   return `<div class="rd-sec">
-    <div class="rd-sec-hd"><div class="rd-sec-title">我的书架</div><div class="rd-sec-sub">${s.total || all.length} 项 · ${s.bookCount || (s.books || []).length} 本电子书 + ${s.albumCount || (s.albums || []).length} 有声书${s.hasMp ? ' + 文章收藏' : ''}</div></div>
+    <div class="rd-sec-hd"><div class="rd-sec-title" id="rd-sec-shelf">我的书架</div><div class="rd-sec-sub">${s.total || all.length} 项 · 按最近阅读排序 · ${s.bookCount || (s.books || []).length} 本电子书 + ${s.albumCount || (s.albums || []).length} 有声书${s.hasMp ? ' + 文章收藏' : ''}</div></div>
     <div class="rd-tools" style="margin-bottom:12px"><input class="rd-search" id="rdShelfSearch" type="search" placeholder="搜索书名或作者" value="${rdEsc(_rd.shelfQuery)}"></div>
     <div class="rd-chips">${chip('all', '全部')}${chip('reading', '在读')}${chip('wish', '想读')}${chip('done', '读完')}</div>
     ${fl.length ? `<div class="rd-books">${shown.map(b => rdBookCard(b, {
@@ -6501,7 +6719,7 @@ function rdKBHTML(snap, jm) {
     <div class="rd-stat"><div class="rd-stat-k">个主题</div><div class="rd-stat-v">${tags.length}</div></div>
   </div>`;
   return `<div class="rd-sec">
-    <div class="rd-sec-hd"><div class="rd-sec-title">知识库</div><div class="rd-sec-sub">划线与想法 · 全文检索</div></div>
+    <div class="rd-sec-hd"><div class="rd-sec-title" id="rd-sec-kb">知识库</div><div class="rd-sec-sub">划线与想法 · 全文检索</div></div>
     <div class="rd-tools" style="margin-bottom:12px"><input class="rd-search" id="rdKBSearch" type="search" placeholder="全文检索：关键词、书目、主题" value="${rdEsc(_rd.kbQuery)}"></div>
     ${stats}
     <div class="rd-chips">${chip('all')}${tags.slice(0, 7).map(chip).join('')}</div>
@@ -6517,7 +6735,8 @@ function rdRender() {
   const el = $('#rdContent');
   if (!el) return;
   const jm = rdJoinMaps(snap);
-  el.innerHTML = rdCalHTML(snap) + rdRecentHTML(snap, jm) + rdShelfHTML(snap, jm) + rdKBHTML(snap, jm);
+  el.innerHTML = rdNavHTML() + rdAutoMsgHTML() +
+    rdCalHTML(snap) + rdRecentHTML(snap, jm) + rdShelfHTML(snap, jm) + rdKBHTML(snap, jm) + rdStatsHTML(snap);
 }
 
 function renderReadingPage() { rdFetch(false); }
@@ -6535,6 +6754,15 @@ function rdFallbackCopy(text, done) {
   const content = $('#rdContent');
   if (content) {
     content.addEventListener('click', e => {
+      const navBtn = e.target.closest('.rd-nav-btn');
+      if (navBtn) {
+        _rd.navActive = navBtn.dataset.rdnav;
+        content.querySelectorAll('.rd-nav-btn').forEach(b => b.classList.toggle('on', b === navBtn));
+        rdScrollToSection(_rd.navActive);
+        return;
+      }
+      const scopeBtn = e.target.closest('#rdScope button');
+      if (scopeBtn) { _rd.scope = scopeBtn.dataset.scope; rdRender(); rdScrollToSection('stats'); return; }
       if (e.target.closest('#rdCalPrev')) { _rd.calM--; if (_rd.calM < 0) { _rd.calM = 11; _rd.calY--; } rdRender(); return; }
       if (e.target.closest('#rdCalNext')) { _rd.calM++; if (_rd.calM > 11) { _rd.calM = 0; _rd.calY++; } rdRender(); return; }
       const shelfChip = e.target.closest('.rd-chip[data-shelf]');
@@ -6567,6 +6795,8 @@ function rdFallbackCopy(text, done) {
   }
   const btn = $('#rdReload');
   if (btn) btn.addEventListener('click', () => rdFetch(true));
+  const mainEl = document.querySelector('.main');
+  if (mainEl) mainEl.addEventListener('scroll', rdSyncNavActive, { passive: true });
 })();
 
 // TEST CONNECTION BUTTONS
